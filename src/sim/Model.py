@@ -23,7 +23,32 @@ class Model:
     :param params: list containning Sigma's and Rho's
     :param N: set of Dataset cardinalities N = {n0...ni} , ni ∈ {2*k | k ∈ int*}
     :param dictionary: A dictionary (also known as search space bias) is a family of classifiers (e.g., linear classifiers, quadratic classifiers,...)
+    :return None
+    :raise ValueError: if length of params is less than 3
+    :raise ValueError: if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...)
+    :raise ValueError: if max_n is not a power of 2
+    :raise ValueError: if N is not a list of powers of 2
+    :raise ValueError: if dictionary is not a list of strings and is equal to ['linear']
+    :raise ValueError: if self.cov is not a positive definite matrix
+    :raise ValueError: if self.cov is not a symmetric matrix
+    :raise ValueError: if Sigma's are not positive numbers
+    :raise ValueError: if Rho's are not numbers between -1 and 1
+
+
+    usage: Model([1,1,2,-0.1,0.2,0.2], 2**13, [2**i for i in range(1,11)], ['linear'])
+    usage:
+    params = [1,1,2,-0.1,0.2,0.2]
+    max_n = 2**13
+    N = [2**i for i in range(1,11)]
+    dictionary = ['linear']
+    model = Model(params, max_n, N, dictionary)
     """
+
+
+
+
+    if len(params) < 3:
+        raise ValueError('Check parameters list lenght, this experiment requires at least 3 parameters (case dim = 2)')
 
     dim = 2
     param_len = 3
@@ -31,9 +56,35 @@ class Model:
       dim += 1
       param_len += dim
 
+
     if param_len > len(params):
       raise ValueError('Check parameters list lenght')
 
+    for d in range(dim):
+        if params[d] <= 0:
+            raise ValueError('Every Sigma must be a positive number')
+
+    for d in range(dim, len(params)):
+        if params[d] < -1 or params[d] > 1:
+            raise ValueError('Every Rho must be a number between -1 and 1')
+
+    if max_n & (max_n - 1) != 0:
+      raise ValueError('max_n must be a power of 2')
+
+    for n in N:
+      if n & (n - 1) != 0:
+        raise ValueError('N must be a list of powers of 2 to make this experiment')
+
+    if dictionary != ['linear']:
+      raise ValueError('dictionary must be equal to ["linear"] for this experiment, other dictionaries are not implemented yet')
+
+    self.cov = [[self.sigma[p]**2 if p == q else self.sigma[p]*self.sigma[q]*self.rho_matrix[p][q] if q>p else self.sigma[p]*self.sigma[q]*self.rho_matrix[q][p] for q in range(len(self.sigma))] for p in range(len(self.sigma))]
+
+    if not np.all(np.linalg.eigvals(self.cov) > 0):
+        raise ValueError('cov must be a positive definite matrix to make this experiment')
+
+    if not np.allclose(self.cov, self.cov.T):
+        raise ValueError('cov must be a symmetric matrix to make this experiment')
 
     self.dim = dim
     self.sigma = params[0:dim]
@@ -58,7 +109,6 @@ class Model:
 
     self.rho_matrix = [[None]*(i+1) + self.rho[aux1[i]:aux2[i]] for i in range(len(self.sigma)-1)]
 
-    self.cov = [[self.sigma[p]**2 if p == q else self.sigma[p]*self.sigma[q]*self.rho_matrix[p][q] if q>p else self.sigma[p]*self.sigma[q]*self.rho_matrix[q][p] for q in range(len(self.sigma))] for p in range(len(self.sigma))]
     self.params = params
     self.N = N
     self.max_n = max_n
@@ -69,7 +119,20 @@ class Model:
         """
         :param cov: covariance matrix of the ellipsoid to be plotted
         :return fig: Figure object containing the plot of the ellipsoid
+        :raise ValueError: if cov is not a 3x3 matrix
+        :raise ValueError: if cov is not a positive definite matrix
+        :raise ValueError: if cov is not a symmetric matrix
         """
+
+        if len(cov) != 3 or len(cov[0]) != 3 or len(cov[1]) != 3 or len(cov[2]) != 3:
+            raise ValueError('cov must be a 3x3 matrix to make this plot')
+
+        if not np.all(np.linalg.eigvals(cov) > 0):
+            raise ValueError('cov must be a positive definite matrix to make this plot')
+
+        if not np.allclose(cov, cov.T):
+            raise ValueError('cov must be a symmetric matrix to make this plot')
+
 
         # Define mean and covariance for 3D
         mean = [1, 1, 1]
@@ -168,7 +231,8 @@ class Model:
 
         return fig
 
-    self.fig = plot_sourrounding_ellipsis_and_ellipsoids(self.cov)
+    if dim == 3:
+        self.fig = plot_sourrounding_ellipsis_and_ellipsoids(self.cov)
 
 
 
