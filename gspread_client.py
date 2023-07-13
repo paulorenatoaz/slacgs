@@ -1,41 +1,68 @@
+import os
 from enum import Enum
 import googleapiclient
 import numpy as np
 import pygsheets as pygsheets
-
+import math
 
 class GspreadClient:
-  """GspreadClient performs operations using gspread, a Python API for Google Sheets"""
+  """GspreadClient performs operations using gspread, a Python API for Google Sheets. It is used to write simulation results to a spreadsheet."""
 
   def __init__(self, key_path, spredsheet_title):
-    """
-    :param key_path (str): path to connect key
-    :param spredsheet_title (str): title of the spreadsheet to be writen on
-    """
-    self.key_path = key_path
-    self.spredsheet_title = spredsheet_title
+    """Constructor for GspreadClient class.
 
-  def write_compare_report_to_spreadsheet(self, report,dims):
+    :param key_path: path to connect key
+    :type key_path: str
+    :param spredsheet_title: title of the spreadsheet to be writen on
+    :type spredsheet_title: str
+
+    :raise TypeError: if spredsheet_title is not a valid string;
+                      if key_path is not a valid string;
+    :raise FileNotFoundError: if key_path is not a valid path
+
+
+    :Example:
+
+    """
+    if not isinstance(spredsheet_title, str):
+      raise TypeError('spredsheet_title must be a string')
+    if not isinstance(key_path, str):
+      raise TypeError('key_path must be a string')
+    if not os.path.isfile(key_path):
+      raise FileNotFoundError('key_path must be a valid path')
+
+    # authorization
+    gc = pygsheets.authorize(service_file=key_path)
+    self.sh = gc.open(spredsheet_title)
+
+  def write_compare_report_to_spreadsheet(self, report, dims):
     """write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.
 
-    :param report (Report): Report containnig simulation results
-    :param dims (List(int)): pair of dimensionalyties to be compared
+    :param self: GspreadClient object
+    :type self: GspreadClient
+    :param report: Report containnig simulation results
+    :type report: Report
+    :param dims: a pair of dimensionalyties to be compared
+    :type dims: list of int or tuple of int
+    :return: None
+    :rtype: None
+
     """
 
     parameters = ['compare' + str(dims[0]) + '&' + str(dims[1])] + report.sim.model.params
 
-    #authorization
-    gc = pygsheets.authorize(service_file=self.key_path)
-
-    sh = gc.open(self.spredsheet_title)
+    sh = self.sh
     ws_title_index = 0
+    sim = report.sim
 
-    if(report.sim.step_size*report.sim.max_steps<1000):
+    ## define sheet title
+    if(report.sim.iters_per_step*report.sim.max_steps<1000):
       sheet_title = '[TEST]' + str(parameters)
     else:
       sheet_title = str(parameters)
 
     chart_height = 18
+    ## create worksheet
     while True:
       try:
         if ws_title_index == 0:
@@ -48,13 +75,14 @@ class GspreadClient:
         ws = sh.worksheet_by_title(sheet_title) if ws_title_index == 0 else sh.worksheet_by_title(sheet_title + '[' + str(ws_title_index) + ']')
         break
 
-
+    ## compile report
     loss_N, iter_N, bayes_loss, d, intersection_points, model_tag, sim_tag = report.compile_compare(dims)
     N = report.sim.model.N
     loss_types = report.sim.loss_types
     matrix_N, matrix_N_log2 , matrix_loss_N, matrix_iter_N, bayes_loss_matrix, d_matrix, intersection_points_matrix, model_tag_matrix, sim_tag_matrix = [],[],[],[],[],[],[],[],[]
     colum_pointer = 0
 
+    ## link to home
     try:
       ws_home = sh.worksheet_by_title('home')
     except pygsheets.exceptions.WorksheetNotFound:
@@ -75,12 +103,11 @@ class GspreadClient:
     colum_pointer += len(matrix_N[3])
     ws.update_values((1,colum_pointer), matrix_N_log2)
 
-
     matrix_loss_N.append(['simulated loss results (P(Error)):'])
     matrix_loss_N.append([ str(dims[int(i/len(loss_types))]) + ' feat' for i in range(2*len(loss_types))])
     matrix_loss_N.append([list(loss_N[i].keys())[j] for i in list(loss_N.keys()) for j in range(len(list(loss_N[i].keys())))])
     aux = [np.matrix(loss_N[i][j]).T for i in list(loss_N.keys()) for j in list(loss_N[i].keys())]
-    matrix_loss_N = matrix_loss_N + np.concatenate(aux,axis=1).tolist()
+    matrix_loss_N = matrix_loss_N + np.concatenate(aux, axis=1).tolist()
     colum_pointer += len(matrix_N_log2[2])
     ws.update_values((1,colum_pointer), matrix_loss_N)
 
@@ -98,7 +125,6 @@ class GspreadClient:
     bayes_loss_matrix = bayes_loss_matrix + [aux]
     colum_pointer += len(matrix_iter_N[2])
     ws.update_values((1,colum_pointer), bayes_loss_matrix)
-
 
     d_matrix.append(['(d_n) as dist(P_n,P_origin), \nP_n=intersect(Line_n,Ellipsse_n)\nLine_n = Line(x_1=x_2=...=x_n)\nEllipse_n = Ellip(X_n^t . cov_n^(-1) . X_n = 1))'])
     d_matrix.append(['d_' + str(dim) if isinstance(dim,int) else dim for dim in list(d.keys())])
@@ -147,8 +173,7 @@ class GspreadClient:
     ws.update_value((1,8),'---->\nDATA\nIN\nHIDDEN\nCELLS\n---->')
     ws.hide_dimensions(9, 14, dimension='COLUMNS')
 
-
-
+    #add charts
     for i in range(len(loss_types)):
       columns = [((2,3+i),(2+len(N),3+i)),((2,3+i+len(loss_types)),(2+len(N),3+i+len(loss_types)))]
       ws.add_chart(((2,2),(2+len(N),2)), columns, loss_types[i] + ': P(E) vs log2(N)', chart_type=ChartType.LINE, anchor_cell=(4 + len(N) + chart_height*i,3))
@@ -188,8 +213,7 @@ class GspreadClient:
     matrix_N, matrix_N_log2 , matrix_loss_N, matrix_iter_N, matrix_delta_L1, matrix_delta_L2 = [],[],[],[],[],[]
     matrix_delta_Ltest, matrix_delta_Ltrain, bayes_loss_matrix, d_matrix, model_tag_matrix, sim_tag_matrix = [],[],[],[],[],[]
 
-    gc = pygsheets.authorize(service_file=self.key_path)
-    sh = gc.open(self.spredsheet_title)
+    sh = self.sh
 
     try:
       ws_home = sh.worksheet_by_title('home')
@@ -284,7 +308,7 @@ class GspreadClient:
     parameters = ['loss'] + report.sim.model.params
     ws_title_index = 0
 
-    if(report.sim.step_size*report.sim.max_steps<1000):
+    if(report.sim.iters_per_step*report.sim.max_steps<1000):
       sheet_title = '[TEST]' + str(parameters)
     else:
       sheet_title = str(parameters)
@@ -372,8 +396,7 @@ class GspreadClient:
     chart_height = 18
     chart_width = 8
 
-    gc = pygsheets.authorize(service_file=self.key_path)
-    sh = gc.open(self.spredsheet_title)
+    sh = self.sh
     sheet_title = 'home'
     new_home = False
 
@@ -400,7 +423,7 @@ class GspreadClient:
     ws_aux_index = 0
 
     while True:
-      if(report.sim.step_size*report.sim.max_steps<1000):
+      if(report.sim.iters_per_step*report.sim.max_steps<1000):
         sheet_title_aux_1 = '[TEST]' + str(parameters_1) if not ws_aux_index else '[TEST]' + str(parameters_1) + '[' + str(ws_aux_index) + ']'
         sheet_title_aux_2 = '[TEST]' + str(parameters_2) if not ws_aux_index else '[TEST]' + str(parameters_2) + '[' + str(ws_aux_index) + ']'
       else:
@@ -411,7 +434,7 @@ class GspreadClient:
         ws_aux_2 = sh.worksheet_by_title(sheet_title_aux_2)
       except pygsheets.exceptions.WorksheetNotFound:
         ws_aux_index -= 1
-        if(report.sim.step_size*report.sim.max_steps<1000):
+        if(report.sim.iters_per_step*report.sim.max_steps<1000):
           sheet_title_aux_1 = '[TEST]' + str(parameters_1) if not ws_aux_index else '[TEST]' + str(parameters_1) + '[' + str(ws_aux_index) + ']'
           sheet_title_aux_2 = '[TEST]' + str(parameters_2) if not ws_aux_index else '[TEST]' + str(parameters_2) + '[' + str(ws_aux_index) + ']'
         else:
@@ -753,3 +776,12 @@ class GspreadClient:
         ws.client.sheet.batch_update(sh.id,request)
 
     print('sheet is over! id: ', ws.index, ' title:', ws.title)
+
+  def param_not_in_home(self, param):
+    sh = self.sh
+    ws_home = sh.worksheet(value=0)
+    already_done = ws_home.get_values((4, 1), (ws_home.rows, 6), value_render='FORMULA')
+
+
+
+    return (param in already_done)

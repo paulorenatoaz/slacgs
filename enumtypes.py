@@ -1,7 +1,13 @@
 from enum import Enum
 
+
 class LossType(Enum):
 
   THEORETICAL = 'THEORETICAL'
   EMPIRICALTRAIN = 'EMPIRICAL_TRAIN'
   EMPIRICALTEST = 'EMPIRICAL_TEST'
+
+
+class DictionaryType(Enum):
+
+  LINEAR = 'LINEAR'
