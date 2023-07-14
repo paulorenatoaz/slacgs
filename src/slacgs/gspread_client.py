@@ -562,7 +562,7 @@ class GspreadClient:
       L_title_1 = ['']*len(title) + ['n='+str(2**(i)) if i > 0 and i < (N_count_reported+1) else None if i == 0 else 'min(L)' for i in range(N_count_reported + 2)]*len(loss_types) + ['time consumption (h)', ''] + ['']*(len(loss_types)+1+len(dims_sim)+1+N_count_reported) + ['% consumption'] + ['']*(2+len(loss_types)+1+len(dims_sim)+1+N_count_reported+1) + ['% iter'] + ['']*(len(loss_types)+len(dims_sim)+N_count_reported-1)
       L_title_2 = ['L|' + str(dims[0]) +  'feat|n='+str(2**(i)) if i > 0 and i < (N_count_reported+1) else None if i == 0 else 'min(L)| ' +str(dims[0])+ 'feat' for i in range(N_count_reported + 2)]*len(loss_types)
 
-      cost_title = ['sim', 'iters'] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)] + [''] + ['dim=' + str(dim) for dim in dims_sim] +['sim','iter'] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)]+ [''] + ['dim=' + str(dim) for dim in dims_sim] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)]+ [''] + ['dim=' + str(dim) for dim in dims_sim]
+      cost_title = ['slacgs', 'iters'] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)] + [''] + ['dim=' + str(dim) for dim in dims_sim] +['slacgs','iter'] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)]+ [''] + ['dim=' + str(dim) for dim in dims_sim] + [loss_type for loss_type in loss_types] + [''] + ['n='+ str(2**(i+1)) for i in range(N_count_reported)]+ [''] + ['dim=' + str(dim) for dim in dims_sim]
       links_title = ['url compare report', 'url loss report']
 
       title = title + L_title_2 + cost_title + links_title
@@ -721,42 +721,42 @@ class GspreadClient:
     y_column = len(params) + len(indicators) + len(loss_types_n_star) + (N_count_reported+2)*len(loss_types) + 2 + len(loss_types) + 1
     x_data = ((3, y_column),(3, y_column + N_count_reported))
     y_data =[((4 + i, y_column),( 4 + i, y_column + N_count_reported)) for i in range(table_len)]
-    chart_title = 'time consumption / sim' + ' |params=' + params_title + '|' + param_values_title +' vs n'
+    chart_title = 'time consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs n'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 0*chart_height, 21 + chart_width*7))
 
     #% consumption per param vs n
     y_column += 1 + N_count_reported + 1 + len(dims_sim) + 2 + len(loss_types)
     x_data = ((3, y_column),(3, y_column + N_count_reported))
     y_data =[((4 + i, y_column),( 4 + i, y_column + N_count_reported)) for i in range(table_len)]
-    chart_title = '% consumption / sim' + ' |params=' + params_title + '|' + param_values_title +' vs n'
+    chart_title = '% consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs n'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 1*chart_height, 21 + chart_width*7))
 
     #% iterations per param vs n
     y_column += 1 + N_count_reported + 1 + len(dims_sim) + len(loss_types)
     x_data = ((3, y_column),(3, y_column + N_count_reported))
     y_data = [((4 + i, y_column),( 4 + i, y_column + N_count_reported)) for i in range(table_len)]
-    chart_title = '% iter / sim' + ' |params=' + params_title + '|' + param_values_title +' vs n'
+    chart_title = '% iter / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs n'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 2*chart_height, 21 + chart_width*7))
 
     #time consumption per param vs dim
     y_column = len(params) + len(indicators) + len(loss_types_n_star) + (N_count_reported+2)*len(loss_types) + 2 + len(loss_types) + 1 + N_count_reported + 1
     x_data = ((3, y_column),(3, y_column + len(dims_sim)))
     y_data =[((4 + i, y_column),( 4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-    chart_title = 'time consumption / sim' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
+    chart_title = 'time consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 0*chart_height, 21 + chart_width*8))
 
     #% consumption per param vs dim
     y_column += 1 + len(dims_sim) + 2 + len(loss_types) + 1 + N_count_reported
     x_data = ((3, y_column),(3, y_column + len(dims_sim)))
     y_data =[((4 + i, y_column),( 4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-    chart_title = '% consumption / sim' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
+    chart_title = '% consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 1*chart_height, 21 + chart_width*8))
 
     #% iterations per param vs dim
     y_column += 1 + len(dims_sim) + len(loss_types) + 1 + N_count_reported
     x_data = ((3, y_column),(3, y_column +  len(dims_sim)))
     y_data = [((4 + i, y_column),( 4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-    chart_title = '% iter / sim' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
+    chart_title = '% iter / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 2*chart_height, 21 + chart_width*8))
 
 

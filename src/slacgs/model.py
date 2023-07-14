@@ -2,25 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.patches import Ellipse
-import IPython
 
+# Check if the code is running in a notebook environment.
+try:
+	shell = IPython.get_ipython().__class__.__name__
+	if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
+		IS_NOTEBOOK = True
+	else:
+		IS_NOTEBOOK = False
+except NameError:
+	IS_NOTEBOOK = False
 
-def is_running_in_notebook():
-	"""
-	Check if the code is running in a notebook environment.
-	Returns True if running in a notebook, False otherwise.
-	"""
-	try:
-		shell = IPython.get_ipython().__class__.__name__
-		if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
-			return True
-		else:
-			return False
-	except NameError:
-		return False
-
-if not is_running_in_notebook():
-	from enumtypes import DictionaryType
+if not IS_NOTEBOOK:
+	from .enumtypes import DictionaryType
 
 
 class Model:
@@ -68,6 +62,8 @@ class Model:
 		>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
 		>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
 		>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
+		>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
+		>>> model = Model([1, 2, -0.1])
 
 		"""
 		if not isinstance(params, list):
@@ -156,7 +152,6 @@ class Model:
 
 		:Example:
 
-		>>> from src.sim.model import Model
 		>>> model = Model([1, 1, 2, 0.5, 0, 0])
 		>>> plot_fig = model.fig
 

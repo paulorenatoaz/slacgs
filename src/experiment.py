@@ -1,7 +1,7 @@
-import pygsheets
-from GspreadClient import GspreadClient
-from Model import Model
-from Simulator import Simulator
+from slacgs import GspreadClient
+from slacgs import Model
+from slacgs import Simulator
+from math import sqrt
 
 ## define list of parameters for cenario 1
 cenario1 = [[1,1,round(1 + 0.1*sigma3,2),0,0,0] for sigma3 in range(3,10)]
@@ -15,14 +15,14 @@ cenario2 = [[1,1,2,round(rho12*0.1,1),0,0] for rho12 in range(-8,9)]
 rho12=0
 cenario3 = []
 for r in range(-8,8):
-  if  abs(round(0.1*r,1)) < math.sqrt((1+rho12)/2) :
+  if  abs(round(0.1*r,1)) < sqrt((1+rho12)/2) :
     cenario3 += [[1,1,2,rho12, round(0.1*r,1), round(0.1*r,1)]]
 
 ## define list of parameters for cenario 4
 rho12=-0.1
 cenario4 = []
 for r in range(-8,8):
-  if  abs(round(0.1*r,1)) < math.sqrt((1+rho12)/2) :
+  if  abs(round(0.1*r,1)) < sqrt((1+rho12)/2) :
     cenario4 += [[1,1,2,rho12, round(0.1*r,1), round(0.1*r,1)]]
 
 ## create list of cenarios

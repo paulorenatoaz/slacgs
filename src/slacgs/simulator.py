@@ -5,38 +5,26 @@ from matplotlib import pyplot as plt
 from sklearn import svm
 import os
 from scipy.stats import multivariate_normal, norm
-import doctest
 import IPython
 from IPython.display import clear_output
 
 
-def is_running_in_notebook():
-  """
-  Check if the code is running in a notebook environment.
-  Returns True if running in a notebook, False otherwise.
-  """
-  try:
-    shell = IPython.get_ipython().__class__.__name__
-    if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
-      return True
-    else:
-      return False
-  except NameError:
-    return False
+# Check if the code is running in a notebook environment.
+try:
+  shell = IPython.get_ipython().__class__.__name__
+  if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
+    IS_NOTEBOOK = True
+  else:
+    IS_NOTEBOOK = False
+except NameError:
+  IS_NOTEBOOK = False
 
 
-if not is_running_in_notebook():
-  from enumtypes import LossType
-  from model import Model
-  from report import Report
+if not IS_NOTEBOOK:
+  from .enumtypes import LossType
+  from .model import Model
+  from .report import Report
 
-
-
-if __name__ == "__main__":
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
-
-if __name__ == "__main__":
-    doctest.testmod(optionflags=doctest.ELLIPSIS)
 
 def cls():
   """
@@ -93,45 +81,44 @@ class Simulator:
 
 
     :Example:
-    >>> from src.sim.model import Model
-    >>> from src.sim.simulator import Simulator
+    >>> if not IS_NOTEBOOK :
+    ...   from model import Model
+
     >>> param = [1,1,2,0,0,0]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     >>> param = [1,1,2,-0.1,0,0]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     >>> param = [1,1,2,0,-0.4,-0.4]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     >>> param = [1,1,2,-0.1,-0.4,-0.4]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     >>> param = [1,2,-0.1]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     :Example:
-    >>> from src.sim.model import Model
-    >>> from src.sim.simulator import Simulator
     >>> param = [1,1,1,2,0,0,0,0,0,0]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> sim = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> sim.run() # doctest: +ELLIPSIS
+    >>> slacgs = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+    >>> slacgs.run() # doctest: +ELLIPSIS
     Execution time: ... h
 
     """
@@ -213,7 +200,7 @@ class Simulator:
     self.time_spent_test = 0
     self.verbose = verbose
 
-    self.is_notebook = is_running_in_notebook()
+    self.is_notebook = IS_NOTEBOOK
 
 
 
