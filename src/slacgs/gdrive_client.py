@@ -51,7 +51,7 @@ class GdriveClient:
 		spreadsheet = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()
 		return spreadsheet['spreadsheetId']
 
-	def create_folder(folder_name, parent_folder_id=None):
+	def create_folder(self, folder_name, parent_folder_id=None):
 		folder_metadata = {
 			'name': folder_name,
 			'mimeType': 'application/vnd.google-apps.folder'
@@ -65,4 +65,33 @@ class GdriveClient:
 	def move_file_to_folder(self, file_id, folder_id):
 		file = self.drive_service.files().get(fileId=file_id, fields='parents').execute()
 		previous_parents = ",".join(file.get('parents'))
-		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents, fields='id, parents').execute()
+		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
+		                                         fields='id, parents').execute()
+
+	def check_spreadsheet_existence(self, name):
+		response = self.drive_service.files().list(
+			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'", spaces='drive',
+			fields='files(id)').execute()
+		spreadsheets = response.get('files', [])
+
+		if len(spreadsheets) > 0:
+			return True  # A spreadsheet with the specified name exists
+		else:
+			return False  # No spreadsheet with the specified name exists
+
+	def get_spreadsheet_id_by_name(self, name):
+		response = self.drive_service.files().list(
+			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'",
+			spaces='drive',
+			fields='files(id)').execute()
+		spreadsheets = response.get('files', [])
+		if len(spreadsheets) > 0:
+			return spreadsheets[0]['id'] # Return the ID of the first matching spreadsheet
+		else:
+			return None # No spreadsheet with the specified name exists
+
+	def delete_spreadsheet(self, spreadsheet_id):
+		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
+		print(f"Spreadsheet with ID '{spreadsheet_id}' has been deleted.")
+
+
