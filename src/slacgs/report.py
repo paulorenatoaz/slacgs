@@ -1,4 +1,6 @@
 import itertools
+
+import IPython
 import googleapiclient
 import numpy as np
 from shapely.geometry import LineString
