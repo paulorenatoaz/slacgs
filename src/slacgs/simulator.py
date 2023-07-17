@@ -26,7 +26,7 @@ def is_colab_notebook():
   """Check if the environment is a Google Colab notebook."""
   try:
     import google.colab
-    return Tre
+    return True
   except ImportError:
     return False
 
