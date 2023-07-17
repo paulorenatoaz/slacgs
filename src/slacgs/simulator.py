@@ -10,15 +10,28 @@ from IPython.display import clear_output
 
 
 # Check if the code is running in a notebook environment.
-try:
-  shell = IPython.get_ipython().__class__.__name__
-  if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
-    IS_NOTEBOOK = True
-  else:
-    IS_NOTEBOOK = False
-except NameError:
-  IS_NOTEBOOK = False
+def is_jupyter_notebook():
+  """Check if the environment is a Jupyter notebook."""
+  try:
+    shell = get_ipython().__class__.__name__
+    if shell == 'ZMQInteractiveShell':
+      return True
+    else:
+      return False
+  except NameError:
+    return False
 
+
+def is_colab_notebook():
+  """Check if the environment is a Google Colab notebook."""
+  try:
+    import google.colab
+    return Tre
+  except ImportError:
+    return False
+
+
+IS_NOTEBOOK = is_jupyter_notebook() or is_colab_notebook()
 
 if not IS_NOTEBOOK:
   from .enumtypes import LossType
