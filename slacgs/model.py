@@ -6,7 +6,7 @@ from matplotlib.patches import Ellipse
 
 from .enumtypes import DictionaryType
 
-from enumtypes import DictionaryType
+# from enumtypes import DictionaryType
 
 class Model:
 	"""Represents a Linear Classifier Loss Analysis Model composed by:
