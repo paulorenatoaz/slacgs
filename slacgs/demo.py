@@ -4,6 +4,7 @@ from .simulator import Simulator
 from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
 import os
+import re
 
 ## define list of parameters for cenario 1
 CENARIO1 = [[1, 1, round(1 + 0.1 * sigma3, 2), 0, 0, 0] for sigma3 in range(3, 10)]
@@ -30,32 +31,50 @@ for r in range(-8,8):
 ## create list of cenarios
 CENARIOS = [CENARIO1, CENARIO2, CENARIO3, CENARIO4]
 
+try:  # check if running on Google Colab
+	import google.colab
+
+	IN_COLAB = True
+except:
+	IN_COLAB = False
+
+if IN_COLAB:
+	KEY_PATH = '/content/key.json'
+else:
+	if os.name == 'nt':  # check if running on Windows
+		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.json'
+	else:  # running on Linux or Mac
+		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.json'
+
+## create GdriveClient object
+gdc = GdriveClient(KEY_PATH)
+
 def simulation_test():
 	## define path to Key file for accessing Google Sheets API via Service Account Credentials
+	if not gdc.gdrive_account_mail:
+		def is_valid_email(email):
+			# Regular expression pattern for email validation
+			pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+			return re.match(pattern, email)
 
-	try:  # check if running on Google Colab
-		import google.colab
-		IN_COLAB = True
-	except:
-		IN_COLAB = False
+		while True:
+			user_email = input("Please enter your google account email address so I can share results with you:\n(if you don't have a google account, create one at https://accounts.google.com/signup) ")
+			if is_valid_email(user_email):
+				print("Valid email address!")
+				break
+			else:
+				print("Invalid email address. Please try again.")
 
-	if IN_COLAB:
-		KEY_PATH = '/content/key.json'
-	else:
-		if os.name == 'nt':  # check if running on Windows
-			KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.json'
-		else:  # running on Linux or Mac
-			KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.json'
+		# Store the user's input email as a string in the GdriveClient object
+		gdc.gdrive_account_mail = user_email
 
-	## create GdriveClient object
-	gdc = GdriveClient(KEY_PATH)
-
-	## define folder name
-	REPORT_FOLDER_NAME = 'slacgs.demo'  # Replace with your desired folder name
+	## define folder name for storing reports
+	REPORT_FOLDER_NAME = 'slacgs.demo.' + user_email
 
 	## create folder if it doesn't exist
 	if not gdc.check_folder_existence(REPORT_FOLDER_NAME):
-		gdc.create_folder(REPORT_FOLDER_NAME) # create folder
+		folder_id = gdc.create_folder(REPORT_FOLDER_NAME) # create folder
+		gdc.share_folder_with_gdrive_account(folder_id) # share folder with user's google drive account
 
 
 	SPREADSHEET_TITLE = 'cenario1.test'
@@ -66,7 +85,7 @@ def simulation_test():
 		gdc.move_file_to_folder(spreadsheet_id, folder_id)
 		gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
 		PARAM = CENARIOS[0][0]
-	else:
+	else: # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(len(CENARIOS)):
 			SPREADSHEET_TITLE = 'cenario' + str(i+1) + '.test'
 

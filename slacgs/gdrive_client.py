@@ -27,6 +27,7 @@ class GdriveClient:
 		credentials = service_account.Credentials.from_service_account_file(key_path, scopes=SCOPES)
 		self.drive_service = build('drive', 'v3', credentials=credentials)
 		self.sheets_service = build('sheets', 'v4', credentials=credentials)
+		self.gdrive_account_mail = None
 
 	def get_folder_id_by_name(self, folder_name):
 
@@ -49,6 +50,7 @@ class GdriveClient:
 		}
 
 		spreadsheet = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()
+		print(f"Spreadsheet with path '{self.get_spreadsheet_path(spreadsheet['spreadsheetId'])}' has been created.")
 		return spreadsheet['spreadsheetId']
 
 	def create_folder(self, folder_name, parent_folder_id=None):
@@ -60,6 +62,7 @@ class GdriveClient:
 			folder_metadata['parents'] = [parent_folder_id]
 
 		folder = self.drive_service.files().create(body=folder_metadata, fields='id').execute()
+		print(f"Folder with path '{self.get_folder_path(folder['id'])}' has been created.")
 		return folder['id']
 
 	def move_file_to_folder(self, file_id, folder_id):
@@ -67,6 +70,8 @@ class GdriveClient:
 		previous_parents = ",".join(file.get('parents'))
 		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
 		                                         fields='id, parents').execute()
+		print(f"File with name '{file.get('name')}' has been moved to the folder with path "
+		      f"'{self.get_folder_path(folder_id)}'.")
 
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id):
 		# Retrieve the current parents of the folder
@@ -76,6 +81,8 @@ class GdriveClient:
 		# Move the folder to the new parent folder
 		folder = self.drive_service.files().update(fileId=folder_id, addParents=new_parent_folder_id,
 		                                      removeParents=previous_parents, fields='id, parents').execute()
+		print(f"Folder with name '{folder.get('name')}' has been moved to the folder with name "
+		      f"'{self.drive_service.files().get(fileId=new_parent_folder_id, fields='name').execute().get('name')}'.")
 
 	def check_spreadsheet_existence(self, name):
 		response = self.drive_service.files().list(
@@ -112,5 +119,30 @@ class GdriveClient:
 		if len(folders) > 0:
 			return True
 
+	def get_root_folder_id(self):
+		response = self.drive_service.files().get(fileId='root', fields='id').execute()
+		return response.get('id')
 
+	def get_folder_path(self, folder_id):
+		folder_path = []
+		while folder_id != 'root':
+			folder = self.drive_service.files().get(fileId=folder_id, fields='id, name, parents').execute()
+			folder_name = folder.get('name')
+			folder_path.insert(0, folder_name)
+			parents = folder.get('parents')
+			if parents:
+				folder_id = parents[0]
+			else:
+				break
+		return '/'.join(folder_path)
+
+	def share_folder_with_gdrive_account(self, folder_id):
+		permission = {
+			'type': 'user',
+			'role': 'writer',
+			'emailAddress': self.gdrive_account_mail
+		}
+
+		self.drive_service.permissions().create(fileId=folder_id, body=permission).execute()
+		print(f"Folder with ID '{folder_id}' has been shared with account (email: {self.gdrive_account_mail}).")
 
