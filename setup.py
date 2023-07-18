@@ -10,7 +10,7 @@ setup(
         'matplotlib>=3.3.3',
         'shapely>=2.0.1',
         'ipython>=7.34.0',
-        'scikit-learn>=1.3.0',
+        'scikit-learn>=1.2.2',
         'scipy>=1.10.1',
         'pygsheets>=2.0.6'
     ],
