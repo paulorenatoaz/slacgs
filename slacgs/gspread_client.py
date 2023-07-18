@@ -47,6 +47,7 @@ class GspreadClient:
     :return: None
     :rtype: None
 
+
     """
 
     parameters = ['compare' + str(dims[0]) + '&' + str(dims[1])] + report.sim.model.params

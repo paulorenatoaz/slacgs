@@ -32,6 +32,21 @@ class GdriveClient:
 
 	def get_folder_id_by_name(self, folder_name):
 
+		"""Get the ID of a folder by its name. If no folder with the given name is found, return None.
+
+		:param folder_name: name of the folder.
+		:type folder_name: str
+
+		:returns: ID of the folder with the given name.
+		:rtype: str or None
+
+		:raises ValueError: if folder_name is not a string.
+
+		"""
+
+		if not isinstance(folder_name, str):
+			raise ValueError('folder_name must be a string.')
+
 		response = self.drive_service.files().list(
 			q=f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder'", spaces='drive',
 			fields='files(id)').execute()
@@ -43,6 +58,20 @@ class GdriveClient:
 			return None  # Return None if no folder with the given name is found
 
 	def create_spreadsheet(self, name):
+		"""Create a new spreadsheet with the given name.
+
+		:param name: name of the spreadsheet.
+		:type name: str
+
+		:returns: ID of the created spreadsheet.
+		:rtype: str
+
+		:raises ValueError: if name is not a string.
+
+		"""
+
+		if not isinstance(name, str):
+			raise ValueError('name must be a string.')
 
 		spreadsheet = {
 			'properties': {
@@ -55,6 +84,28 @@ class GdriveClient:
 		return spreadsheet['spreadsheetId']
 
 	def create_folder(self, folder_name, parent_folder_id=None):
+		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID.
+
+		:param folder_name: name of the folder.
+		:type folder_name: str
+
+		:param parent_folder_id: ID of the parent folder.
+		:type parent_folder_id: str
+
+		:returns: ID of the created folder.
+		:rtype: str
+
+		:raises ValueError: if folder_name or parent_folder_id is not a string.
+
+		"""
+
+		if not isinstance(folder_name, str):
+			raise ValueError('folder_name must be a string.')
+
+		if parent_folder_id is not None and not isinstance(parent_folder_id, str):
+			raise ValueError('parent_folder_id must be a string or None.')
+
+
 		folder_metadata = {
 			'name': folder_name,
 			'mimeType': 'application/vnd.google-apps.folder'
@@ -67,6 +118,18 @@ class GdriveClient:
 		return folder['id']
 
 	def move_file_to_folder(self, file_id, folder_id):
+		"""Move a file to a folder.
+
+		:param file_id: ID of the file to be moved.
+		:type file_id: str
+
+		:param folder_id: ID of the folder to which the file will be moved.
+		:type folder_id: str
+
+		:raises ValueError: if file_id or folder_id is not a string.
+
+		"""
+
 		file = self.drive_service.files().get(fileId=file_id, fields='parents').execute()
 		previous_parents = ",".join(file.get('parents'))
 		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
@@ -75,6 +138,25 @@ class GdriveClient:
 		      f"'{self.get_folder_path(folder_id)}'.")
 
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id):
+		"""Move a folder to another folder.
+
+		:param folder_id: ID of the folder to be moved.
+		:type folder_id: str
+
+		:param new_parent_folder_id: ID of the folder to which the folder will be moved.
+		:type new_parent_folder_id: str
+
+		:raises ValueError: if folder_id or new_parent_folder_id is not a string.
+
+		"""
+
+		if not isinstance(folder_id, str):
+			raise ValueError('folder_id must be a string.')
+
+		if not isinstance(new_parent_folder_id, str):
+			raise ValueError('new_parent_folder_id must be a string.')
+
+
 		# Retrieve the current parents of the folder
 		folder = self.drive_service.files().get(fileId=folder_id, fields='parents').execute()
 		previous_parents = ",".join(folder.get('parents'))
@@ -86,6 +168,22 @@ class GdriveClient:
 		      f"'{self.drive_service.files().get(fileId=new_parent_folder_id, fields='name').execute().get('name')}'.")
 
 	def check_spreadsheet_existence(self, name):
+		"""Check if a spreadsheet with the given name exists.
+
+		:param name: name of the spreadsheet.
+		:type name: str
+
+		:returns: True if a spreadsheet with the given name exists, False otherwise.
+		:rtype: bool
+
+		:raises ValueError: if name is not a string.
+
+		"""
+
+		if not isinstance(name, str):
+			raise ValueError('name must be a string.')
+
+
 		response = self.drive_service.files().list(
 			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'", spaces='drive',
 			fields='files(id)').execute()
@@ -97,6 +195,22 @@ class GdriveClient:
 			return False  # No spreadsheet with the specified name exists
 
 	def get_spreadsheet_id_by_name(self, name):
+		"""Get the ID of a spreadsheet with the given name.
+
+		:param name: name of the spreadsheet.
+		:type name: str
+
+		:returns: ID of the spreadsheet with the given name.
+		:rtype: str
+
+		:raises ValueError: if name is not a string.
+
+		"""
+
+		if not isinstance(name, str):
+			raise ValueError('name must be a string.')
+
+
 		response = self.drive_service.files().list(
 			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'",
 			spaces='drive',
@@ -108,10 +222,38 @@ class GdriveClient:
 			return None # No spreadsheet with the specified name exists
 
 	def delete_spreadsheet(self, spreadsheet_id):
+		"""Delete a spreadsheet.
+
+		:param spreadsheet_id: ID of the spreadsheet to be deleted.
+		:type spreadsheet_id: str
+
+		:raises ValueError: if spreadsheet_id is not a string.
+
+		"""
+
+		if not isinstance(spreadsheet_id, str):
+			raise ValueError('spreadsheet_id must be a string.')
+
+
 		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
 		print(f"Spreadsheet with ID '{spreadsheet_id}' has been deleted.")
 
 	def check_folder_existence(self, report_folder_name):
+		"""Check if a folder with the given name exists.
+
+		:param report_folder_name: name of the folder.
+		:type report_folder_name: str
+
+		:returns: True if a folder with the given name exists, False otherwise.
+		:rtype: bool
+
+		:raises ValueError: if report_folder_name is not a string.
+
+		"""
+
+		if not isinstance(report_folder_name, str):
+			raise ValueError('report_folder_name must be a string.')
+
 		response = self.drive_service.files().list(
 			q=f"name='{report_folder_name}' and mimeType='application/vnd.google-apps.folder'", spaces='drive',
 			fields='files(id)').execute()
@@ -121,10 +263,33 @@ class GdriveClient:
 			return True
 
 	def get_root_folder_id(self):
+		"""Get the ID of the root folder.
+
+		:returns: ID of the root folder.
+		:rtype: str
+
+		"""
+
 		response = self.drive_service.files().get(fileId='root', fields='id').execute()
 		return response.get('id')
 
 	def get_folder_path(self, folder_id):
+		"""Get the path of a folder.
+
+		:param folder_id: ID of the folder.
+		:type folder_id: str
+
+		:returns: path of the folder.
+		:rtype: str
+
+		:raises ValueError: if folder_id is not a string.
+
+		"""
+
+		if not isinstance(folder_id, str):
+			raise ValueError('folder_id must be a string.')
+
+
 		folder_path = []
 		while folder_id != 'root':
 			folder = self.drive_service.files().get(fileId=folder_id, fields='id, name, parents').execute()
@@ -138,6 +303,19 @@ class GdriveClient:
 		return '/'.join(folder_path)
 
 	def share_folder_with_gdrive_account(self, folder_id):
+		"""Share a folder with the GDrive account.
+
+		:param folder_id: ID of the folder.
+		:type folder_id: str
+
+		:raises ValueError: if folder_id is not a string.
+
+		"""
+
+		if not isinstance(folder_id, str):
+			raise ValueError('folder_id must be a string.')
+
+
 		permission = {
 			'type': 'user',
 			'role': 'writer',
@@ -148,6 +326,18 @@ class GdriveClient:
 		print(f"Folder with path '{self.get_folder_path(folder_id)}' has been shared with the GDrive account with "
 		      f"email address '{self.gdrive_account_mail}'.")
 
-	def delete_folder(folder_id):
-	    self.drive_service.files().delete(fileId=folder_id).execute()
-	    print(f"Folder with path '{gdc.get_folder_path(folder_id)}' has been deleted.")
+	def delete_folder(self, folder_id):
+		"""Delete a folder.
+
+		:param folder_id: ID of the folder.
+		:type folder_id: str
+
+		:raises ValueError: if folder_id is not a string.
+
+		"""
+
+		if not isinstance(folder_id, str):
+			raise ValueError('folder_id must be a string.')
+
+		self.drive_service.files().delete(fileId=folder_id).execute()
+		print(f"Folder with path '{self.get_folder_path(folder_id)}' has been deleted.")
