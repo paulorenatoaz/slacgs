@@ -145,5 +145,9 @@ class GdriveClient:
 		}
 
 		self.drive_service.permissions().create(fileId=folder_id, body=permission).execute()
-		print(f"Folder with ID '{folder_id}' has been shared with account (email: {self.gdrive_account_mail}).")
+		print(f"Folder with path '{self.get_folder_path(folder_id)}' has been shared with the GDrive account with "
+		      f"email address '{self.gdrive_account_mail}'.")
 
+	def delete_folder(folder_id):
+	    self.drive_service.files().delete(fileId=folder_id).execute()
+	    print(f"Folder with path '{gdc.get_folder_path(folder_id)}' has been deleted.")
