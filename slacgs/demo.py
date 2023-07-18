@@ -58,7 +58,7 @@ def simulation_test():
 		gdc.create_folder(REPORT_FOLDER_NAME) # create folder
 
 	SPREADSHEET_TITLE = 'cenario1.test'
-	## create spreadsheet for the first sinulation if it doesn't exist
+	## create spreadsheet for the first simulation if it doesn't exist
 	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
 		spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
 		folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
@@ -67,7 +67,7 @@ def simulation_test():
 		PARAM = CENARIOS[0][0]
 	else:
 		for i in range(len(CENARIOS)):
-			SPREADSHEET_TITLE = 'cenario' + (i+1) +'.test'
+			SPREADSHEET_TITLE = 'cenario' + str(i+1) + '.test'
 
 			## create spreadsheet if it doesn't exist
 			if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
