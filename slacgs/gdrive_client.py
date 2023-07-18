@@ -83,7 +83,7 @@ class GdriveClient:
 		print(f"Spreadsheet with path '{self.get_spreadsheet_path(spreadsheet['spreadsheetId'])}' has been created.")
 		return spreadsheet['spreadsheetId']
 
-	def get_spreadsheet_path(self, spreadsheet_id):
+	def get_spreadsheet_path_by_id(self, spreadsheet_id):
 		"""Get the path of a spreadsheet by its ID.
 
 		:param spreadsheet_id: ID of the spreadsheet.
@@ -153,7 +153,7 @@ class GdriveClient:
 		previous_parents = ",".join(file.get('parents'))
 		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
 		                                         fields='id, parents').execute()
-		print(f"File with name '{file.get('name')}' has been moved to the folder with path "
+		print(f"File has been moved to the folder with path "
 		      f"'{self.get_folder_path(folder_id)}'.")
 
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id):
@@ -360,3 +360,7 @@ class GdriveClient:
 
 		self.drive_service.files().delete(fileId=folder_id).execute()
 		print(f"Folder with path '{self.get_folder_path(folder_id)}' has been deleted.")
+
+	def delete_file(self, file_id):
+		self.drive_service.files().delete(fileId=file_id).execute()
+		print(f"File with ID '{file_id}' has been deleted.")
