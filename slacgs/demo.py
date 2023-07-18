@@ -91,6 +91,7 @@ def simulation_test():
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
 			for param in CENARIOS[i]:
+				print(gsc.param_not_in_home(param))
 				if gsc.param_not_in_home(param):
 					PARAM = param
 					break

@@ -80,7 +80,7 @@ class GdriveClient:
 		}
 
 		spreadsheet = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()
-		print(f"Spreadsheet with path '{self.get_spreadsheet_path(spreadsheet['spreadsheetId'])}' has been created.")
+		print(f"Spreadsheet with path '{self.get_spreadsheet_path_by_id(spreadsheet['spreadsheetId'])}' has been created.")
 		return spreadsheet['spreadsheetId']
 
 	def get_spreadsheet_path_by_id(self, spreadsheet_id):
