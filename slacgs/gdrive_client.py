@@ -83,6 +83,25 @@ class GdriveClient:
 		print(f"Spreadsheet with path '{self.get_spreadsheet_path(spreadsheet['spreadsheetId'])}' has been created.")
 		return spreadsheet['spreadsheetId']
 
+	def get_spreadsheet_path(self, spreadsheet_id):
+		"""Get the path of a spreadsheet by its ID.
+
+		:param spreadsheet_id: ID of the spreadsheet.
+		:type spreadsheet_id: str
+
+		:returns: path of the spreadsheet with the given ID.
+		:rtype: str
+
+		:raises ValueError: if spreadsheet_id is not a string.
+
+		"""
+
+		if not isinstance(spreadsheet_id, str):
+			raise ValueError('spreadsheet_id must be a string.')
+
+		spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+		return spreadsheet['properties']['title']
+
 	def create_folder(self, folder_name, parent_folder_id=None):
 		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID.
 
