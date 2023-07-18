@@ -1,4 +1,4 @@
-# SLAC.GS
+# SLACGS
 
 A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order to evaluate Trade Off Between Samples and Features sizes in Classification Problems on gaussian Samples.
 

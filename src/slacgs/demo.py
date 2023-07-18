@@ -77,12 +77,15 @@ def simulation_test():
 			gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
 
 			## retrieve the first parameter that is not in the spreadsheet report home
+			PARAM = None
 			for param in CENARIOS[i]:
 				if gsc.param_not_in_home(param):
 					PARAM = param
 					break
 
-
+			## if all parameters are in the spreadsheet report home, then go to the next spreadsheet
+			if PARAM:
+				break
 
 
 	## create model object
