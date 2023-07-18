@@ -1,5 +1,4 @@
 from math import sqrt
-
 from .model import Model
 from .simulator import Simulator
 from .gspread_client import GspreadClient
