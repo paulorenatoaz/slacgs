@@ -31,20 +31,11 @@ for r in range(-8,8):
 ## create list of cenarios
 CENARIOS = [CENARIO1, CENARIO2, CENARIO3, CENARIO4]
 
-try:  # check if running on Google Colab
-	import google.colab
 
-	IN_COLAB = True
-except:
-	IN_COLAB = False
-
-if IN_COLAB:
+if os.name == 'nt':  # check if running on Windows
+	KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.py'
+else:  # running on Linux or Mac
 	KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.py'
-else:
-	if os.name == 'nt':  # check if running on Windows
-		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.py'
-	else:  # running on Linux or Mac
-		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.py'
 
 ## create GdriveClient object
 gdc = GdriveClient(KEY_PATH)
