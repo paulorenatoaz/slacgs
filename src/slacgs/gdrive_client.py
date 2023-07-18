@@ -94,4 +94,14 @@ class GdriveClient:
 		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
 		print(f"Spreadsheet with ID '{spreadsheet_id}' has been deleted.")
 
+	def check_folder_existence(self, report_folder_name):
+		response = self.drive_service.files().list(
+			q=f"name='{report_folder_name}' and mimeType='application/vnd.google-apps.folder'", spaces='drive',
+			fields='files(id)').execute()
+		folders = response.get('files', [])
+
+		if len(folders) > 0:
+			return True
+
+
 

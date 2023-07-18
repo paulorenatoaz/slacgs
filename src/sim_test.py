@@ -1,4 +1,4 @@
-from slacgs.model import Model
+from slacgs import Model
 from slacgs import Simulator
 from slacgs import GspreadClient
 from slacgs import GdriveClient

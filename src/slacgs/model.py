@@ -3,19 +3,10 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.patches import Ellipse
 
-# Check if the code is running in a notebook environment.
-try:
-	shell = IPython.get_ipython().__class__.__name__
-	if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
-		IS_NOTEBOOK = True
-	else:
-		IS_NOTEBOOK = False
-except NameError:
-	IS_NOTEBOOK = False
 
-if not IS_NOTEBOOK:
-	from .enumtypes import DictionaryType
+from .enumtypes import DictionaryType
 
+# from enumtypes import DictionaryType
 
 class Model:
 	"""Represents a Linear Classifier Loss Analysis Model composed by:

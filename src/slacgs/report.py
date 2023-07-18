@@ -6,19 +6,9 @@ import numpy as np
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
 
+from .enumtypes import LossType
 
-# Check if the code is running in a notebook environment.
-try:
-  shell = IPython.get_ipython().__class__.__name__
-  if shell == 'ZMQInteractiveShell' or shell == 'google.colab.shell' or shell == 'TerminalInteractiveShell':
-    IS_NOTEBOOK = True
-  else:
-    IS_NOTEBOOK = False
-except NameError:
-  IS_NOTEBOOK = False
-
-if not IS_NOTEBOOK:
-  from .enumtypes import LossType
+# from enumtypes import LossType
 
 
 class Report:

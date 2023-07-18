@@ -5,38 +5,16 @@ from matplotlib import pyplot as plt
 from sklearn import svm
 import os
 from scipy.stats import multivariate_normal, norm
-import IPython
 from IPython.display import clear_output
 
+from .enumtypes import LossType
+from .model import Model
+from .report import Report
+from .utils import *
 
-# Check if the code is running in a notebook environment.
-def is_jupyter_notebook():
-  """Check if the environment is a Jupyter notebook."""
-  try:
-    shell = get_ipython().__class__.__name__
-    if shell == 'ZMQInteractiveShell':
-      return True
-    else:
-      return False
-  except NameError:
-    return False
-
-
-def is_colab_notebook():
-  """Check if the environment is a Google Colab notebook."""
-  try:
-    import google.colab
-    return True
-  except ImportError:
-    return False
-
-
-IS_NOTEBOOK = is_jupyter_notebook() or is_colab_notebook()
-
-if not IS_NOTEBOOK:
-  from .enumtypes import LossType
-  from .model import Model
-  from .report import Report
+# from enumtypes import LossType
+# from model import Model
+# from report import Report
 
 
 def cls():
@@ -94,8 +72,7 @@ class Simulator:
 
 
     :Example:
-    >>> if not IS_NOTEBOOK :
-    ...   from model import Model
+    >>> from model import Model
 
     >>> param = [1,1,2,0,0,0]
     >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
@@ -212,8 +189,7 @@ class Simulator:
     self.report = Report(self)
     self.time_spent_test = 0
     self.verbose = verbose
-
-    self.is_notebook = IS_NOTEBOOK
+    self.is_notebook = is_notebook()
 
 
 
@@ -231,13 +207,13 @@ class Simulator:
     """
 
     # terminal output setting
-
     progress_stream = '----------------------------------------------------------------------------------------------------'
     n_index = (self.model.N.index(n)+1)
     N_size = len(self.model.N)
     p = int(n_index*100/N_size)
+
     if self.is_notebook:
-      clear_output(wait=True)
+      clear_output()
     else:
       cls()
 
