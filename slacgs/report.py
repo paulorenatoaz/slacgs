@@ -311,12 +311,12 @@ class Report:
     ...   IN_COLAB = False
 
     >>> if IN_COLAB:
-    ...  key_path = '/content/key.json'
+    ...  key_path = '/content/key.py'
     ... else:
     ...   if os.name == 'nt':
-    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.json'
+    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.py'
     ...   else:
-    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.json'
+    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
 
     >>> ## define spreadsheet title
     >>> spreadsheet_title = 'doctest'

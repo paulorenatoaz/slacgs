@@ -13,12 +13,12 @@ except:
 	IN_COLAB = False
 
 if IN_COLAB:
-	KEY_PATH = '/content/key.json'
+	KEY_PATH = '/content/key.py'
 else:
 	if os.name == 'nt':  # check if running on Windows
-		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.json'
+		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '\\key.py'
 	else:  # running on Linux or Mac
-		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.json'
+		KEY_PATH = os.path.dirname(os.path.abspath(__file__)) + '/key.py'
 		
 ## define spreadsheet title and folder name
 REPORT_FOLDER_NAME = 'slacgs.test'  # Replace with your desired folder name
