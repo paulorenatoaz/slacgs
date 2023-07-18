@@ -21,6 +21,7 @@ class GdriveClient:
 			raise ValueError('key_path must be a string.')
 
 		if not os.path.exists(key_path):
+			print('key_path: ',key_path)
 			raise FileNotFoundError('key_path is not a valid path.')
 
 		SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
