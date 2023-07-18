@@ -68,6 +68,15 @@ class GdriveClient:
 		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
 		                                         fields='id, parents').execute()
 
+	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id):
+		# Retrieve the current parents of the folder
+		folder = self.drive_service.files().get(fileId=folder_id, fields='parents').execute()
+		previous_parents = ",".join(folder.get('parents'))
+
+		# Move the folder to the new parent folder
+		folder = self.drive_service.files().update(fileId=folder_id, addParents=new_parent_folder_id,
+		                                      removeParents=previous_parents, fields='id, parents').execute()
+
 	def check_spreadsheet_existence(self, name):
 		response = self.drive_service.files().list(
 			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'", spaces='drive',

@@ -57,6 +57,7 @@ def simulation_test():
 	if not gdc.check_folder_existence(REPORT_FOLDER_NAME):
 		gdc.create_folder(REPORT_FOLDER_NAME) # create folder
 
+
 	SPREADSHEET_TITLE = 'cenario1.test'
 	## create spreadsheet for the first simulation if it doesn't exist
 	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
