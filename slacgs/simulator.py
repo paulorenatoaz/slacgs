@@ -72,44 +72,44 @@ class Simulator:
 
 
     :Example:
-    >>> from model import Model
+      >>> from slacgs import Model
 
-    >>> param = [1,1,2,0,0,0]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> param = [1,1,2,0,0,0]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    >>> param = [1,1,2,-0.1,0,0]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> param = [1,1,2,-0.1,0,0]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    >>> param = [1,1,2,0,-0.4,-0.4]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> param = [1,1,2,0,-0.4,-0.4]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    >>> param = [1,1,2,-0.1,-0.4,-0.4]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> param = [1,1,2,-0.1,-0.4,-0.4]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    >>> param = [1,2,-0.1]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> param = [1,2,-0.1]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    :Example:
-    >>> param = [1,1,1,2,0,0,0,0,0,0]
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-    >>> slacgs = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      :Example:
+      >>> param = [1,1,1,2,0,0,0,0,0,0]
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> slacgs = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
     """
 

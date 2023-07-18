@@ -1,11 +1,9 @@
 import itertools
-
 import IPython
 import googleapiclient
 import numpy as np
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
-
 from .enumtypes import LossType
 
 # from enumtypes import LossType
@@ -283,50 +281,40 @@ class Report:
     :return: None
     :rtype: None
 
+    :Example:
+      >>> import os
+      >>> from slacgs import Model
+      >>> from slacgs import Simulator
+      >>> from slacgs import GspreadClient
 
-    >>> import os
-    >>> if not IS_NOTEBOOK:
-    ...   from model import Model
-    ...   from simulator import Simulator
-    ...   from gspread_client import GspreadClient
+      >>> ## run simulation for parameter
+      >>> param = [1, 1, 2, 0, 0, 0]
 
-    >>> ## run simulation for parameter
-    >>> param = [1, 1, 2, 0, 0, 0]
+      >>> ## create model object
+      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
 
-    >>> ## create model object
-    >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+      >>> ## create simulator object
+      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
 
-    >>> ## create simulator object
-    >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> ## run simulation
+      >>> slacgs.run() # doctest: +ELLIPSIS
+      Execution time: ... h
 
-    >>> ## run simulation
-    >>> slacgs.run() # doctest: +ELLIPSIS
-    Execution time: ... h
+      >>> ## define path to key file
+      >>> if os.name == 'nt':
+      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.py'
+      ... else:
+      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
 
-    >>> ## define path to Key file for accessing Google Sheets API via Service Account Credentials
-    >>> try:
-    ...   import google.colab
-    ...   IN_COLAB = True
-    ... except:
-    ...   IN_COLAB = False
-
-    >>> if IN_COLAB:
-    ...  key_path = '/content/key.py'
-    ... else:
-    ...   if os.name == 'nt':
-    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.py'
-    ...   else:
-    ...     key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
-
-    >>> ## define spreadsheet title
-    >>> spreadsheet_title = 'doctest'
-    >>> ## create GspreadClient object
-    >>> gc = GspreadClient(key_path, spreadsheet_title)
-    >>> ## write simulation results to spreadsheet
-    >>> slacgs.report.write_to_spreadsheet(gc) # doctest: +ELLIPSIS
-    sheet is over! id:  ...  title: [TEST]['loss', 1, 1, 2, 0, 0, 0][...]
-    sheet is over! id:  ...  title: [TEST]['compare2&3', 1, 1, 2, 0, 0, 0][...]
-    sheet is over! id:  0  title: home
+      >>> ## define spreadsheet title
+      >>> spreadsheet_title = 'doctest'
+      >>> ## create GspreadClient object
+      >>> gc = GspreadClient(key_path, spreadsheet_title)
+      >>> ## write simulation results to spreadsheet
+      >>> slacgs.report.write_to_spreadsheet(gc) # doctest: +ELLIPSIS
+      sheet is over! id:  ...  title: [TEST]['loss', 1, 1, 2, 0, 0, 0][...]
+      sheet is over! id:  ...  title: [TEST]['compare2&3', 1, 1, 2, 0, 0, 0][...]
+      sheet is over! id:  0  title: home
 
     """
 

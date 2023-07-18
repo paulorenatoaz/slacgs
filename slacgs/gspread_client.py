@@ -678,7 +678,7 @@ class GspreadClient:
     y_column += len(dims_sim)
     y_data_gen = [((3, y_column + i), (3 + table_len, y_column + i )) for i in range(2)]
     y_column += 2
-    y_data = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i )) for i in range( len(loss_types) )]
+    y_data = [((3, y_column + i), (3 + table_len, y_column + i )) for i in range( len(loss_types) )]
     chart_title = '% consumption / loss_type (h)' + ' |params=' + params_title + '|' + param_values_title +' vs ' + param
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 3*chart_height, 21 + chart_width*6))
 
@@ -692,7 +692,7 @@ class GspreadClient:
     #% consumption x dim (h) vs param
     x_data = ((3, 2 + cenario),(3 + table_len, 2 + cenario))
     y_column += N_count_reported + 1
-    y_data = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i )) for i in range( len(dims_sim) )]
+    y_data = [((3, y_column + i), (3 + table_len, y_column + i )) for i in range( len(dims_sim) )]
     chart_title = '% consumption / dim (h)' + ' |params=' + params_title + '|' + param_values_title +' vs ' + param
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 5*chart_height , 21 + chart_width*6))
 

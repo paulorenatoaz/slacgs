@@ -6,19 +6,20 @@ from matplotlib.patches import Ellipse
 
 from .enumtypes import DictionaryType
 
-# from enumtypes import DictionaryType
+from enumtypes import DictionaryType
 
 class Model:
 	"""Represents a Linear Classifier Loss Analysis Model composed by:
 
 	• A set of Dataset cardinalities N = {n0...ni} , ni ∈ {2*k | k ∈ int*}, i.e., the cardinality on each Dataset to be analysed.
-	• Each feature discrimination power, either alone or in the presence of the others features.
+	• Each feature discrimination power, either alone or in the presence of the others features. This is represented by the Sigmas and Rhos parameters.
 	• The problem dimensionality "dim", i.e., the number of available features.
 	• Dictionary "dictionary", from which we will pick our classifier
-
 	"""
 
-	def __init__(self, params, max_n=int(2 ** 13), N=[2 ** i for i in range(1, 11)], dictionary=('LINEAR',)):
+
+
+	def __init__(self, params, max_n=int(2 ** 13), N=(2 ** i for i in range(1, 11)), dictionary=('LINEAR',)):
 		"""Constructor for Model class objects.
 
 		:param max_n:  last Dataset cardinality, assuming N = [2,...,max_n]
@@ -26,9 +27,9 @@ class Model:
 		:param params: list containning Sigmas and Rhos
 		:type params: list  of numbers (floats or ints) or tuple of numbers (floats or ints)
 		:param N: set of Dataset cardinalities N = {n0...ni} , ni ∈ {2*k | k ∈ int*}
-		:type N: list of ints
+		:type N: list[int] or tuple[int]
 		:param dictionary: A dictionary (also known as search space bias) is a family of classifiers (e.g., linear classifiers, quadratic classifiers,...)
-		:type dictionary: list of strings or tuple of strings
+		:type dictionary: list[str] or tuple[str]
 		:raise ValueError:  if length of params is less than 3,
 							if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...),
 							if max_n is not a power of 2,
@@ -47,24 +48,30 @@ class Model:
 							if dictionary is not a list of strings;
 
 		:Example:
-		>>> model = Model([1, 1, 2, 0, 0, 0])
-		>>> model = Model([1, 1, 2, 0.5, 0, 0])
-		>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
-		>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
-		>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
-		>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
-		>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
-		>>> model = Model([1, 2, -0.1])
+			>>> model = Model([1, 1, 2, 0, 0, 0])
+			>>> model = Model([1, 1, 2, 0.5, 0, 0])
+			>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
+			>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
+			>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
+			>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
+			>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
+			>>> model = Model([1, 2, -0.1])
+
+
 
 		"""
 		if not isinstance(params, list):
 			raise TypeError('params must be a list of numbers (floats or ints)')
+
 		if not isinstance(max_n, int):
 			raise TypeError('max_n must be an int')
-		if not isinstance(N, list):
-			raise TypeError('N must be a list of ints')
+
+		if not isinstance(N, list) and not isinstance(N, tuple):
+			raise TypeError('N must be a list or tuple of ints')
+
 		if not isinstance(dictionary, list) and not isinstance(dictionary, tuple):
 			raise TypeError('dictionary must be a list or tuple of strings')
+
 		if len(params) < 3:
 			raise ValueError('Check parameters list lenght, this experiment requires at least 3 parameters (case dim = 2)')
 
@@ -114,7 +121,7 @@ class Model:
 
 		self.rho_matrix = [[None] * (i + 1) + self.rho[aux1[i]:aux2[i]] for i in range(len(self.sigma) - 1)]
 		self.params = params
-		self.N = N
+		self.N = list(N)
 		self.max_n = max_n
 
 		self.cov = [[self.sigma[p] ** 2 if p == q else self.sigma[p] * self.sigma[q] * self.rho_matrix[p][q] if q > p else
@@ -140,6 +147,7 @@ class Model:
 		:raise ValueError:  if cov is not a 3x3 matrix;
 							if cov is not a positive definite matrix;
 							if cov is not a symmetric matrix;
+
 
 		:Example:
 
