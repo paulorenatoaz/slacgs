@@ -69,7 +69,7 @@ def simulation_test():
 		gdc.gdrive_account_mail = user_email
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'slacgs.demo.' + user_email
+	REPORT_FOLDER_NAME = 'slacgs.demo.' + gdc.gdrive_account_mail
 
 	## create folder if it doesn't exist
 	if not gdc.check_folder_existence(REPORT_FOLDER_NAME):
