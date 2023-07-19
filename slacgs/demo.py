@@ -283,7 +283,7 @@ def simulation(start_cenario=1):
 		folder_id = gdc.create_folder(REPORT_FOLDER_NAME)  # create folder
 		gdc.share_folder_with_gdrive_account(folder_id)  # share folder with user's google drive account
 
-	SPREADSHEET_TITLE = 'cenario1.test'
+	SPREADSHEET_TITLE = 'cenario1'
 	## create spreadsheet for the first simulation if it doesn't exist
 	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
 		spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
@@ -293,7 +293,7 @@ def simulation(start_cenario=1):
 		PARAM = CENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_cenario - 1, len(CENARIOS)):
-			SPREADSHEET_TITLE = 'cenario' + str(i + 1) + '.test'
+			SPREADSHEET_TITLE = 'cenario' + str(i + 1)
 
 			## create spreadsheet if it doesn't exist
 			if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
