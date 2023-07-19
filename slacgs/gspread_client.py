@@ -422,6 +422,7 @@ class GspreadClient:
 
     table_params = ws.get_values((2,1),(ws.rows,len(report.sim.model.params)),value_render='FORMULA')
 
+    url_compare = url_loss = []
     for ws_aux_index in range(6):
       if(report.sim.iters_per_step*report.sim.max_steps<1000):
         sheet_title_aux_1 = '[TEST]' + str(parameters_1) if not ws_aux_index else '[TEST]' + str(parameters_1) + '[' + str(ws_aux_index) + ']'
