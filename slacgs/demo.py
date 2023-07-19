@@ -42,27 +42,27 @@ else:  # running on Linux or Mac
 ## create GdriveClient object
 gdc = GdriveClient(KEY_PATH)
 
-def experiment_test(start_param_percentile=0):
+def experiment_test(start_cenario=1):
 	""" run the experiment test for the simulator and return 0 if all parameters have been simulated
 
-	:param start_param_percentile: percentile of the parameter list to start the experiment test
-	:type start_param_percentile: float
+	:param start_cenario: cenario to start the experiment test
+	:type start_cenario: int
+
 	:returns: 0 if all parameters have been simulated
 	:rtype: int
 
-	:raises ValueError: if start_param_percentile is not between 0 and 1
-	:raises TypeError: if start_param_percentile is not a float
+	:raises ValueError: if start_cenario is not between 1 and 4
+	:raises TypeError: if start_cenario is not an int
 
 	"""
 
-	if not isinstance(start_param_percentile, float):
-		raise TypeError("start_param_percentile must be a float")
+	if not isinstance(start_cenario, int):
+		raise TypeError("start_cenario must be an int")
 
-	if not 0 <= start_param_percentile <= 1:
-		raise ValueError("start_param_percentile must be between 0 and 1")
+	if start_cenario < 1 or start_cenario > 4:
+		raise ValueError("start_cenario must be between 1 and 4")
 
-
-	while simulation_test(start_param_percentile):
+	while simulation_test(start_cenario):
 		continue
 
 	print("All parameters have been simulated. Please check your google drive section: 'Shared with me' for results.")
@@ -113,24 +113,24 @@ def doctest_next_parameter():
 
 
 
-def simulation_test(start_param_percentile=0):
+def simulation_test(start_cenario=1):
 	""" run the simulation test for the simulator and return True if there are still parameters to be simulated and False otherwise
 
-	:param start_param_percentile: percentile of the parameter list to start the simulation test
-	:type start_param_percentile: float
+	:param start_cenario: cenario to start the simulation test
+	:type start_cenario: int
 	:returns: True if there are still parameters to be simulated and False otherwise
 	:rtype: bool
 
-	:raises ValueError: if start_param_percentile is not between 0 and 1
-	:raises TypeError: if start_param_percentile is not a float
+	:raises ValueError: if start_cenario is not between 1 and 4
+	:raises TypeError: if start_cenario is not an int
 
 	"""
 
-	if not isinstance(start_param_percentile, float):
-		raise TypeError("start_param_percentile must be a float")
+	if not isinstance(start_cenario, int):
+		raise TypeError("start_cenario must be an int")
 
-	if not 0 <= start_param_percentile <= 1:
-		raise ValueError("start_param_percentile must be between 0 and 1")
+	if not 1 <= start_cenario <= 4:
+		raise ValueError("start_cenario must be between 1 and 4")
 
 
 	## define path to Key file for accessing Google Sheets API via Service Account Credentials
@@ -169,21 +169,7 @@ def simulation_test(start_param_percentile=0):
 		gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
 		PARAM = CENARIOS[0][0]
 	else: # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
-
-		total_param_index = sum([len(CENARIOS[i]) - 1 for i in len(CENARIOS)]) + len(CENARIOS) - 1
-		start_param_index = int(total_param_index * start_param_percentile)
-
-		floor = 0
-		for i in range(len(CENARIOS)):
-			for j in range(len(CENARIOS[i])):
-				if (i+j) < start_param_index:
-					continue
-				else:
-					start_i = i
-					start_j = j
-					break
-
-		for i in range(start_i,len(CENARIOS)):
+		for i in range(start_cenario-1,len(CENARIOS)):
 			SPREADSHEET_TITLE = 'cenario' + str(i+1) + '.test'
 
 			## create spreadsheet if it doesn't exist
@@ -196,7 +182,7 @@ def simulation_test(start_param_percentile=0):
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
-			for j in range(start_j, CENARIOS[i]):
+			for j in range(CENARIOS[i]):
 				param = CENARIOS[i][j]
 				if gsc.param_not_in_home(param):
 					PARAM = param
