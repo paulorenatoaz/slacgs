@@ -692,7 +692,10 @@ class Simulator:
               break
 
         ## compute time spent for each cardinality n
-        self.report.time_spent['n'][int(math.log(n,2)-1)] = self.report.time_spent['total'] - sum(self.report.time_spent['n'][:int(math.log(n,2)-1)])
+        try:
+          self.report.time_spent['n'][int(math.log(n,2)-1)] = self.report.time_spent['total'] - sum(self.report.time_spent['n'][:int(math.log(n,2)-1)])
+        except IndexError:
+          self.report.time_spent['n'].append(self.report.time_spent['total'] - sum(self.report.time_spent['n']))
 
         ## report loss and iter number for each dim and loss type
         for d in self.dims:
