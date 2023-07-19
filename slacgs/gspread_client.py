@@ -594,8 +594,9 @@ class GspreadClient:
 
     params_title = str(params[:param_index] + [param] + params[param_index + 1:]) if cenario < 3 else str(params[:param_index] + [param[:4]] + [param[5:]])
     param_values_title = str(param_values_min) + '<=' + str(param) + '<=' + str(param_values_max)
+
     #log(N*) for each loss_type
-    columns = [((3, len(sigma) + len(rho) + 5 + i),(4 + table_len,len(sigma) + len(rho) + 5 + i)) for i in range(len(loss_types_n_star))]
+    columns = [((3, len(sigma) + len(rho) + len(indicators) + 1 + i),(4 + table_len,len(sigma) + len(rho) + len(indicators) + 1 + i)) for i in range(len(loss_types_n_star))]
 
     #log(N*) vs d_i/d_(i+1)
     ws.add_chart(((3,len(sigma) + len(rho) + 4),(4 + table_len,len(sigma) + len(rho)  + 4)), [columns[0]], 'log2(N*)|params=' + params_title + '|' + param_values_title +' vs ' + '(d_'+  str(dims[0]) + '/' + 'd_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table)  + 1 ,1))
