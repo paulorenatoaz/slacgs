@@ -227,7 +227,7 @@ def simulation_test(start_cenario=1):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model)
+	slacgs = Simulator(model, model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024)
 
 	## run simulation
 	slacgs.run()
@@ -323,7 +323,7 @@ def simulation(start_cenario=1):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024)
+	slacgs = Simulator(model)
 
 	## run simulation
 	slacgs.run()
