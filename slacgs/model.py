@@ -19,7 +19,7 @@ class Model:
 
 
 
-	def __init__(self, params, max_n=int(2 ** 13), N=(2 ** i for i in range(1, 11)), dictionary=('LINEAR',)):
+	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]), dictionary=('LINEAR',)):
 		"""Constructor for Model class objects.
 
 		:param max_n:  last Dataset cardinality, assuming N = [2,...,max_n]
@@ -113,8 +113,7 @@ class Model:
 			aux1.append(summ)
 
 		summ = len(self.sigma) - 1
-		aux2 = []
-		aux2.append(summ)
+		aux2 = [summ]
 		for i in range(1, len(self.sigma) - 1):
 			summ += len(self.sigma) - (i + 1)
 			aux2.append(summ)

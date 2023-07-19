@@ -148,14 +148,15 @@ class GdriveClient:
 		:raises ValueError: if file_id or folder_id is not a string.
 
 		"""
+		file_old_path = self.get_spreadsheet_path_by_id(file_id)
 
 		file = self.drive_service.files().get(fileId=file_id, fields='parents').execute()
 		previous_parents = ",".join(file.get('parents'))
-		file = self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
-		                                         fields='id, parents').execute()
-		print(f"File has been moved to the folder with path "
-		      f"'{self.get_folder_path(folder_id)}'.")
 
+		self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
+		                                         fields='id, parents').execute()
+
+		print(f"Spreadsheet with path '{file_old_path}' has been moved to the folder with path '{self.get_folder_path(folder_id)}'.")
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id):
 		"""Move a folder to another folder.
 
@@ -253,9 +254,10 @@ class GdriveClient:
 		if not isinstance(spreadsheet_id, str):
 			raise ValueError('spreadsheet_id must be a string.')
 
+		path = self.get_spreadsheet_path(spreadsheet_id)
 
 		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
-		print(f"Spreadsheet with ID '{spreadsheet_id}' has been deleted.")
+		print(f"Spreadsheet with path '{path}' has been deleted.")
 
 	def check_folder_existence(self, report_folder_name):
 		"""Check if a folder with the given name exists.
@@ -354,12 +356,12 @@ class GdriveClient:
 		:raises ValueError: if folder_id is not a string.
 
 		"""
-
+		path = self.get_folder_path(folder_id)
 		if not isinstance(folder_id, str):
 			raise ValueError('folder_id must be a string.')
 
 		self.drive_service.files().delete(fileId=folder_id).execute()
-		print(f"Folder with path '{self.get_folder_path(folder_id)}' has been deleted.")
+		print(f"Folder with path '{path}' has been deleted.")
 
 	def delete_file(self, file_id):
 		self.drive_service.files().delete(fileId=file_id).execute()

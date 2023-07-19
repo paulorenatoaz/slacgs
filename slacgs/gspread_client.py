@@ -421,9 +421,8 @@ class GspreadClient:
     sheet_title_aux_1 = sheet_title_aux_2 = ''
 
     table_params = ws.get_values((2,1),(ws.rows,len(report.sim.model.params)),value_render='FORMULA')
-    ws_aux_index = 0
 
-    while True:
+    for ws_aux_index in range(6):
       if(report.sim.iters_per_step*report.sim.max_steps<1000):
         sheet_title_aux_1 = '[TEST]' + str(parameters_1) if not ws_aux_index else '[TEST]' + str(parameters_1) + '[' + str(ws_aux_index) + ']'
         sheet_title_aux_2 = '[TEST]' + str(parameters_2) if not ws_aux_index else '[TEST]' + str(parameters_2) + '[' + str(ws_aux_index) + ']'
@@ -434,21 +433,18 @@ class GspreadClient:
         ws_aux_1 = sh.worksheet_by_title(sheet_title_aux_1)
         ws_aux_2 = sh.worksheet_by_title(sheet_title_aux_2)
       except pygsheets.exceptions.WorksheetNotFound:
-        ws_aux_index -= 1
-        if(report.sim.iters_per_step*report.sim.max_steps<1000):
-          sheet_title_aux_1 = '[TEST]' + str(parameters_1) if not ws_aux_index else '[TEST]' + str(parameters_1) + '[' + str(ws_aux_index) + ']'
-          sheet_title_aux_2 = '[TEST]' + str(parameters_2) if not ws_aux_index else '[TEST]' + str(parameters_2) + '[' + str(ws_aux_index) + ']'
-        else:
-          sheet_title_aux_1 = str(parameters_1) if not ws_aux_index else str(parameters_1) + '[' + str(ws_aux_index) + ']'
-          sheet_title_aux_2 = str(parameters_2) if not ws_aux_index else str(parameters_2) + '[' + str(ws_aux_index) + ']'
-        break
+        continue
       else:
-        ws_aux_index += 1
         url_compare = ws_aux_1.url
         url_loss = ws_aux_2.url
+        break
+
+    if not url_compare or not url_loss:
+      url_compare = '<link not found>'
+      url_loss = '<link not found>'
 
 
-    indicators = [loss_bayes['diff'], loss_bayes['ratio'],  d['diff'], d['ratio']]
+    indicators = [loss_bayes['diff'], loss_bayes['ratio'],  d['diff'], d['ratio'], d[dims[0]],  loss_bayes[dims[0]], d[dims[1]], loss_bayes[dims[1]]]
 
     links = ['=HYPERLINK( "' + url_compare + '"; "'+sheet_title_aux_1+'" )', '=HYPERLINK( "' + url_loss + '"; "'+sheet_title_aux_2+'" )']
 
@@ -503,7 +499,7 @@ class GspreadClient:
       param_value = str(params[param_index]) if cenario == 2 else '0'
       loss_N_0 = [['L|' + str(dims[0]) + 'feat| ' + param + '=' + param_value] + loss_N_0[i*(N_count_reported+1):(i+1)*(N_count_reported+1)] for i in range(len(loss_types))]
       loss_N_0 = [loss_N_0[i][j] for i in range(len(loss_N_0)) for j in range(len(loss_N_0[i]))]
-      report_row_minor_dim = sigma[:2] + [''] + rho[:1] + ['']*2  + ['']*4 + ['']*len(loss_types_n_star) + loss_N_0 + ['']*2
+      report_row_minor_dim = sigma[:2] + [''] + rho[:1] + ['']*2  + ['']*len(indicators) + ['']*len(loss_types_n_star) + loss_N_0 + ['']*2
       table.append(report_row_minor_dim)
 
       table.append(report_row)
@@ -553,13 +549,14 @@ class GspreadClient:
       rho_title = ['ρ_' + str(i+1) + str(j+1)   for i in range(dims[-1]) for j in range(i+1,dims[-1])]
       br_title = ['BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1]), 'BR_' + str(dims[0]) + '/' + 'BR_' + str(dims[1])]
       d_title = ['d_' + str(dims[0]) + '-' + 'd_' + str(dims[1]), 'd_' + str(dims[0]) + '/' + 'd_' + str(dims[1])]
+      single_br_d_title = ['d_' + str(dims[0]) , 'BR_' + str(dims[0]) , 'd_' + str(dims[1]), 'BR_' + str(dims[1])]
 
       n_star_title = [ 'log2(N*) ' + str(loss_type) for loss_type  in loss_types_n_star]
-      title = sigma_title + rho_title + br_title + d_title + n_star_title
+      title = sigma_title + rho_title + br_title + d_title + single_br_d_title + n_star_title
 
       L_title_0_aux = [[loss_type + ' Loss'] + [None]*(N_count_reported+1)  for loss_type in loss_types]
       L_title_0_aux = [L_title_0_aux[i][j] for i in range(len(L_title_0_aux)) for j in range(len(L_title_0_aux[i]))]
-      L_title_0 = [None]*len(title) + L_title_0_aux
+      L_title_0 = ['']*len(title) + L_title_0_aux
       L_title_1 = ['']*len(title) + ['n='+str(2**(i)) if i > 0 and i < (N_count_reported+1) else None if i == 0 else 'min(L)' for i in range(N_count_reported + 2)]*len(loss_types) + ['time consumption (h)', ''] + ['']*(len(loss_types)+1+len(dims_sim)+1+N_count_reported) + ['% consumption'] + ['']*(2+len(loss_types)+1+len(dims_sim)+1+N_count_reported+1) + ['% iter'] + ['']*(len(loss_types)+len(dims_sim)+N_count_reported-1)
       L_title_2 = ['L|' + str(dims[0]) +  'feat|n='+str(2**(i)) if i > 0 and i < (N_count_reported+1) else None if i == 0 else 'min(L)| ' +str(dims[0])+ 'feat' for i in range(N_count_reported + 2)]*len(loss_types)
 
@@ -573,7 +570,7 @@ class GspreadClient:
       param_value = str(params[param_index]) if cenario == 2 else '0'
       loss_N_0 = [['L|' + str(dims[0]) + 'feat| ' + param + '=' + param_value] + loss_N_0[i*(N_count_reported+1):(i+1)*(N_count_reported+1)] for i in range(len(loss_types))]
       loss_N_0 = [loss_N_0[i][j] for i in range(len(loss_N_0)) for j in range(len(loss_N_0[i]))]
-      report_row_minor_dim = sigma[:2] + [''] + rho[:1] + ['']*2  + ['']*4 + ['']*len(loss_types_n_star) + loss_N_0 + ['']*4
+      report_row_minor_dim = sigma[:2] + [''] + rho[:1] + ['']*2  + ['']*len(indicators) + ['']*len(loss_types_n_star) + loss_N_0 + ['']*4
       title = pre_title + [title]
 
       title_N = ['']*(len(params) + len(indicators) + len(loss_types_n_star) ) + ['L|' + str(dims[1]) +  'feat|n='+str(2**(i)) if i > 0 and i < (N_count_reported+1) else '' if i == 0 else  'min(L)| ' +str(dims[1])+ 'feat' for i in range(N_count_reported + 2)]*len(loss_types) + ['']*2
@@ -618,6 +615,12 @@ class GspreadClient:
     #d_i/d_i+1 vs BR_i/BR_i+1
     ws.add_chart(((3,len(sigma) + len(rho) + 3),(4 + table_len,len(sigma) + len(rho)  + 3)), [((3,len(sigma) + len(rho) + 1),(4 + table_len,len(sigma) + len(rho)  + 1))], '(BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1]) + ')' + ' vs ' + '(d_'+  str(dims[0]) + '-' + 'd_' + str(dims[1]) + ')' +' |params=' + params_title + '|' + param_values_title , chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 4*chart_height,1))
     ws.add_chart(((3,len(sigma) + len(rho) + 4),(4 + table_len,len(sigma) + len(rho)  + 4)), [((3,len(sigma) + len(rho) + 2),(4 + table_len,len(sigma) + len(rho)  + 2))], '(BR_' + str(dims[0]) + '/' + 'BR_' + str(dims[1]) + ')' +  'vs ' + '(d_'+  str(dims[0]) + '/' + 'd_' + str(dims[1]) + ')' +' |params=' + params_title + '|' + param_values_title, chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 4*chart_height + 1,13))
+
+    # BR_i vs d_i
+    ws.add_chart(((3,len(sigma) + len(rho) + 5),(4 + table_len,len(sigma) + len(rho)  + 5)), [((3,len(sigma) + len(rho) + 6),(4 + table_len,len(sigma) + len(rho)  + 6))], 'BR_' + str(dims[0]) + ' vs ' + 'd_'+  str(dims[0]) + ' |params=' + params_title + '|' + param_values_title, chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 5*chart_height,1))
+
+    # BR_i+1 vs d_i+1
+    ws.add_chart(((3,len(sigma) + len(rho) + 7),(4 + table_len,len(sigma) + len(rho)  + 7)), [((3,len(sigma) + len(rho) + 8),(4 + table_len,len(sigma) + len(rho)  + 8))], 'BR_' + str(dims[1]) + ' vs ' + 'd_'+  str(dims[1]) + ' |params=' + params_title + '|' + param_values_title, chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 5*chart_height,13))
 
     # for i in range(len(loss_types)):
     #   for j in range(N_count_reported + 1):
@@ -760,8 +763,6 @@ class GspreadClient:
     chart_title = '% iter / slacgs' + ' |params=' + params_title + '|' + param_values_title +' vs dim'
     ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE, anchor_cell=(1 + len(table) + 1 + 2*chart_height, 21 + chart_width*8))
 
-
-
     charts = ws.get_charts()
     for i in range(len(charts)) :
         spec = charts[i].get_json()
@@ -778,11 +779,10 @@ class GspreadClient:
 
     print('sheet is over! id: ', ws.index, ' title:', ws.title)
 
+
   def param_not_in_home(self, param):
     sh = self.sh
     ws_home = sh.worksheet(value=0)
     already_done = ws_home.get_values((4, 1), (ws_home.rows, 6), value_render='FORMULA')
 
-
-
-    return (param in already_done)
+    return not (param in already_done)

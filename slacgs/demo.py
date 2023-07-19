@@ -1,3 +1,5 @@
+import contextlib
+import io
 from math import sqrt
 from .model import Model
 from .simulator import Simulator
@@ -39,6 +41,44 @@ else:  # running on Linux or Mac
 
 ## create GdriveClient object
 gdc = GdriveClient(KEY_PATH)
+
+def doctest_next_parameter():
+	REPORT_FOLDER_NAME = 'slacgs.doctest'
+	SPREADSHEET_TITLE = 'cenario1.doctest'
+	## create spreadsheet for the first simulation if it doesn't exist
+	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+		with contextlib.redirect_stdout(io.StringIO()):
+			## do operations without printing to stdout
+			spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+			folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+			gdc.move_file_to_folder(spreadsheet_id, folder_id)
+		PARAM = CENARIOS[0][0]
+	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
+		for i in range(len(CENARIOS)):
+			SPREADSHEET_TITLE = 'cenario' + str(i + 1) + '.doctest'
+
+			## create spreadsheet if it doesn't exist
+			if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+				spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+				folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+				gdc.move_file_to_folder(spreadsheet_id, folder_id)
+
+			gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
+
+			## retrieve the first parameter that is not in the spreadsheet report home
+			PARAM = None
+			for param in CENARIOS[i]:
+				if gsc.param_not_in_home(param):
+					PARAM = param
+					break
+
+			## if all parameters are in the spreadsheet report home, then go to the next spreadsheet
+			if PARAM:
+				break
+
+	return PARAM, SPREADSHEET_TITLE
+
+
 
 def simulation_test():
 	## define path to Key file for accessing Google Sheets API via Service Account Credentials
@@ -91,7 +131,141 @@ def simulation_test():
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
 			for param in CENARIOS[i]:
+				if gsc.param_not_in_home(param):
+					PARAM = param
+					break
+
+			## if all parameters are in the spreadsheet report home, then go to the next spreadsheet
+			if PARAM:
+				break
+
+
+	## create model object
+	model = Model(PARAM, N=[2 ** i for i in range(1, 11)], max_n=1024)
+
+	## create simulator object
+	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024)
+
+	## run simulation
+	slacgs.run()
+
+	## write results to spreadsheet
+	slacgs.report.write_to_spreadsheet(gsc)
+
+def simulation():
+	## define path to Key file for accessing Google Sheets API via Service Account Credentials
+	if not gdc.gdrive_account_mail:
+		def is_valid_email(email):
+			# Regular expression pattern for email validation
+			pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+			return re.match(pattern, email)
+
+		while True:
+			user_email = input("Please enter your google account email address so I can share results with you:\n(if you don't have a google account, create one at https://accounts.google.com/signup) ")
+			if is_valid_email(user_email):
+				print("Valid email address!")
+				break
+			else:
+				print("Invalid email address. Please try again.")
+
+		# Store the user's input email as a string in the GdriveClient object
+		gdc.gdrive_account_mail = user_email
+
+	## define folder name for storing reports
+	REPORT_FOLDER_NAME = 'slacgs.demo.' + gdc.gdrive_account_mail
+
+	## create folder if it doesn't exist
+	if not gdc.check_folder_existence(REPORT_FOLDER_NAME):
+		folder_id = gdc.create_folder(REPORT_FOLDER_NAME) # create folder
+		gdc.share_folder_with_gdrive_account(folder_id) # share folder with user's google drive account
+
+
+	SPREADSHEET_TITLE = 'cenario1'
+	## create spreadsheet for the first simulation if it doesn't exist
+	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+		spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+		folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+		gdc.move_file_to_folder(spreadsheet_id, folder_id)
+		gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
+		PARAM = CENARIOS[0][0]
+	else: # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
+		for i in range(len(CENARIOS)):
+			SPREADSHEET_TITLE = 'cenario' + str(i+1) + '.test'
+
+			## create spreadsheet if it doesn't exist
+			if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+				spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+				folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+				gdc.move_file_to_folder(spreadsheet_id, folder_id)
+
+			gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
+
+			## retrieve the first parameter that is not in the spreadsheet report home
+			PARAM = None
+			for param in CENARIOS[i]:
 				print(gsc.param_not_in_home(param))
+				if gsc.param_not_in_home(param):
+					PARAM = param
+					break
+
+			## if all parameters are in the spreadsheet report home, then go to the next spreadsheet
+			if PARAM:
+				break
+
+
+	## create model object
+	model = Model(PARAM, N=[2 ** i for i in range(1, 11)], max_n=1024)
+
+	## create simulator object
+	slacgs = Simulator(model)
+
+	## run simulation
+	slacgs.run()
+
+	## write results to spreadsheet
+	slacgs.report.write_to_spreadsheet(gsc)
+
+def simulation_doctest():
+	## define path to Key file for accessing Google Sheets API via Service Account Credentials
+	if not gdc.gdrive_account_mail:
+		def is_valid_email(email):
+			# Regular expression pattern for email validation
+			pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+			return re.match(pattern, email)
+
+
+	## define folder name for storing reports
+	REPORT_FOLDER_NAME = 'slacgs.doctest.' + gdc.gdrive_account_mail
+
+	## create folder if it doesn't exist
+	if not gdc.check_folder_existence(REPORT_FOLDER_NAME):
+		folder_id = gdc.create_folder(REPORT_FOLDER_NAME) # create folder
+		gdc.share_folder_with_gdrive_account(folder_id) # share folder with user's google drive account
+
+
+	SPREADSHEET_TITLE = 'cenario1.doctest'
+	## create spreadsheet for the first simulation if it doesn't exist
+	if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+		spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+		folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+		gdc.move_file_to_folder(spreadsheet_id, folder_id)
+		gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
+		PARAM = CENARIOS[0][0]
+	else: # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
+		for i in range(len(CENARIOS)):
+			SPREADSHEET_TITLE = 'cenario' + str(i+1) + '.doctest'
+
+			## create spreadsheet if it doesn't exist
+			if not gdc.check_spreadsheet_existence(SPREADSHEET_TITLE):
+				spreadsheet_id = gdc.create_spreadsheet(SPREADSHEET_TITLE)
+				folder_id = gdc.get_folder_id_by_name(REPORT_FOLDER_NAME)
+				gdc.move_file_to_folder(spreadsheet_id, folder_id)
+
+			gsc = GspreadClient(KEY_PATH, SPREADSHEET_TITLE)
+
+			## retrieve the first parameter that is not in the spreadsheet report home
+			PARAM = None
+			for param in CENARIOS[i]:
 				if gsc.param_not_in_home(param):
 					PARAM = param
 					break

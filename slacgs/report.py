@@ -136,11 +136,15 @@ class Report:
 
     bayes_ratio = self.loss_bayes[dims[0]]/self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
     bayes_diff = self.loss_bayes[dims[0]] - self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
-    loss_bayes = {'ratio': bayes_ratio , 'diff': bayes_diff }
 
-    d_ratio = self.d[dims[0]]/self.d[dims[1]]
+    loss_bayes = {dims[0]: self.loss_bayes[dims[0]], dims[1]: self.loss_bayes[dims[1]]}
+    loss_bayes.update({'ratio': bayes_ratio, 'diff': bayes_diff})
+
+    d_ratio = self.d[dims[0]] / self.d[dims[1]]
     d_diff = self.d[dims[0]] - self.d[dims[1]]
-    d = {'ratio': d_ratio , 'diff': d_diff }
+
+    d = {dims[0]: self.d[dims[0]], dims[1]: self.d[dims[1]]}
+    d.update({'ratio': d_ratio, 'diff': d_diff})
 
     loss_types = self.sim.loss_types
     loss_N_0 = [self.loss_N[dims[0]][loss_type][i] if i<10 else self.loss_bayes[dims[0]] for loss_type in loss_types  for i in range(min(len(self.loss_N[dims[0]][loss_type])+1,11))]
@@ -286,9 +290,11 @@ class Report:
       >>> from slacgs import Model
       >>> from slacgs import Simulator
       >>> from slacgs import GspreadClient
+      >>> from slacgs import doctest_next_parameter
 
       >>> ## run simulation for parameter
-      >>> param = [1, 1, 2, 0, 0, 0]
+      >>> param, _ = doctest_next_parameter()
+      >>> ## param = [1, 1, 2, 0, 0, 0]
 
       >>> ## create model object
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
@@ -307,13 +313,16 @@ class Report:
       ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
 
       >>> ## define spreadsheet title
-      >>> spreadsheet_title = 'doctest'
+      >>> _, spreadsheet_title = doctest_next_parameter()
+      >>> ## spreadsheet_title = 'cenario1.doctest'
+
       >>> ## create GspreadClient object
       >>> gc = GspreadClient(key_path, spreadsheet_title)
+
       >>> ## write simulation results to spreadsheet
       >>> slacgs.report.write_to_spreadsheet(gc) # doctest: +ELLIPSIS
-      sheet is over! id:  ...  title: [TEST]['loss', 1, 1, 2, 0, 0, 0][...]
-      sheet is over! id:  ...  title: [TEST]['compare2&3', 1, 1, 2, 0, 0, 0][...]
+      sheet is over! id:  ...  title: [TEST]['loss', ..., ..., ..., ..., ..., ...]...
+      sheet is over! id:  ...  title: [TEST]['compare2&3', ..., ..., ..., ..., ..., ...]...
       sheet is over! id:  0  title: home
 
     """

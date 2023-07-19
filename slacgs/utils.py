@@ -6,8 +6,9 @@ def is_jupyter_notebook():
     # Check if 'get_ipython' function exists
     from IPython import get_ipython
     # Check if running in a notebook
-    if 'IPKernelApp' in get_ipython().config:
-      return True
+    if get_ipython() is not None:
+      if 'IPKernelApp' in get_ipython().config:
+        return True
   except ImportError:
     pass
   return False
