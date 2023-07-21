@@ -703,7 +703,7 @@ class Simulator:
       ## test if intersection point between dim d and dim d-1 is found and continue simulation for one more cardinality n if not
       finish = True
       if 'EMPIRICAL_TEST' in self.loss_types:
-        if self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] > self.report.loss_N[self.model.dim-1]['EMPIRICAL_TEST'][-1]:
+        if self.report.loss_N[self.dims[-1]]['EMPIRICAL_TEST'][-1] > self.report.loss_N[self.dims[-2]]['EMPIRICAL_TEST'][-1]:
           finish = False
         if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-2]) > 0.001:
           finish = False
@@ -712,7 +712,7 @@ class Simulator:
             finish = False
 
       if 'THEORETICAL' in self.loss_types:
-        if self.report.loss_N[self.model.dim]['THEORETICAL'][-1] > self.report.loss_N[self.model.dim-1]['THEORETICAL'][-1]:
+        if self.report.loss_N[self.dims[-1]]['THEORETICAL'][-1] > self.report.loss_N[self.dims[-2]]['THEORETICAL'][-1]:
           finish = False
         # print('theo-1-2',self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2])
         if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2]) > 0.001:
