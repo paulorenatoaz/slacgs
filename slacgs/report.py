@@ -272,18 +272,27 @@ class Report:
 
     # return self.intersection_point_( dims, loss_type)
 
-  def write_to_spreadsheet(self, gc, dims_to_compare = (2,3)):
+  def write_to_spreadsheet(self, gc, dims_to_compare = None, verbose=True):
 
     """Write results to a Google Spreadsheet
 
     :param self: object of class Report
     :type self: Report
     :param gc: gspread client object
-    :type gspread_client: GspreadClient
+    :type gc: GspreadClient
     :param dims_to_compare: list of dimensionalities to be compared
     :type dims_to_compare: list of int or tuple of int
+    :param verbose: print output
+    :type verbose: bool
     :return: None
     :rtype: None
+
+    :raises TypeError:
+      if dims_to_compare is not a list of int or tuple of int;
+
+    :raises ValueError:
+      if the number of compared dimensionalities is not 2;
+      if the list of dioemnsionalities to be compared is not a subset of the list of simulated dimensionalities
 
     :Example:
       >>> import os
@@ -293,8 +302,8 @@ class Report:
       >>> from slacgs import doctest_next_parameter
 
       >>> ## run simulation for parameter
-      >>> param, _ = doctest_next_parameter()
       >>> ## param = [1, 1, 2, 0, 0, 0]
+      >>> param, _ = doctest_next_parameter()
 
       >>> ## create model object
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
@@ -304,7 +313,6 @@ class Report:
 
       >>> ## run simulation
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
 
       >>> ## define path to key file
       >>> if os.name == 'nt':
@@ -313,34 +321,46 @@ class Report:
       ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
 
       >>> ## define spreadsheet title
+      >>> ## spreadsheet_title = 'title of spreadsheet'
       >>> _, spreadsheet_title = doctest_next_parameter()
-      >>> ## spreadsheet_title = 'cenario1.doctest'
 
       >>> ## create GspreadClient object
       >>> gc = GspreadClient(key_path, spreadsheet_title)
 
       >>> ## write simulation results to spreadsheet
-      >>> slacgs.report.write_to_spreadsheet(gc) # doctest: +ELLIPSIS
-      sheet is over! id:  ...  title: [TEST]['loss', ..., ..., ..., ..., ..., ...]...
-      sheet is over! id:  ...  title: [TEST]['compare2&3', ..., ..., ..., ..., ..., ...]...
-      sheet is over! id:  0  title: home
+      >>> slacgs.report.write_to_spreadsheet(gc, verbose=False)
 
     """
+    if dims_to_compare is None:
+      dims_to_compare = self.sim.dims[-2:]
 
-    gc.write_loss_report_to_spreadsheet(self)
-    gc.write_compare_report_to_spreadsheet(self, dims_to_compare)
+    if not isinstance(dims_to_compare, (list, tuple)):
+      raise TypeError('dims_to_compare must be a list or tuple of int')
+
+    if len(dims_to_compare) != 2:
+      raise ValueError('dims_to_compare must be a list or tuple of length 2')
+
+    if not set(dims_to_compare).issubset(set(self.sim.dims)):
+      raise ValueError('dims_to_compare must be a subset of the list of simulated dimensionalities')
+
+
+
+    gc.write_loss_report_to_spreadsheet(self, verbose=verbose)
+    gc.write_compare_report_to_spreadsheet(self, dims_to_compare, verbose=verbose)
     if dims_to_compare == (2,3):
       tryal = 1
       while True:
         try:
-          gc.update_N_report_on_spreadsheet(self, dims_to_compare)
+          gc.update_N_report_on_spreadsheet(self, dims_to_compare, verbose=verbose)
         except googleapiclient.errors.HttpError:
           if tryal <= 3:
-            print('try again...' + str(tryal) + '/3')
+            if verbose:
+              print('try again...' + str(tryal) + '/3')
             tryal += 1
             continue
           else:
-            print('going next...')
+            if verbose:
+              print('going next...')
             break
         else:
           break

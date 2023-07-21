@@ -12,10 +12,6 @@ from .model import Model
 from .report import Report
 from .utils import *
 
-# from enumtypes import LossType
-# from model import Model
-# from report import Report
-
 
 def cls():
   """
@@ -32,11 +28,11 @@ class Simulator:
   """A simulator for Linear classifier Loss analysis in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
 
 
-  def __init__(self, model: Model, dims=(1,2,3), loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
+  def __init__(self, model: Model, dims=(1,2), loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
 
     """
     :param model: Linear Classifier Loss Analysis Model
-    :param dims: dimensions of the datasets to be generated
+    :param dims: dimensionalities to be simulated
     :type dims: list[int] or tuple[int]
     :param loss_types: types of Loss comparation graphs wich will be compiled by the Simulator
     :type loss_types: list[str] or tuple[str]
@@ -78,38 +74,37 @@ class Simulator:
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
+
 
       >>> param = [1,1,2,-0.1,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
+
 
       >>> param = [1,1,2,0,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
+
 
       >>> param = [1,1,2,-0.1,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
+
 
       >>> param = [1,2,-0.1]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
 
-      :Example:
+
       >>> param = [1,1,1,2,0,0,0,0,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
       >>> slacgs = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
-      Execution time: ... h
+
 
     """
 
@@ -177,7 +172,9 @@ class Simulator:
     if not all((dim > 0 and dim <= model.dim) for dim in dims):
         raise ValueError('invalid dims list/tuple for simulation, available dims for this Model are: ' + str([dim for dim in range(1, model.dim+1)]))
 
-    self.dims = list(dims)
+
+    self.dims = sorted(list(dims)) if model.dim ==2 else sorted(list(dims)) + [dim for dim in range(3, model.dim+1)] if dims == (1,2) else sorted(list(dims))
+
     self.test_samples_amt = test_samples_amt
     self.iters_per_step = iters_per_step
     self.max_steps = max_steps
@@ -217,7 +214,7 @@ class Simulator:
     else:
       cls()
 
-    if self.is_notebook or n_index == 1:
+    if fig and (self.is_notebook or n_index == 1) :
       plt.show()
       plt.figure()
       fm = plt.get_current_fig_manager()
@@ -747,7 +744,8 @@ class Simulator:
 
     # get the execution time
     elapsed_time = et - st
-    print('Execution time:', elapsed_time/3600, 'h')
+    if self.verbose:
+      print('Execution time:', elapsed_time/3600, 'h')
 
     ## transform time spent from seconds to hours
     self.report.duration = elapsed_time/3600

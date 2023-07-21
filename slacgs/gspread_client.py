@@ -35,7 +35,7 @@ class GspreadClient:
     gc = pygsheets.authorize(service_file=key_path)
     self.sh = gc.open(spredsheet_title)
 
-  def write_compare_report_to_spreadsheet(self, report, dims):
+  def write_compare_report_to_spreadsheet(self, report, dims, verbose=True):
     """write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.
 
     :param self: GspreadClient object
@@ -44,6 +44,8 @@ class GspreadClient:
     :type report: Report
     :param dims: a pair of dimensionalyties to be compared
     :type dims: list of int or tuple of int
+    :param verbose: if True, print messages to stdout
+    :type verbose: bool
     :return: None
     :rtype: None
 
@@ -189,13 +191,21 @@ class GspreadClient:
                 }
 
         ws.client.sheet.batch_update(sh.id,request)
+    if verbose:
+      print('sheet is over! id: ', ws.index, ' title:', ws.title)
 
-    print('sheet is over! id: ', ws.index, ' title:', ws.title)
-
-  def write_loss_report_to_spreadsheet(self, report):
+  def write_loss_report_to_spreadsheet(self, report, verbose=True):
     """write loss_report to spreadsheet, a report that contains all results of Loss estimations
 
-    :param report (Report): Report containnig simulation results
+    :param report: Report containnig simulation results
+    :type report: Report
+
+    :param verbose: print report to console, defaults to True
+    :type verbose: bool, optional
+
+    :return: None
+    :rtype: None
+
     """
     loss_N = report.loss_N
     iter_N = report.iter_N
@@ -382,14 +392,25 @@ class GspreadClient:
                 }
 
         ws.client.sheet.batch_update(sh.id,request)
+    if verbose:
+      print('sheet is over! id: ', ws.index, ' title:', ws.title)
 
-    print('sheet is over! id: ', ws.index, ' title:', ws.title)
-
-  def update_N_report_on_spreadsheet(self, report, dims):
+  def update_N_report_on_spreadsheet(self, report, dims, verbose=True):
     """update N_report to spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
 
-    :param report (Report): Report containnig simulation results
-    :param dims (List(int)): pair of dimensionalyties to be compared
+    :param report: Report containnig simulation results
+    :type report: Report
+
+    :param dims: pair of dimensionalyties to be compared
+    :type dims: List(int)
+
+    :param verbose (bool): if True, print messages
+    :type verbose: bool
+
+    :return: None
+    :rtype: None
+
+
     """
 
 
@@ -779,7 +800,8 @@ class GspreadClient:
                         'chartId': charts[i].id, "spec": spec}}
         ws.client.sheet.batch_update(sh.id,request)
 
-    print('sheet is over! id: ', ws.index, ' title:', ws.title)
+    if verbose:
+      print('sheet is over! id: ', ws.index, ' title:', ws.title)
 
 
   def param_not_in_home(self, param):

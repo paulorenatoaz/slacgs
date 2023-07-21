@@ -12,7 +12,8 @@ setup(
         'ipython>=7.34.0',
         'scikit-learn>=1.2.2',
         'scipy>=1.10.1',
-        'pygsheets>=2.0.6'
+        'pygsheets>=2.0.6',
+        'google-api-python-client>=2.83.0'
     ],
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',

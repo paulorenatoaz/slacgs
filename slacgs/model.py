@@ -1,3 +1,5 @@
+from math import sqrt
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -40,9 +42,10 @@ class Model:
 							if Sigma's are not positive numbers;
 							if Rho's are not numbers between -1 and 1
 							if dictionary is not a valid list of strings (see enumtypes.py for valid strings);
+							if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
 
 
-		:raise TypeError:   if params is not a list of numbers (floats or ints);
+		:raise TypeError:   if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
 							if max_n is not an int;
 							if N is not a list of ints;
 							if dictionary is not a list of strings;
@@ -60,8 +63,11 @@ class Model:
 
 
 		"""
-		if not isinstance(params, list):
-			raise TypeError('params must be a list of numbers (floats or ints)')
+		if not isinstance(params, list) and not isinstance(params, tuple):
+			raise TypeError('params must be a list or tuple of numbers (floats or ints)')
+
+		if not all(isinstance(param, int) or isinstance(param, float) for param in params):
+			raise TypeError('params must be a list or tuple of numbers (floats or ints)')
 
 		if not isinstance(max_n, int):
 			raise TypeError('max_n must be an int')
@@ -99,9 +105,16 @@ class Model:
 			if n & (n - 1) != 0:
 				raise ValueError('N must be a list of powers of 2 to make this experiment')
 
+		params = list(params)
+
 		self.dim = dim
 		self.sigma = params[0:dim]
 		self.rho = params[dim:len(params)]
+
+		if self.dim > 2:
+			if not abs(self.rho[1]) < sqrt((1 + self.rho[0]) / 2):
+				raise ValueError('abs(rho_13) must be smaller than sqrt((1 + rho_12) / 2)')
+
 		self.mean_pos = [1 for d in range(dim)]
 		self.mean_neg = [-1 for d in range(dim)]
 		self.dictionary = list(dictionary)
@@ -128,10 +141,10 @@ class Model:
 		            range(len(self.sigma))]
 
 		if not np.all(np.linalg.eigvals(self.cov) > 0):
-			raise ValueError('cov must be a positive definite matrix to make this experiment')
+			raise ValueError('cov must be a positive definite matrix to make this experiment, check your parameters')
 
 		if not np.allclose(self.cov, np.array(self.cov).T):
-			raise ValueError('cov must be a symmetric matrix to make this experiment')
+			raise ValueError('cov must be a symmetric matrix to make this experiment, check your parameters')
 
 		if not all(dictionary in DictionaryType.__members__ for dictionary in dictionary):
 			raise ValueError('invalid dictionary, implemented dictionaries are: ' + ', '.join(DictionaryType.__members__))
@@ -150,7 +163,7 @@ class Model:
 
 		:Example:
 
-		>>> model = Model([1, 1, 2, 0.5, 0, 0])
+		>>> model = Model((1, 1, 2, 0.5, 0, 0))
 		>>> plot_fig = model.fig
 
 		"""

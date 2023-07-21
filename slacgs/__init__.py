@@ -5,5 +5,6 @@ from .enumtypes import DictionaryType, LossType
 from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
 from .demo import *
+from .demo_test import *
 from .utils import *
 from .key import *
