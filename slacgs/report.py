@@ -314,11 +314,11 @@ class Report:
       >>> ## run simulation
       >>> slacgs.run() # doctest: +ELLIPSIS
 
-      >>> ## define path to key file
+      >>> ## define path to key.slac file
       >>> if os.name == 'nt':
-      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.py'
+      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.slac.py'
       ... else:
-      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.py'
+      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.slac.py'
 
       >>> ## define spreadsheet title
       >>> ## spreadsheet_title = 'title of spreadsheet'

@@ -11,7 +11,7 @@ class GspreadClient:
   def __init__(self, key_path, spredsheet_title):
     """Constructor for GspreadClient class.
 
-    :param key_path: path to connect key
+    :param key_path: path to connect key.slac
     :type key_path: str
     :param spredsheet_title: title of the spreadsheet to be writen on
     :type spredsheet_title: str
