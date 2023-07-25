@@ -1,3 +1,4 @@
+import os
 from math import sqrt
 
 import numpy as np
@@ -7,6 +8,7 @@ from matplotlib.patches import Ellipse
 
 
 from .enumtypes import DictionaryType
+from .utils import get_grandparent_folder_path
 
 # from enumtypes import DictionaryType
 
@@ -20,7 +22,6 @@ class Model:
 	"""
 
 
-
 	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]), dictionary=('LINEAR',)):
 		"""Constructor for Model class objects.
 
@@ -32,35 +33,43 @@ class Model:
 		:type N: list[int] or tuple[int]
 		:param dictionary: A dictionary (also known as search space bias) is a family of classifiers (e.g., linear classifiers, quadratic classifiers,...)
 		:type dictionary: list[str] or tuple[str]
-		:raise ValueError:  if length of params is less than 3,
-							if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...),
-							if max_n is not a power of 2,
-							if N is not a list of powers of 2,
-							if dictionary is not a list of strings and is equal to ['linear'];
-							if self.cov is not a positive definite matrix;
-							if self.cov is not a symmetric matrix;
-							if Sigma's are not positive numbers;
-							if Rho's are not numbers between -1 and 1
-							if dictionary is not a valid list of strings (see enumtypes.py for valid strings);
-							if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
+		:raise ValueError:
+			if length of params is less than 3,
+			if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...),
+			if max_n is not a power of 2,
+			if N is not a list of powers of 2,
+			if dictionary is not a list of strings and is equal to ['linear'];
+			if self.cov is not a positive definite matrix;
+			if self.cov is not a symmetric matrix;
+			if Sigma's are not positive numbers;
+			if Rho's are not numbers between -1 and 1
+			if dictionary is not a valid list of strings (see enumtypes.py for valid strings);
+			if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
 
 
-		:raise TypeError:   if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
-							if max_n is not an int;
-							if N is not a list of ints;
-							if dictionary is not a list of strings;
+		:raise TypeError:
+			if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
+			if max_n is not an int;
+			if N is not a list of ints;
+			if dictionary is not a list of strings;
 
 		:Example:
 			>>> model = Model([1, 1, 2, 0, 0, 0])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, 0.5, 0, 0])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
+			>>> model.save_figure_as_png(verbose=False)
 			>>> model = Model([1, 2, -0.1])
-
-
+			>>> model.save_figure_as_png(verbose=False)
 
 		"""
 		if not isinstance(params, list) and not isinstance(params, tuple):
@@ -151,6 +160,39 @@ class Model:
 
 		self.fig = self.plot_surrounding_ellipsis_and_ellipsoids() if dim == 3 else None
 
+	def save_figure_as_png(self, export_path=None, verbose=True):
+		"""
+		Save a matplotlib Figure object as a PNG image.
+
+		Parameters:
+				export_path (str): The file path where the PNG image will be saved.
+		Returns:
+				None
+		"""
+		if self.fig is not None:
+			if export_path is None:
+				export_path = get_grandparent_folder_path()
+				export_path += '\\images\\' if os.name == 'nt' else '/images/'
+				export_path +=  str(self.params) + '.png'
+			elif not export_path.endswith(".png"):
+				export_path = get_grandparent_folder_path()
+				export_path += '\\images\\' if os.name == 'nt' else '/images/'
+				export_path += str(self.params) + '.png'
+
+			if not os.path.exists(export_path):
+				try:
+					self.fig.savefig(export_path, format="png", dpi=300)
+					if verbose:
+						print(f"Figure saved as: {export_path}")
+				except Exception as e:
+					print(f"Failed to save the figure: {e}")
+			else:
+				if verbose:
+					print(f"File already exists: {export_path}")
+		else:
+			if verbose:
+				print("No figure to save.")
+
 	def plot_surrounding_ellipsis_and_ellipsoids(self) -> Figure:
 
 		"""Plots the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points for dim=2,3
@@ -219,8 +261,8 @@ class Model:
 		transformed_ellipsoid1 = transformed_ellipsoid1.reshape((100, 100, 3))
 
 		# Plot the points and the ellipsoid
-		fig = plt.figure(figsize=(10, 10))
-		ax2 = fig.add_subplot(221, projection='3d')
+		fig = plt.figure(figsize=(10, 4))
+		ax2 = fig.add_subplot(121, projection='3d')
 		ax2.scatter(points[:, 0], points[:, 1], points[:, 2], alpha=0.3)
 		ax2.scatter(points1[:, 0], points1[:, 1], points1[:, 2], alpha=0.3)
 		ax2.plot_wireframe(transformed_ellipsoid[:, :, 0], transformed_ellipsoid[:, :, 1], transformed_ellipsoid[:, :, 2],
@@ -260,7 +302,7 @@ class Model:
 		width, height = 2 * np.sqrt(5.991 * eigenvalues)
 
 		# Plot the points and the ellipse
-		ax1 = fig.add_subplot(222)
+		ax1 = fig.add_subplot(122)
 		ax1.scatter(points[:, 0], points[:, 1], s=5, alpha=0.2)
 		ax1.scatter(points1[:, 0], points1[:, 1], s=5, alpha=0.2)
 

@@ -3,15 +3,14 @@ import time
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import svm
-import os
 from scipy.stats import multivariate_normal, norm
 from IPython.display import clear_output
+import os
 
 from .enumtypes import LossType
 from .model import Model
 from .report import Report
-from .utils import *
-
+from .utils import is_notebook
 
 def cls():
   """
@@ -28,7 +27,7 @@ class Simulator:
   """A simulator for Linear classifier Loss analysis in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
 
 
-  def __init__(self, model: Model, dims=(1,2), loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
+  def __init__(self, model: Model, dims=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
 
     """
     :param model: Linear Classifier Loss Analysis Model
@@ -111,7 +110,7 @@ class Simulator:
     if not isinstance(model, Model):
         raise TypeError('model must be a Model object')
 
-    if not isinstance(dims, list) and not isinstance(dims, tuple):
+    if dims and not isinstance(dims, list) and not isinstance(dims, tuple):
         raise TypeError('dims must be a list or tuple')
 
     if not isinstance(loss_types, list) and not isinstance(loss_types, tuple):
@@ -138,7 +137,7 @@ class Simulator:
     if not all(isinstance(loss_type, str) for loss_type in loss_types):
         raise TypeError('loss_types must be a list of strings')
 
-    if not all(isinstance(dim, int) for dim in dims):
+    if dims and not all(isinstance(dim, int) for dim in dims):
         raise TypeError('dims must be a list of integers')
 
     if not isinstance(verbose, bool):
@@ -169,11 +168,14 @@ class Simulator:
     if not all(loss_type in loss_types_enum_values for loss_type in loss_types):
         raise ValueError('invalid loss_types list, implemented loss_types are: ' + str(loss_types_enum_values))
 
-    if not all((dim > 0 and dim <= model.dim) for dim in dims):
-        raise ValueError('invalid dims list/tuple for simulation, available dims for this Model are: ' + str([dim for dim in range(1, model.dim+1)]))
 
+    if dims:
+      if not all((dim > 0 and dim <= model.dim) for dim in dims):
+          raise ValueError('invalid dims list/tuple for simulation, available dims for this Model are: ' + str([dim for dim in range(1, model.dim+1)]))
+      self.dims = sorted(list(dims))
+    else:
+      self.dims = [dim for dim in range(1, model.dim + 1)]
 
-    self.dims = sorted(list(dims)) if model.dim ==2 else sorted(list(dims)) + [dim for dim in range(3, model.dim+1)] if dims == (1,2) else sorted(list(dims))
 
     self.test_samples_amt = test_samples_amt
     self.iters_per_step = iters_per_step
@@ -214,7 +216,7 @@ class Simulator:
     else:
       cls()
 
-    if fig and (self.is_notebook or n_index == 1) :
+    if fig and self.is_notebook :
       plt.show()
       plt.figure()
       fm = plt.get_current_fig_manager()
@@ -250,7 +252,7 @@ class Simulator:
     print('step (',int((i+1)/iter_per_step),'): ', {d : {loss_type : loss_sum[d][loss_type]/iter_N[d][loss_type]  for loss_type in self.loss_types} for d in self.dims})
 
   def plot_compare(self, dims, loss_type, fig):
-    """print compare_report data for pair of compared dimensionalyties and loss estimation method and plot the loss function for each dimensionality
+    """print compare_report images for pair of compared dimensionalyties and loss estimation method and plot the loss function for each dimensionality
 
     :param self: self object of the class Simulator
     :type self: Simulator
@@ -354,9 +356,9 @@ class Simulator:
     """
 
     # remove k columns from sample_data for model.dim-k features
-    dims_to_remove = [i for i in range(len(dataset_train['data'][0])-1,dim-1,-1)]
+    dims_to_remove = [i for i in range(len(dataset_train['images'][0])-1,dim-1,-1)]
 
-    X_train, y_train = np.delete(dataset_train['data'], dims_to_remove, 1) , dataset_train['target']
+    X_train, y_train = np.delete(dataset_train['images'], dims_to_remove, 1) , dataset_train['target']
 
     # train
     C = 1.0  # SVM regularization parameter
@@ -379,9 +381,9 @@ class Simulator:
 
     """
 
-    dims_to_remove = [i for i in range(len(dataset_test['data'][0])-1,len(clf.coef_[0])-1,-1)]
+    dims_to_remove = [i for i in range(len(dataset_test['images'][0])-1,len(clf.coef_[0])-1,-1)]
 
-    X_test, y_test = np.delete(dataset_test['data'], dims_to_remove, 1) , dataset_test['target']
+    X_test, y_test = np.delete(dataset_test['images'], dims_to_remove, 1) , dataset_test['target']
 
     return 1 - clf.score(X_test,y_test)
 
@@ -511,7 +513,7 @@ class Simulator:
     :type n: int
     :param i: random seed
     :type i: int
-    :return: dataset containing the trainning and testing data for both classes generated from the bivariate gaussian distribution for each dimension in the simulation
+    :return: dataset containing the trainning and testing images for both classes generated from the bivariate gaussian distribution for each dimension in the simulation
     :rtype: dict
 
 
@@ -519,40 +521,40 @@ class Simulator:
 
     half_n = int(n/2)
 
-    #generate N/2 D-variate normal points for trainning data for each class
+    #generate N/2 D-variate normal points for trainning images for each class
     sample_data_class_pos_train =  multivariate_normal(self.model.mean_pos, self.model.cov).rvs(size=half_n, random_state=i)
     sample_data_class_neg_train =  multivariate_normal(self.model.mean_neg, self.model.cov).rvs(size=half_n, random_state=i+1)
 
-    #generate D-variate normal points for testing data
+    #generate D-variate normal points for testing images
     self.time_spent_test = time.time()
     sample_data_class_pos_test =  multivariate_normal(self.model.mean_pos, self.model.cov).rvs(size=self.test_samples_amt, random_state=i+2)
     sample_data_class_neg_test =  multivariate_normal(self.model.mean_neg, self.model.cov).rvs(size=self.test_samples_amt, random_state=i+3)
     self.time_spent_test = time.time() - self.time_spent_test
 
-    #generate target array for 2 classes: pos (class 1), neg (class 0) training data
+    #generate target array for 2 classes: pos (class 1), neg (class 0) training images
     sample_target_class_pos_train = np.full((half_n, 1), 1, dtype=int)
     sample_target_class_neg_train = np.full((half_n, 1), 0, dtype=int)
 
-    #generate target array for 2 classes: pos (class 1), neg (class 0) testing data
+    #generate target array for 2 classes: pos (class 1), neg (class 0) testing images
     self.time_spent_test = time.time() - self.time_spent_test
     sample_target_class_pos_test = np.full((self.test_samples_amt, 1), 1, dtype=int)
     sample_target_class_neg_test = np.full((self.test_samples_amt, 1), 0, dtype=int)
     self.time_spent_test = time.time() - self.time_spent_test
 
-    #concatenate data for both classes into one single array for training and testing data
+    #concatenate images for both classes into one single array for training and testing images
     sample_data_train = np.append(sample_data_class_pos_train, sample_data_class_neg_train, axis=0) if n > 2 else np.append(sample_data_class_pos_train, sample_data_class_neg_train, axis=0).reshape(2, self.model.dim)
     self.time_spent_test = time.time() - self.time_spent_test
     sample_data_test = np.append(sample_data_class_pos_test, sample_data_class_neg_test, axis=0)
     self.time_spent_test = time.time() - self.time_spent_test
 
-    #concatenate target for both classes into one single array for training and testing data
+    #concatenate target for both classes into one single array for training and testing images
     sample_target_train = np.append(sample_target_class_pos_train, sample_target_class_neg_train , axis=0)
     self.time_spent_test = time.time() - self.time_spent_test
     sample_target_test = np.append(sample_target_class_pos_test, sample_target_class_neg_test , axis=0)
     self.time_spent_test = time.time() - self.time_spent_test
 
-    dataset = {'train': {'data': sample_data_train, 'target':sample_target_train},
-          'test': {'data': sample_data_test, 'target':sample_target_test}}
+    dataset = {'train': {'images': sample_data_train, 'target':sample_target_train},
+          'test': {'images': sample_data_test, 'target':sample_target_test}}
 
     return dataset
 
@@ -579,6 +581,7 @@ class Simulator:
     self.report.loss_bayes = { d : self.loss_bayes(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = { d : self.intersect_elip_dist_from_origin(d) for d in self.dims}
     fig = self.model.fig
+    self.model.save_figure_as_png(verbose=self.verbose)
 
 
     N = self.model.N

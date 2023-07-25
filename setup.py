@@ -13,7 +13,8 @@ setup(
         'scikit-learn>=1.2.2',
         'scipy>=1.10.1',
         'pygsheets>=2.0.6',
-        'google-api-python-client>=2.83.0'
+        'google-api-python-client>=2.83.0',
+        'cryptography>=41.0.2'
     ],
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',

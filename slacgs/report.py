@@ -6,7 +6,6 @@ from shapely.geometry import LineString
 import matplotlib.pyplot as plt
 from .enumtypes import LossType
 
-# from enumtypes import LossType
 
 
 class Report:
@@ -117,13 +116,13 @@ class Report:
     return intersection_points, n_star
 
   def compile_N(self, dims=(2,3)):
-    """return N* data for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
+    """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
 
     :self: report object
     :type self: Report
     :param dims: a pair of dimensionalyties to be compared
     :type dims: tuple of int or list of int
-    :return: N* data for report compilation
+    :return: N* images for report compilation
     :rtype: dict
 
     """
@@ -181,13 +180,13 @@ class Report:
     return N_report_params
 
   def compile_compare(self, dims=(2,3)):
-    """return compare_report data for pair of compared dimensionalyties
+    """return compare_report images for pair of compared dimensionalyties
 
     :self: report object
     :type self: Report
     :param dims: a pair of dimensionalyties to be compared
     :type dims: tuple of int or list of int
-    :return: compare_report data for a pair of compared dimensionalyties
+    :return: compare_report images for a pair of compared dimensionalyties
     :rtype: tuple
 
     """
@@ -221,7 +220,7 @@ class Report:
     return self.compare
 
   def print_compare_report(self, dims, loss_type):
-    """print compare_report data for a pair of compared dimensionalyties
+    """print compare_report images for a pair of compared dimensionalyties
 
     :self: report object
     :type self: Report
@@ -347,7 +346,7 @@ class Report:
 
     gc.write_loss_report_to_spreadsheet(self, verbose=verbose)
     gc.write_compare_report_to_spreadsheet(self, dims_to_compare, verbose=verbose)
-    if dims_to_compare == (2,3):
+    if list(dims_to_compare) == [2,3]:
       tryal = 1
       while True:
         try:

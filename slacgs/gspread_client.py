@@ -1,39 +1,44 @@
-import os
 from enum import Enum
 import googleapiclient
 import numpy as np
-import pygsheets as pygsheets
+import pygsheets
 import math
 
 class GspreadClient:
   """GspreadClient performs operations using gspread, a Python API for Google Sheets. It is used to write simulation results to a spreadsheet."""
 
-  def __init__(self, key_path, spredsheet_title):
+  def __init__(self, pygsheets_service, spreadsheet_title):
     """Constructor for GspreadClient class.
 
-    :param key_path: path to connect key.slac
-    :type key_path: str
-    :param spredsheet_title: title of the spreadsheet to be writen on
+    :param self: GspreadClient object
+    :type self: GspreadClient
+
+    :param pygsheets_service: pygsheets service
+    :type pygsheets_service: pygsheets.service.client.Client
+
+    :param spredsheet_title: title of the spreadsheet
     :type spredsheet_title: str
 
-    :raise TypeError: if spredsheet_title is not a valid string;
-                      if key_path is not a valid string;
-    :raise FileNotFoundError: if key_path is not a valid path
+    :raises TypeError:
+      if pygsheets_service is not a pygsheets.service.client.Client object
+      if spredsheet_title is not a string
 
+    :raises ValueError:
+      if spredsheet_title is empty
 
-    :Example:
 
     """
-    if not isinstance(spredsheet_title, str):
-      raise TypeError('spredsheet_title must be a string')
-    if not isinstance(key_path, str):
-      raise TypeError('key_path must be a string')
-    if not os.path.isfile(key_path):
-      raise FileNotFoundError('key_path must be a valid path')
 
-    # authorization
-    gc = pygsheets.authorize(service_file=key_path)
-    self.sh = gc.open(spredsheet_title)
+    if not isinstance(pygsheets_service, pygsheets.client.Client):
+      raise TypeError('pygsheets_service must be a pygsheets.service.client.Client object')
+
+    if not isinstance(spreadsheet_title, str):
+      raise TypeError('spredsheet_title must be a string')
+
+    if spreadsheet_title == '':
+      raise ValueError('spredsheet_title cannot be empty')
+
+    self.sh = pygsheets_service.open(spreadsheet_title)
 
   def write_compare_report_to_spreadsheet(self, report, dims, verbose=True):
     """write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.

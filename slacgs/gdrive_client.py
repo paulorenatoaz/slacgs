@@ -1,34 +1,59 @@
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-import os
+import re
+from googleapiclient.discovery import Resource
 
 
 class GdriveClient:
 	"""perform operations on Google Drive."""
 
-	def __init__(self, key_path):
+	def __init__(self, drive_service, sheets_service, gdrive_account_email=None):
 
 		"""Constructor for GdriveClient class.
 
-		:param key_path: path to Key file for accessing Google Sheets API via Service Account Credentials.
-		:type key_path: str
+		:param drive_service: Google Drive API Resource object.
+		:type drive_service: googleapiclient.discovery.Resource
 
-		:raises ValueError: if key_path is not a string.
-		:raises FileNotFoundError: if key_path is not a valid path.
+		:param sheets_service: Google Sheets API Resource object.
+		:type sheets_service: googleapiclient.discovery.Resource
+
+		:param gdrive_account_email: email of the Google account to be used to share reports folder.
+		:type gdrive_account_email: str
+
+		:raises TypeError:
+			if drive_service is not a googleapiclient.discovery.Resource object;
+			if sheets_service is not a googleapiclient.discovery.Resource object;
+			if gdrive_account_email is not a string.
+
+		:raises ValueError:
+			if gdrive_account_email is not a valid email address.
 		"""
 
-		if not isinstance(key_path, str):
-			raise ValueError('key_path must be a string.')
+		if not isinstance(drive_service, Resource):
+			raise TypeError('drive_service must be a googleapiclient.discovery.Resource object.')
 
-		if not os.path.exists(key_path):
-			print('key_path: ',key_path)
-			raise FileNotFoundError('key_path is not a valid path.')
+		if not isinstance(sheets_service, Resource):
+			raise TypeError('sheets_service must be a googleapiclient.discovery.Resource object.')
 
-		SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
-		credentials = service_account.Credentials.from_service_account_file(key_path, scopes=SCOPES)
-		self.drive_service = build('drive', 'v3', credentials=credentials)
-		self.sheets_service = build('sheets', 'v4', credentials=credentials)
-		self.gdrive_account_mail = None
+		if gdrive_account_email:
+			if not isinstance(gdrive_account_email, str):
+				raise TypeError('gdrive_account_email must be a string.')
+
+			if not re.match(r"[^@]+@[^@]+\.[^@]+", gdrive_account_email):
+				raise ValueError('gdrive_account_email must be a valid email address.')
+
+		else:
+			while True:
+				gdrive_account_email = input(
+					"Please enter your google account email address so I can share results with you\n(if you don't have a google account, create one at https://accounts.google.com/signup)\ngoogle account email:")
+				if re.match(r"[^@]+@[^@]+\.[^@]+", gdrive_account_email):
+					print("Valid email address!")
+					break
+				else:
+					print("Invalid email address. Please try again.")
+
+		self.drive_service = drive_service
+		self.sheets_service = sheets_service
+		self.gdrive_account_email = gdrive_account_email
+
 
 	def get_folder_id_by_name(self, folder_name):
 
@@ -56,6 +81,7 @@ class GdriveClient:
 			return folders[0]['id']  # Return the ID of the first matching folder
 		else:
 			return None  # Return None if no folder with the given name is found
+
 
 	def create_spreadsheet(self, name, verbose=True):
 		"""Create a new spreadsheet with the given name.
@@ -90,6 +116,7 @@ class GdriveClient:
 
 		return spreadsheet['spreadsheetId']
 
+
 	def get_spreadsheet_path_by_id(self, spreadsheet_id):
 		"""Get the path of a spreadsheet by its ID.
 
@@ -108,6 +135,7 @@ class GdriveClient:
 
 		spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
 		return spreadsheet['properties']['title']
+
 
 	def create_folder(self, folder_name, parent_folder_id=None, verbose=True):
 		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID.
@@ -148,6 +176,7 @@ class GdriveClient:
 
 		return folder['id']
 
+
 	def move_file_to_folder(self, file_id, folder_id, verbose=True):
 		"""Move a file to a folder.
 
@@ -172,6 +201,8 @@ class GdriveClient:
 		                                         fields='id, parents').execute()
 		if verbose:
 			print(f"Spreadsheet with path '{file_old_path}' has been moved to the folder with path '{self.get_folder_path(folder_id)}'.")
+
+
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id, verbose=True):
 		"""Move a folder to another folder.
 
@@ -209,6 +240,7 @@ class GdriveClient:
 			print(f"Folder with name '{folder.get('name')}' has been moved to the folder with name "
 		      f"'{self.drive_service.files().get(fileId=new_parent_folder_id, fields='name').execute().get('name')}'.")
 
+
 	def check_spreadsheet_existence(self, name):
 		"""Check if a spreadsheet with the given name exists.
 
@@ -234,6 +266,7 @@ class GdriveClient:
 			return True  # A spreadsheet with the specified name exists
 		else:
 			return False  # No spreadsheet with the specified name exists
+
 
 	def get_spreadsheet_id_by_name(self, name):
 		"""Get the ID of a spreadsheet with the given name.
@@ -262,6 +295,7 @@ class GdriveClient:
 		else:
 			return None # No spreadsheet with the specified name exists
 
+
 	def delete_spreadsheet(self, spreadsheet_id):
 		"""Delete a spreadsheet.
 
@@ -279,6 +313,7 @@ class GdriveClient:
 
 		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
 		print(f"Spreadsheet with path '{path}' has been deleted.")
+
 
 	def check_folder_existence(self, report_folder_name):
 		"""Check if a folder with the given name exists.
@@ -304,6 +339,7 @@ class GdriveClient:
 		if len(folders) > 0:
 			return True
 
+
 	def get_root_folder_id(self):
 		"""Get the ID of the root folder.
 
@@ -314,6 +350,7 @@ class GdriveClient:
 
 		response = self.drive_service.files().get(fileId='root', fields='id').execute()
 		return response.get('id')
+
 
 	def get_folder_path(self, folder_id):
 		"""Get the path of a folder.
@@ -344,6 +381,7 @@ class GdriveClient:
 				break
 		return '/'.join(folder_path)
 
+
 	def share_folder_with_gdrive_account(self, folder_id, verbose=True):
 		"""Share a folder with the GDrive account.
 
@@ -363,18 +401,19 @@ class GdriveClient:
 		if not isinstance(folder_id, str):
 			raise ValueError('folder_id must be a string.')
 
+		self.check_user_email()
 
 		permission = {
 			'type': 'user',
 			'role': 'writer',
-			'emailAddress': self.gdrive_account_mail
+			'emailAddress': self.gdrive_account_email
 		}
 
 		self.drive_service.permissions().create(fileId=folder_id, body=permission).execute()
 
 		if verbose:
 			print(f"Folder with path '{self.get_folder_path(folder_id)}' has been shared with the GDrive account with "
-		      f"email address '{self.gdrive_account_mail}'.")
+		      f"email address '{self.gdrive_account_email}'.")
 
 	def delete_folder(self, folder_id):
 		"""Delete a folder.
