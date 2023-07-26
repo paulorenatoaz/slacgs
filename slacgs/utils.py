@@ -8,6 +8,7 @@ from cryptography.fernet import Fernet
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pygsheets
+from .demo import start_google_drive_service
 from matplotlib import pyplot as plt
 
 report_service_conf = {
@@ -38,6 +39,8 @@ def start_report_service(password=None, user_email=None):
   report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)
   report_service_conf['drive_service'] = build('drive', 'v3', credentials=credentials)
   report_service_conf['spreadsheet_service'] = build('sheets', 'v4', credentials=credentials)
+
+  start_google_drive_service(password, user_email)
 
 
 def get_grandparent_folder_path():
