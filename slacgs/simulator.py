@@ -255,7 +255,7 @@ class Simulator:
 
       plt.close()
       if datapoints_fig:
-        plt.figure(figsize=(14, 4))
+        plt.figure(figsize=(10, 4))
         fm = plt.get_current_fig_manager()
         fm.canvas.figure = datapoints_fig
         datapoints_fig.canvas = fm.canvas
