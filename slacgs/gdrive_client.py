@@ -1,20 +1,20 @@
 import re
 from googleapiclient.discovery import Resource
-from .utils import report_service, start_report_service
+from .utils import report_service_conf, start_report_service
 
 
 class GdriveClient:
 	"""perform operations on Google Drive."""
 
-	def __init__(self, drive_service=None, sheets_service=None, gdrive_account_email=None):
+	def __init__(self, drive_service=None, spreadsheet_service=None, gdrive_account_email=None):
 
 		"""Constructor for GdriveClient class.
 
 		:param drive_service: Google Drive API Resource object.
 		:type drive_service: googleapiclient.discovery.Resource
 
-		:param sheets_service: Google Sheets API Resource object.
-		:type sheets_service: googleapiclient.discovery.Resource
+		:param spreadsheet_service: Google Sheets API Resource object.
+		:type spreadsheet_service: googleapiclient.discovery.Resource
 
 		:param gdrive_account_email: email of the Google account to be used to share reports folder.
 		:type gdrive_account_email: str
@@ -31,7 +31,7 @@ class GdriveClient:
 		if drive_service and not isinstance(drive_service, Resource):
 			raise TypeError('drive_service must be a googleapiclient.discovery.Resource object.')
 
-		if sheets_service and not isinstance(sheets_service, Resource):
+		if spreadsheet_service and not isinstance(spreadsheet_service, Resource):
 			raise TypeError('sheets_service must be a googleapiclient.discovery.Resource object.')
 
 		if gdrive_account_email:
@@ -42,8 +42,8 @@ class GdriveClient:
 				raise ValueError('gdrive_account_email must be a valid email address.')
 
 		else:
-			if report_service['user_email']:
-				gdrive_account_email = report_service['user_email']
+			if report_service_conf['user_email']:
+				gdrive_account_email = report_service_conf['user_email']
 			else:
 				while True:
 					gdrive_account_email = input(
@@ -55,16 +55,16 @@ class GdriveClient:
 						print("Invalid email address. Please try again.")
 
 		## If drive_service and sheets_service are not provided, try to get them from report_service. If report_service is not running, start it.
-		if not drive_service and not sheets_service:
-			if not report_service['drive_service'] or not report_service['sheets_service']:
+		if not drive_service and not spreadsheet_service:
+			if not report_service_conf['drive_service'] or not report_service_conf['spreadsheet_service']:
 				start_report_service()
 
-			drive_service = report_service['drive_service']
-			sheets_service = report_service['sheets_service']
+			drive_service = report_service_conf['drive_service']
+			spreadsheet_service = report_service_conf['spreadsheet_service']
 
 
 		self.drive_service = drive_service
-		self.sheets_service = sheets_service
+		self.sheets_service = spreadsheet_service
 		self.gdrive_account_email = gdrive_account_email
 
 

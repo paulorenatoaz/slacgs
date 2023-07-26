@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 import pygsheets
 from matplotlib import pyplot as plt
 
-report_service = {
+report_service_conf = {
   """ This is a global variable that is used to store the services that are used by the report service."""
   'user_email' : None,
   'drive_service' : None,
@@ -28,16 +28,16 @@ def start_report_service(password=None, user_email=None):
   """
 
   if user_email is not None:
-    report_service['user_email'] = user_email
+    report_service_conf['user_email'] = user_email
 
   SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 
   key_obj = eval(get_key(password))
   credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
 
-  report_service['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)
-  report_service['drive_service'] = build('drive', 'v3', credentials=credentials)
-  report_service['spreadsheet_service'] = build('sheets', 'v4', credentials=credentials)
+  report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)
+  report_service_conf['drive_service'] = build('drive', 'v3', credentials=credentials)
+  report_service_conf['spreadsheet_service'] = build('sheets', 'v4', credentials=credentials)
 
 
 def get_grandparent_folder_path():

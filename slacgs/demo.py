@@ -9,7 +9,7 @@ from .model import Model
 from .simulator import Simulator
 from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
-from .utils import report_service, start_report_service, get_grandparent_folder_path
+from .utils import report_service_conf, start_report_service, get_grandparent_folder_path
 
 ## define list of parameters for scenario 1
 SCENARIO1 = [[1, 1, round(1 + 0.1 * sigma3, 2), 0, 0, 0] for sigma3 in range(3, 10)]
@@ -44,7 +44,7 @@ r = RHO_12 = None
 GDC = None
 
 
-def start_google_drive_client(password=None, user_email=None, verbose=True):
+def start_google_drive_service(password=None, user_email=None, verbose=True):
 	"""
 		start Google Drive Client for demo report service
 
@@ -54,12 +54,12 @@ def start_google_drive_client(password=None, user_email=None, verbose=True):
 	"""
 
 	## create GdriveClient object and connect to Google Drive for reports service
-	if report_service['drive_service'] is None:
+	if report_service_conf['drive_service'] is None:
 		start_report_service(password=password, user_email=user_email)
 
 	global GDC
 	if GDC is None:
-		GDC = GdriveClient(report_service['drive_service'], report_service['spreadsheet_service'], report_service['user_email'])
+		GDC = GdriveClient(report_service_conf['drive_service'], report_service_conf['spreadsheet_service'], report_service_conf['user_email'])
 
 	if GDC.gdrive_account_email:
 		if not GDC.check_folder_existence('slacgs.demo.' + GDC.gdrive_account_email):
@@ -90,7 +90,7 @@ def run_experiment_simulation(start_scenario=1):
 		raise ValueError("start_scenario must be between 1 and 4")
 
 	## start google drive client
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -106,7 +106,7 @@ def run_experiment_simulation(start_scenario=1):
 		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE)
 		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 		GDC.move_file_to_folder(spreadsheet_id, folder_id)
-		gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+		gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 		PARAM = SCENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_scenario - 1, len(SCENARIOS)):
@@ -118,7 +118,7 @@ def run_experiment_simulation(start_scenario=1):
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
-			gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
@@ -185,7 +185,7 @@ def run_custom_simulation(param, dims_to_compare):
 	if not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
-	start_google_drive_client()
+	start_google_drive_service()
 
 
 
@@ -214,7 +214,7 @@ def run_custom_simulation(param, dims_to_compare):
 		GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
@@ -304,7 +304,7 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 		GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	for slacgs in simulators:
 		if dims_to_compare == (2,3) or dims_to_compare == [2,3]:
@@ -404,7 +404,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
 		GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## create model object
 	model = Model(param)
@@ -464,7 +464,7 @@ def doctest_next_parameter():
 		>>> params, spreadsheet_title = doctest_next_parameter()
 
 	"""
-	start_google_drive_client()
+	start_google_drive_service()
 
 	REPORT_FOLDER_NAME = 'slacgs.doctest'
 	SPREADSHEET_TITLE = 'scenario1.doctest'
@@ -486,7 +486,7 @@ def doctest_next_parameter():
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
-			gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
@@ -532,7 +532,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	if not 1 <= start_scenario <= 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -548,7 +548,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
 		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-		gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+		gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 		PARAM = SCENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_scenario - 1, len(SCENARIOS)):
@@ -560,7 +560,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
-			gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
@@ -680,7 +680,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
 
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -700,7 +700,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## create model object
 	model = Model(params)
@@ -777,7 +777,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	if scenario_number < 5:
 		raise ValueError("Custom scenario_number must be >= 5")
 
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## create Model objects to test each parameter set before continuing
 	models = []
@@ -815,7 +815,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	for slacgs in simulators:
 		if dims_to_compare == (2, 3) or dims_to_compare == [2, 3]:
@@ -894,7 +894,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
 
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## create Model object to test parameter set before continuing
 	model = Model(params)
@@ -925,7 +925,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
@@ -996,7 +996,7 @@ def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
 	## initialize gdrive client if it hasn't been initialized yet
-	start_google_drive_client()
+	start_google_drive_service()
 
 	## create model object
 	model = Model(params)
@@ -1024,7 +1024,7 @@ def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
