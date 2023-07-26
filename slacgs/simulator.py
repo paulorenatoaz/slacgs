@@ -216,16 +216,13 @@ class Simulator:
     else:
       cls()
 
-
-
-
-    if fig and self.is_notebook :
+    if fig :
       plt.show()
       plt.figure()
       fm = plt.get_current_fig_manager()
       fm.canvas.figure = fig
       fig.canvas = fm.canvas
-      self.report.plot_with_intersection()
+      self.report.plot_with_intersection().canvas = fm.canvas
 
 
     print(' progress: ', end='')
