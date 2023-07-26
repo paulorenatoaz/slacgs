@@ -65,7 +65,7 @@ def start_google_drive_client(password=None, user_email=None, verbose=True):
 		if not GDC.check_folder_existence('slacgs.demo.' + GDC.gdrive_account_email):
 			folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
 		else:
-			folder_id = GDC.get_folder_id('slacgs.demo.' + GDC.gdrive_account_email)
+			folder_id = GDC.get_folder_id_by_name('slacgs.demo.' + GDC.gdrive_account_email)
 
 		GDC.share_folder_with_gdrive_account(folder_id)
 
