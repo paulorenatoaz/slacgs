@@ -1,6 +1,6 @@
 import re
 from googleapiclient.discovery import Resource
-from .utils import report_service_conf, start_report_service
+from .utils import report_service_conf, set_report_service_conf
 
 
 class GdriveClient:
@@ -57,7 +57,7 @@ class GdriveClient:
 		## If drive_service and sheets_service are not provided, try to get them from report_service. If report_service is not running, start it.
 		if not drive_service and not spreadsheet_service:
 			if not report_service_conf['drive_service'] or not report_service_conf['spreadsheet_service']:
-				start_report_service()
+				set_report_service_conf()
 
 			drive_service = report_service_conf['drive_service']
 			spreadsheet_service = report_service_conf['spreadsheet_service']

@@ -9,7 +9,7 @@ from .model import Model
 from .simulator import Simulator
 from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
-from .utils import report_service_conf, start_report_service, get_grandparent_folder_path
+from .utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
 
 ## define list of parameters for scenario 1
 SCENARIO1 = [[1, 1, round(1 + 0.1 * sigma3, 2), 0, 0, 0] for sigma3 in range(3, 10)]
@@ -55,7 +55,7 @@ def start_google_drive_service(password=None, user_email=None, verbose=True):
 
 	## create GdriveClient object and connect to Google Drive for reports service
 	if report_service_conf['drive_service'] is None:
-		start_report_service(password=password, user_email=user_email)
+		set_report_service_conf(password=password, user_email=user_email)
 
 	global GDC
 	if GDC is None:
@@ -460,7 +460,7 @@ def doctest_next_parameter():
 
 	:Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 		>>> params, spreadsheet_title = doctest_next_parameter()
 
 	"""
@@ -519,7 +519,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 
 	Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 		>>> run_experiment_simulation_test(verbose=False)
 
 
@@ -615,7 +615,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 
 	Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 
 		>>> scenario_number = 1
 		>>> params = [1, 1, 2.1, 0, 0, 0]
@@ -743,7 +743,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 
 	Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 
 		>>> scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-1,2)]
 		>>> scenario_number = 5
@@ -866,7 +866,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	Example:
 
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 
 		>>> params = (1, 1, 3, -0.2, 0, 0)
 		>>> scenario_number = 5
@@ -958,7 +958,7 @@ def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 
 	:Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 
 		>>> ## 2 features
 		>>> params = [1, 2, 0.4]
@@ -1052,7 +1052,7 @@ def run_experiment_test(start_scenario=1, verbose=True):
 
 	:Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
+		>>> set_report_service_conf(password, user_email)
 		>>> run_experiment_test()
 
 	"""

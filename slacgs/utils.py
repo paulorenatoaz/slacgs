@@ -8,8 +8,7 @@ from cryptography.fernet import Fernet
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import pygsheets
-from .demo import start_google_drive_service
-from matplotlib import pyplot as plt
+
 
 report_service_conf = {
   """ This is a global variable that is used to store the services that are used by the report service."""
@@ -20,7 +19,7 @@ report_service_conf = {
 }
 
 
-def start_report_service(password=None, user_email=None):
+def set_report_service_conf(password=None, user_email=None):
   """Start the report service. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
 
   Args:
@@ -40,7 +39,6 @@ def start_report_service(password=None, user_email=None):
   report_service_conf['drive_service'] = build('drive', 'v3', credentials=credentials)
   report_service_conf['spreadsheet_service'] = build('sheets', 'v4', credentials=credentials)
 
-  start_google_drive_service(password, user_email)
 
 
 def get_grandparent_folder_path():
