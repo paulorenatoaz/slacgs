@@ -6,7 +6,7 @@ from sklearn import svm
 from scipy.stats import multivariate_normal, norm
 from IPython.display import clear_output
 import os
-
+import pandas as pd
 from .enumtypes import LossType
 from .model import Model
 from .report import Report
@@ -27,7 +27,7 @@ class Simulator:
   """A simulator for Linear classifier Loss analysis in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
 
 
-  def __init__(self, model: Model, dims=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
+  def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
 
     """
     :param model: Linear Classifier Loss Analysis Model
@@ -106,6 +106,7 @@ class Simulator:
 
 
     """
+
 
     if not isinstance(model, Model):
         raise TypeError('model must be a Model object')
@@ -189,6 +190,88 @@ class Simulator:
     self.time_spent_test = 0
     self.verbose = verbose
     self.is_notebook = is_notebook()
+    self.dims_to_compare = dims_to_compare
+
+
+  def print_end(self):
+
+
+    # terminal output setting
+    progress_stream = '----------------------------------------------------------------------------------------------------'
+    n_index = len(self.model.N)
+    N_size = len(self.model.N)
+    p = int(n_index * 100 / N_size)
+    datapoints_fig = self.model.fig
+
+    if self.is_notebook:
+      clear_output()
+      plt.close()
+      if datapoints_fig:
+        plt.figure(figsize=(14, 4))
+        fm = plt.get_current_fig_manager()
+        fm.canvas.figure = datapoints_fig
+        datapoints_fig.canvas = fm.canvas
+
+        plt.figure(datapoints_fig.number)
+      plt.figure(self.report.plot_with_intersection().number)
+      plt.show()
+
+      print(' progress: ', end='')
+      print(progress_stream[0:p], end='')
+      print("\033[91m {}\033[00m".format(progress_stream[p:-1]) + ' ' + str(n_index) + '/' + str(N_size))
+      print('n: ' + str(self.model.N[-1]))
+      print('N = ' + str(self.model.N))
+      print('Model: ', self.report.model_tag)
+      print('Simulator: ', self.report.sim_tag)
+
+      dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
+      loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
+
+      print('loss_bayes: ', loss_bayes)
+      print('d: ', d)
+      print('intersection_points: ', intersection_point_dict)
+      print('loss_N: ', pd.DataFrame(loss_N))
+      print('iter_N: ', pd.DataFrame(iter_N))
+
+    else:
+      cls()
+
+      print(' progress: ', end='')
+      print(progress_stream[0:p], end='')
+      print("\033[91m {}\033[00m".format(progress_stream[p:-1]) + ' ' + str(n_index) + '/' + str(N_size))
+      print('n: ' + str(self.model.N[-1]))
+      print('N = ' + str(self.model.N))
+      print('Model: ', self.report.model_tag)
+      print('Simulator: ', self.report.sim_tag)
+
+      dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
+      loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
+
+      print('loss_bayes: ', loss_bayes)
+      print('d: ', d)
+      print('intersection_points: ', pd.DataFrame(intersection_point_dict))
+      print('loss_N: ', pd.DataFrame(loss_N))
+      print('iter_N: ', pd.DataFrame(iter_N))
+
+      plt.close()
+      if datapoints_fig:
+        plt.figure(figsize=(14, 4))
+        fm = plt.get_current_fig_manager()
+        fm.canvas.figure = datapoints_fig
+        datapoints_fig.canvas = fm.canvas
+
+        plt.figure(datapoints_fig.number)
+      plt.figure(self.report.plot_with_intersection().number)
+      plt.show()
+
+
+
+
+
+
+
+
+
 
 
 
@@ -216,19 +299,16 @@ class Simulator:
     else:
       cls()
 
-    if True:
+    if self.is_notebook:
       plt.close()
       if datapoints_fig :
-        plt.figure(figsize=(10, 4))
+        plt.figure(figsize=(14, 4))
         fm = plt.get_current_fig_manager()
         fm.canvas.figure = datapoints_fig
         datapoints_fig.canvas = fm.canvas
 
         plt.figure(datapoints_fig.number)
-
-
       plt.figure(self.report.plot_with_intersection().number)
-
       plt.show()
 
 
@@ -752,11 +832,15 @@ class Simulator:
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.infered_loss_bayes(d)
 
+    if self.verbose:
+      self.print_end()
+
     # get the end time
     et = time.time()
 
     # get the execution time
     elapsed_time = et - st
+
     if self.verbose:
       print('Execution time:', elapsed_time/3600, 'h')
 

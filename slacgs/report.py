@@ -116,7 +116,7 @@ class Report:
 
     return intersection_points, n_star
 
-  def plot_with_intersection(self, dims=None):
+  def plot_with_intersection(self):
     """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
 
     Parameters:
@@ -124,27 +124,36 @@ class Report:
 
     """
 
-    if dims is None:
-      dims = self.sim.dims[-2:]
+    sim_dims = self.sim.dims
 
-    Xdata = np.log2(self.sim.model.N)[:len(self.loss_N[dims[0]][LossType.THEORETICAL.value])]
+    unique_pairs = []
+    n = len(sim_dims)
+
+    for i in range(n):
+      for j in range(i + 1, n):
+        pair = (sim_dims[i], sim_dims[j])
+        unique_pairs.append(pair)
+
+    Xdata = np.log2(self.sim.model.N)[:len(self.loss_N[sim_dims[0]][LossType.THEORETICAL.value])]
     Y_data = self.loss_N
-
 
     columns = len(self.sim.loss_types)
     # Create the figure and three subplots
-    fig, axs = plt.subplots(1, columns, figsize=(10, 3))
-
+    fig, axs = plt.subplots(1, columns, figsize=(14, 4))
 
     for i, loss_type in enumerate(self.sim.loss_types):
-      axs[i].plot(Xdata, Y_data[dims[0]][loss_type], label='dim = ' + str(dims[0]) , color='blue')
-      axs[i].plot(Xdata, Y_data[dims[1]][loss_type], label='dim = ' + str(dims[1]) , color='red')
-      if len(self.loss_N[dims[0]][loss_type]) > 1:
-        intersection_points, n_star = self.intersection_point_(dims, loss_type)
-        if len(intersection_points) > 0:
-          for j in range(0, len(intersection_points)):
-            axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
-            axs[i].text(intersection_points[j][0], intersection_points[j][1], str(n_star[j]))
+      for d in sim_dims:
+        axs[i].plot(Xdata, Y_data[d][loss_type], label='dim = ' + str(d))
+
+      if len(self.loss_N[sim_dims[0]][loss_type]) > 1:
+        for dims in unique_pairs:
+          intersection_points, n_star = self.intersection_point_(dims, loss_type)
+          if len(intersection_points) > 0:
+            for j in range(0, len(intersection_points)):
+              axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
+              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.2f}".format(intersection_points[j][0]) + ',' + "{:.2f}".format(intersection_points[j][1]) + ')' )
+
+
 
       axs[i].set_title(loss_type)
       axs[i].set_xlabel('$\log_2(n)$')
@@ -156,6 +165,8 @@ class Report:
 
     # Show the plot
     plt.tight_layout()
+
+
 
     return fig
 

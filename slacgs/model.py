@@ -261,7 +261,7 @@ class Model:
 		transformed_ellipsoid1 = transformed_ellipsoid1.reshape((100, 100, 3))
 
 		# Plot the points and the ellipsoid
-		fig = plt.figure(figsize=(10, 4))
+		fig = plt.figure(figsize=(14, 4))
 		ax2 = fig.add_subplot(121, projection='3d')
 		ax2.scatter(points[:, 0], points[:, 1], points[:, 2], alpha=0.3)
 		ax2.scatter(points1[:, 0], points1[:, 1], points1[:, 2], alpha=0.3)
@@ -276,7 +276,7 @@ class Model:
 		ax2.set_ylim3d([-10, 10])
 		ax2.set_zlim3d([-10, 10])
 		ax2.view_init(elev=30, azim=-45)
-		plt.subplots_adjust(wspace=0.5)
+		plt.subplots_adjust(left=0.124, bottom=0.136, right=0.89, top=0.983, wspace=0.943, hspace=0.2)
 
 		# Define mean and covariance for 2D
 		mean = [1, 1]
