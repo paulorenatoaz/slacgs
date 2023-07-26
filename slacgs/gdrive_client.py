@@ -401,8 +401,6 @@ class GdriveClient:
 		if not isinstance(folder_id, str):
 			raise ValueError('folder_id must be a string.')
 
-		self.check_user_email()
-
 		permission = {
 			'type': 'user',
 			'role': 'writer',
