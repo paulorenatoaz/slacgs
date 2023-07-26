@@ -192,7 +192,7 @@ class Simulator:
 
 
 
-  def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,fig: plt.Figure):
+  def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure):
 
     """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (iter_per_step). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
 
@@ -200,7 +200,7 @@ class Simulator:
     :param n: cardinality of the dataset
     :param max_iter: max number of iterations per n ∈ N
     :param iter_per_step: number of datasets generated in one simulation step equals iter_per_step*sqrt(augmentation_until_n)/sqrt(n), if n < augmentation_until_n, else it equals iter_per_step
-    :param fig: a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points
+    :param datapoints_fig: a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points
 
 
     """
@@ -216,13 +216,21 @@ class Simulator:
     else:
       cls()
 
-    if fig :
+    if True:
+      plt.close()
+      if datapoints_fig :
+        plt.figure(figsize=(10, 4))
+        fm = plt.get_current_fig_manager()
+        fm.canvas.figure = datapoints_fig
+        datapoints_fig.canvas = fm.canvas
+
+        plt.figure(datapoints_fig.number)
+
+
+      plt.figure(self.report.plot_with_intersection().number)
+
       plt.show()
-      # plt.figure()
-      fm = plt.get_current_fig_manager()
-      fm.canvas.figure = fig
-      fig.canvas = fm.canvas
-      self.report.plot_with_intersection().canvas = fm.canvas
+
 
 
     print(' progress: ', end='')
