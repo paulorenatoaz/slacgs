@@ -64,6 +64,8 @@ def start_google_drive_client(password=None, user_email=None, verbose=True):
 	if GDC.gdrive_account_email:
 		if not GDC.check_folder_existence('slacgs.demo.' + GDC.gdrive_account_email):
 			folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
+		else:
+			folder_id = GDC.get_folder_id('slacgs.demo.' + GDC.gdrive_account_email)
 
 		GDC.share_folder_with_gdrive_account(folder_id)
 
@@ -837,35 +839,32 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 
 
 def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, dims_to_simulate, dims_to_compare, verbose=True):
-	""" add a test simulation to a custom test scenario
+	""" add a simulation to a custom test scenario
 
-	:param params: a list containnong Sigmas and Rhos
-	:type params: list[float|int] or tuple[float|int]
+	Parameters:
+		params (list[float|int] or tuple[float|int]): a list containnong Sigmas and Rhos
+		scenario_number (int): scenario number
+		dims_to_simulate (list[int] or tuple[int]): dimensionalities to simulate
+		dims_to_compare (list[int] or tuple[int]): dimensionalities to compare
+		verbose (bool): whether to print progress to console output
 
-	:param scenario_number: scenario number
-	:type scenario_number: int
+	Returns:
+		bool: True if successful, False otherwise
 
-	:param dims_to_simulate: dimensions to simulate
-	:type dims_to_simulate: list[int] or tuple[int]
+	Raises:
+		TypeError:
+			if params is not a list[float|int] or tuple[float|int];
+			if scenario_number is not an int;
+			if dims_to_simulate is not a list[int] or tuple[int];
+			if dims_to_compare is not a list[int] or tuple[int]
 
-	:param dims_to_compare: dimensions to compare
-	:type dims_to_compare: list[int] or tuple[int]
-
-	:returns: None
-	:rtype: None
-
-	:raises TypeError:
-		if params is not a list[float|int] or tuple[float|int];
-		if scenario_number is not an int;
-		if dims_to_simulate is not a list[int] or tuple[int];
-		if dims_to_compare is not a list[int] or tuple[int]
+		ValueError:
+			if scenario_number is not a positive integer;
+			if dims_to_compare is not a subset of dims_to_simulate
 
 
-	:raises ValueError:
-		if scenario_number is not a positive integer;
-		if dims_to_compare is not a subset of dims_to_simulate;
+	Example:
 
-	:Example:
 		>>> from slacgs.demo import *
 		>>> start_report_service(password, user_email)
 
