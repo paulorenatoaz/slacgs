@@ -1,11 +1,12 @@
 import re
 from googleapiclient.discovery import Resource
+from .utils import report_service, start_report_service
 
 
 class GdriveClient:
 	"""perform operations on Google Drive."""
 
-	def __init__(self, drive_service, sheets_service, gdrive_account_email=None):
+	def __init__(self, drive_service=None, sheets_service=None, gdrive_account_email=None):
 
 		"""Constructor for GdriveClient class.
 
@@ -27,10 +28,10 @@ class GdriveClient:
 			if gdrive_account_email is not a valid email address.
 		"""
 
-		if not isinstance(drive_service, Resource):
+		if drive_service and not isinstance(drive_service, Resource):
 			raise TypeError('drive_service must be a googleapiclient.discovery.Resource object.')
 
-		if not isinstance(sheets_service, Resource):
+		if sheets_service and not isinstance(sheets_service, Resource):
 			raise TypeError('sheets_service must be a googleapiclient.discovery.Resource object.')
 
 		if gdrive_account_email:
@@ -49,6 +50,15 @@ class GdriveClient:
 					break
 				else:
 					print("Invalid email address. Please try again.")
+
+		## If drive_service and sheets_service are not provided, try to get them from report_service. If report_service is not running, start it.
+		if not drive_service and not sheets_service:
+			if not report_service['drive_service'] or not report_service['sheets_service']:
+				start_report_service()
+
+			drive_service = report_service['drive_service']
+			sheets_service = report_service['sheets_service']
+
 
 		self.drive_service = drive_service
 		self.sheets_service = sheets_service
