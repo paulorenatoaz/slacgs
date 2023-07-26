@@ -264,17 +264,6 @@ class Simulator:
       plt.figure(self.report.plot_with_intersection().number)
       plt.show()
 
-
-
-
-
-
-
-
-
-
-
-
   def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure):
 
     """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (iter_per_step). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
@@ -302,7 +291,7 @@ class Simulator:
     if self.is_notebook:
       plt.close()
       if datapoints_fig :
-        plt.figure(figsize=(14, 4))
+        plt.figure(figsize=(10, 4))
         fm = plt.get_current_fig_manager()
         fm.canvas.figure = datapoints_fig
         datapoints_fig.canvas = fm.canvas
