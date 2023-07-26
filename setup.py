@@ -14,7 +14,11 @@ setup(
         'scipy>=1.10.1',
         'pygsheets>=2.0.6',
         'google-api-python-client>=2.83.0',
-        'cryptography>=41.0.2'
+        'cryptography>=41.0.2',
+        'Pillow>=8.1.0',
+        'pandas>=2.0.3',
+        'setuptools>=51.3.3'
+
     ],
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',
