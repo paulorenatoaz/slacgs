@@ -227,6 +227,9 @@ class Simulator:
       dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
       loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
 
+      for loss_type in self.loss_types:
+        loss_N[loss_type] = [round(value,2) for value in loss_N[loss_type]]
+
       print('loss_bayes: ', loss_bayes)
       print('d: ', d)
       print('intersection_points: ', intersection_point_dict)
@@ -247,9 +250,14 @@ class Simulator:
       dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
       loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
 
+      for loss_type in self.loss_types:
+        for d in dims_to_compare:
+          loss_N[d][loss_type] = [round(value,2) for value in loss_N[d][loss_type]]
+
+
       print('loss_bayes: ', loss_bayes)
       print('d: ', d)
-      print('intersection_points: ', pd.DataFrame(intersection_point_dict))
+      print('inter: ', pd.DataFrame(intersection_point_dict))
       print('loss_N: ', pd.DataFrame(loss_N))
       print('iter_N: ', pd.DataFrame(iter_N))
 

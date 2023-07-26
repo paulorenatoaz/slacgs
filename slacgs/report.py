@@ -151,7 +151,7 @@ class Report:
           if len(intersection_points) > 0:
             for j in range(0, len(intersection_points)):
               axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
-              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.2f}".format(intersection_points[j][0]) + ',' + "{:.2f}".format(intersection_points[j][1]) + ')' )
+              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.3f}".format(intersection_points[j][0]) + ',' + "{:.3f}".format(intersection_points[j][1]) + ')' )
 
 
 
