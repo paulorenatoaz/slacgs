@@ -19,20 +19,23 @@ report_service_conf = {
 }
 
 
-def set_report_service_conf(password=None, user_email=None):
-  """Start the report service. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
+def set_report_service_conf(slags_password=None, user_google_account_email=None):
+  """Set the report service configuration. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
 
-  Args:
-      password (str): The password used to decrypt the key. Defaults to None.
-      user_email (str): The user email used to authenticate the Google services. Defaults to None.
+  Parameters:
+    slags_password (str): The password used to enable Report Service. Defaults to None.
+    user_google_account_email (str): The user email used to authenticate the Google services. Defaults to None.
+
+  Observations:
+    If slags_password or user_google_account_email is None, then the user will be prompted to enter the missing information.
   """
 
-  if user_email is not None:
-    report_service_conf['user_email'] = user_email
+  if user_google_account_email is not None:
+    report_service_conf['user_email'] = user_google_account_email
 
   SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 
-  key_obj = eval(get_key(password))
+  key_obj = eval(get_key(slags_password))
   credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
 
   report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)

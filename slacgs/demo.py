@@ -51,11 +51,13 @@ def start_google_drive_service(password=None, user_email=None, verbose=True):
 		Parameters:
 			password (str): password for slacgs report service
 			user_email (str): email for Google Drive account to be used for report service
+
+		Obs: if password and user_email are None, the report_service_conf dictionary will be used to get the password and user_email
 	"""
 
 	## create GdriveClient object and connect to Google Drive for reports service
 	if report_service_conf['drive_service'] is None:
-		set_report_service_conf(password=password, user_email=user_email)
+		set_report_service_conf(password=password, user_google_account_email=user_email)
 
 	global GDC
 	if GDC is None:
