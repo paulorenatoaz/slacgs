@@ -198,6 +198,7 @@ class GspreadClient:
         ws.client.sheet.batch_update(sh.id,request)
     if verbose:
       print('sheet is over! id: ', ws.index, ' title:', ws.title)
+      print('link to Compare Report: ', ws.url)
 
   def write_loss_report_to_spreadsheet(self, report, verbose=True):
     """write loss_report to spreadsheet, a report that contains all results of Loss estimations
@@ -399,6 +400,7 @@ class GspreadClient:
         ws.client.sheet.batch_update(sh.id,request)
     if verbose:
       print('sheet is over! id: ', ws.index, ' title:', ws.title)
+      print('link to Loss Report: ', sh.url)
 
   def update_N_report_on_spreadsheet(self, report, dims, verbose=True):
     """update N_report to spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
@@ -807,6 +809,8 @@ class GspreadClient:
 
     if verbose:
       print('sheet is over! id: ', ws.index, ' title:', ws.title)
+      print('link to home: ', ws.url)
+
 
 
   def param_not_in_home(self, param):

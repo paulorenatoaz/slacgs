@@ -414,6 +414,7 @@ class GdriveClient:
 		if verbose:
 			print(f"Folder with path '{self.get_folder_path(folder_id)}' has been shared with the GDrive account with "
 		      f"email address '{self.gdrive_account_email}'.")
+			print(f"link: https://drive.google.com/drive/folders/{folder_id}")
 
 	def delete_folder(self, folder_id):
 		"""Delete a folder.

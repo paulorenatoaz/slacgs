@@ -40,18 +40,17 @@ SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4]
 r = RHO_12 = None
 
 
-# initialize global variables for reports service
+# initialize Google Drive Client global variable for demo reports service
 GDC = None
 
 
-def start_gdc(password=None, user_email=None):
-	""" start google drive client
+def start_google_drive_client(password=None, user_email=None, verbose=True):
+	"""
+		start Google Drive Client for demo report service
 
-		:param password: password for google drive account
-		:type password: str
-		:param user_email: email for google drive account
-		:type user_email: str
-
+		Parameters:
+			password (str): password for slacgs report service
+			user_email (str): email for Google Drive account to be used for report service
 	"""
 
 	## create GdriveClient object and connect to Google Drive for reports service
@@ -61,6 +60,10 @@ def start_gdc(password=None, user_email=None):
 	global GDC
 	if GDC is None:
 		GDC = GdriveClient(report_service['drive_service'], report_service['spreadsheet_service'], report_service['user_email'])
+
+	if GDC.gdrive_account_email:
+		folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
+		GDC.share_folder_with_gdrive_account(folder_id)
 
 
 def run_experiment_simulation(start_scenario=1):
@@ -83,7 +86,7 @@ def run_experiment_simulation(start_scenario=1):
 		raise ValueError("start_scenario must be between 1 and 4")
 
 	## start google drive client
-	start_gdc()
+	start_google_drive_client()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -178,7 +181,7 @@ def run_custom_simulation(param, dims_to_compare):
 	if not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
-	start_gdc()
+	start_google_drive_client()
 
 
 
@@ -457,7 +460,7 @@ def doctest_next_parameter():
 		>>> params, spreadsheet_title = doctest_next_parameter()
 
 	"""
-	start_gdc()
+	start_google_drive_client()
 
 	REPORT_FOLDER_NAME = 'slacgs.doctest'
 	SPREADSHEET_TITLE = 'scenario1.doctest'
@@ -496,17 +499,21 @@ def doctest_next_parameter():
 
 
 def run_experiment_simulation_test(start_scenario=1, verbose=True):
-	""" run the simulation test for the simulator and return True if there are still parameters to be simulated and False otherwise
+	""" run a simulation test for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise
 
-	:param start_scenario: scenario to start the simulation test
-	:type start_scenario: int
-	:returns: True if there are still parameters to be simulated and False otherwise
-	:rtype: bool
+	Parameters:
+		start_scenario (int): scenario to start the simulation test
+		verbose (bool): if True, print simulation progress
 
-	:raises ValueError: if start_scenario is not between 1 and 4
-	:raises TypeError: if start_scenario is not an int
+	Returns:
+		bool: True if there are still parameters to be simulated and False otherwise
 
-	:Example:
+	Raises:
+		ValueError: if start_scenario is not between 1 and 4
+		TypeError: if start_scenario is not an int
+
+
+	Example:
 		>>> from slacgs.demo import *
 		>>> start_report_service(password, user_email)
 		>>> run_experiment_simulation_test(verbose=False)
@@ -521,7 +528,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	if not 1 <= start_scenario <= 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
-	start_gdc()
+	start_google_drive_client()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -584,26 +591,25 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 
 
 def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number, verbose=True):
-	""" add simulation results to the scenario spreadsheet on google drive
+	""" add simulation results to one of the experiment scenario spreadsheets
 
-	:param params: a list containnong Sigmas and Rhos
-	:type params: list[float|int] or tuple[float|int]
+	Parameters:
+		params (list[float|int] or tuple[float|int]): a list containnong Sigmas and Rhos
+		scenario_number (int): scenario number
+		verbose (bool): if True, print simulation progress
 
-	:param scenario_number: scenario number
-	:type scenario_number: int
+	Returns:
+		int: 0 if simulation was successful
 
-	:returns: 0 if simulation was successful
-	:rtype: int
+	Raises:
+		TypeError:
+			if scenario is not an int;
+			if params is not a list[int|float] or tuple[int|float]
+		ValueError:
+			if params is not a valid parameter list;
+			if scenario is not between 1 and 4
 
-	:raises TypeError:
-		if scenario is not an int;
-		if params is not a list[int|float] or tuple[int|float]
-
-	:raises ValueError:
-		if params is not a valid parameter list;
-		if scenario is not between 1 and 4
-
-	:Example:
+	Example:
 		>>> from slacgs.demo import *
 		>>> start_report_service(password, user_email)
 
@@ -670,7 +676,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
 
-	start_gdc()
+	start_google_drive_client()
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -705,136 +711,33 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 
-
-def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
-	""" run a custom simulation
-
-	:param params: list containning Sigmas and Rhos
-	:type params: list[float|int] or tuple[float|int]
-
-	:param dims_to_compare: dimensions to compare
-	:type dims_to_compare: list[int] or tuple[int]
-
-	:returns: 0 if simulation was successful
-	:rtype: int
-
-	:raises TypeError:
-		if params is not a list[int|float] or tuple[int|float];
-		if dims_to_compare is not a list[int] or tuple[int];
-
-	:raises ValueError:
-		if params is not a valid parameter list;
-		if dims_to_compare is not a valid dimensions list;
-
-	:Example:
-		>>> from slacgs.demo import *
-		>>> start_report_service(password, user_email)
-
-		>>> ## 2 features
-		>>> params = [1, 2, 0.4]
-		>>> dims_to_compare = (1, 2)
-		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
-
-		>>> ## 3 features
-		>>> params = [1, 1, 4, -0.2, 0.1, 0.1]
-		>>> dims_to_compare = (2, 3)
-		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
-
-		>>> ## 4 features
-		>>> params = [1, 1, 1, 2, 0, 0, 0, 0, 0, 0]
-		>>> dims_to_compare = (3, 4)
-		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
-
-		>>> ## 5 features
-		>>> params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
-		>>> dims_to_compare = (2, 5)
-		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
-
-
-	"""
-
-	if not isinstance(params, (list, tuple)):
-		raise TypeError("params must be a list or tuple")
-
-	if not all(isinstance(x, (int, float)) for x in params):
-		raise TypeError("params must be a list or tuple of int or float")
-
-	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
-		raise TypeError("dims_to_compare must be a list or tuple")
-
-	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
-		raise TypeError("dims_to_compare must be a list or tuple of int")
-
-	## initialize gdrive client if it hasn't been initialized yet
-	start_gdc()
-
-	## create model object
-	model = Model(params)
-
-	## create simulator object
-	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
-	                   augmentation_until_n=1024, verbose=verbose)
-
-
-	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
-
-	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
-		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
-		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
-
-	## define spreadsheet title
-	SPREADSHEET_TITLE = 'custom_simulations.test'
-
-	## create spreadsheet if it doesn't exist
-	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
-		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
-		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
-		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-
-	## create gspread client object
-	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
-
-	## run simulation
-	slacgs.run()
-
-	## write results to spreadsheet
-	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
-
-	return True
-
-
 def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, verbose=True):
 	""" run a custom test scenario and write the results to a Google Spreadsheet shared with the user
 
-	:param scenario_list: scenario list
-	:type scenario_list: list[list[float|int]] or tuple[list[float|int]]
+	Parameters:
+		scenario_list (list[list[float|int]] or tuple[list[float|int]]): scenario list
+		scenario_number (int): scenario number
+		dims_to_simulate (list[int] or tuple[int]): dimensions to simulate
+		dims_to_compare (list[int] or tuple[int]): dimensions to compare
+		verbose (bool): whether to print messages to stdout or not
 
-	:param scenario_number: scenario number
-	:type scenario_number: int
+	Returns:
+		bool: True if simulation was successful
 
-	:param dims_to_simulate: dimensions to simulate
-	:type dims_to_simulate: list[int] or tuple[int]
+	Raises:
+		TypeError:
+			if scenario_list is not a list[list[float|int]] or tuple[list[float|int]];
+			if scenario_number is not an int;
+			if dims_to_simulate is not a list[int] or tuple[int];
+			if dims_to_compare is not a list[int] or tuple[int];
 
-	:param dims_to_compare: dimensions to compare
-	:type dims_to_compare: list[int] or tuple[int]
+		ValueError:
+			if scenario_list is not a valid scenario list;
+			if scenario_number is not a valid scenario number;
+			if dims_to_simulate is not a valid dimensions list;
 
-	:returns: None
-	:rtype: None
 
-	:raises TypeError:
-		if scenario_list is not a list[list[float|int]] or tuple[list[float|int]];
-		if scenario_number is not an int;
-		if dims_to_simulate is not a list[int] or tuple[int];
-		if dims_to_compare is not a list[int] or tuple[int];
-
-	:raises ValueError:
-		if scenario_list is not a valid scenario list;
-		if scenario_number is not a positive integer;
-		if dims_to_compare is not a subset of dims_to_simulate;
-
-	:Example:
+	Example:
 		>>> from slacgs.demo import *
 		>>> start_report_service(password, user_email)
 
@@ -867,10 +770,10 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
-	if scenario_number < 1:
-		raise ValueError("scenario_number must be a positive integer")
+	if scenario_number < 5:
+		raise ValueError("Custom scenario_number must be >= 5")
 
-	start_gdc()
+	start_google_drive_client()
 
 	## create Model objects to test each parameter set before continuing
 	models = []
@@ -990,7 +893,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
 
-	start_gdc()
+	start_google_drive_client()
 
 	## create Model object to test parameter set before continuing
 	model = Model(params)
@@ -1030,6 +933,108 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
+
+
+def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
+	""" run a custom simulation
+
+	:param params: list containning Sigmas and Rhos
+	:type params: list[float|int] or tuple[float|int]
+
+	:param dims_to_compare: dimensions to compare
+	:type dims_to_compare: list[int] or tuple[int]
+
+	:returns: 0 if simulation was successful
+	:rtype: int
+
+	:raises TypeError:
+		if params is not a list[int|float] or tuple[int|float];
+		if dims_to_compare is not a list[int] or tuple[int];
+
+	:raises ValueError:
+		if params is not a valid parameter list;
+		if dims_to_compare is not a valid dimensions list;
+
+	:Example:
+		>>> from slacgs.demo import *
+		>>> start_report_service(password, user_email)
+
+		>>> ## 2 features
+		>>> params = [1, 2, 0.4]
+		>>> dims_to_compare = (1, 2)
+		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
+
+		>>> ## 3 features
+		>>> params = [1, 1, 4, -0.2, 0.1, 0.1]
+		>>> dims_to_compare = (2, 3)
+		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
+
+		>>> ## 4 features
+		>>> params = [1, 1, 1, 2, 0, 0, 0, 0, 0, 0]
+		>>> dims_to_compare = (3, 4)
+		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
+
+		>>> ## 5 features
+		>>> params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
+		>>> dims_to_compare = (2, 5)
+		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
+
+
+	"""
+
+	if not isinstance(params, (list, tuple)):
+		raise TypeError("params must be a list or tuple")
+
+	if not all(isinstance(x, (int, float)) for x in params):
+		raise TypeError("params must be a list or tuple of int or float")
+
+	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
+		raise TypeError("dims_to_compare must be a list or tuple")
+
+	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
+		raise TypeError("dims_to_compare must be a list or tuple of int")
+
+	## initialize gdrive client if it hasn't been initialized yet
+	start_google_drive_client()
+
+	## create model object
+	model = Model(params)
+
+	## create simulator object
+	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
+	                   augmentation_until_n=1024, verbose=verbose)
+
+
+	## define folder name for storing reports
+	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
+
+	## create folder if it doesn't exist
+	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
+		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
+
+	## define spreadsheet title
+	SPREADSHEET_TITLE = 'custom_simulations.test'
+
+	## create spreadsheet if it doesn't exist
+	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
+		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
+		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
+		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
+
+	## create gspread client object
+	gsc = GspreadClient(report_service['pygsheets_service'], SPREADSHEET_TITLE)
+
+	## run simulation
+	slacgs.run()
+
+	## write results to spreadsheet
+	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
+
+	return True
+
+
+
 
 
 def run_experiment_test(start_scenario=1, verbose=True):
