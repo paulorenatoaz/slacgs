@@ -311,7 +311,7 @@ class Model:
 		ellipse = Ellipse(xy=mean1, width=width, height=height, angle=theta, fill=False, color='orange', alpha=1)
 		ax1.add_patch(ellipse)
 
-		ax1.set_aspect('equal')
+
 		ax1.set_xlabel('$x_1$')
 		ax1.set_ylabel('$x_2$')
 		ax1.set_xlim([-10, 10])

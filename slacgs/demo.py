@@ -453,7 +453,7 @@ def doctest_next_parameter():
 
 	:Example:
 		>>> from slacgs.demo import *
-		>>> start_report_service(password, gdrive_account_email)
+		>>> start_report_service(password, user_email)
 		>>> params, spreadsheet_title = doctest_next_parameter()
 
 	"""
@@ -667,6 +667,9 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 		if params[4] < -0.6 or params[4] > 0.6 or params[4] != params[5]:
 			raise ValueError("for scenario 4, params[4] must be between -0.6 and 0.6 and params[4] must be equal to params[5]")
 
+	## update scenario gif
+	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
+
 	start_gdc()
 
 	## define folder name for storing reports
@@ -691,9 +694,6 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 
 	## create model object
 	model = Model(params)
-
-	## update scenario gif
-	save_scenario_figures_as_gif([model], scenario_number, verbose=verbose)
 
 	## create simulator object
 	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024,
@@ -988,11 +988,14 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	if scenario_number < 1:
 		raise ValueError("scenario_number must be a positive integer")
 
+	## update scenario gif
+	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
+
 	start_gdc()
 
 	## create Model object to test parameter set before continuing
 	model = Model(params)
-	save_scenario_figures_as_gif([model], scenario_number, verbose=verbose)
+
 	## create Simulator object to test parameters before continuing
 	slacgs = Simulator(model, dims=dims_to_simulate, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
@@ -1030,7 +1033,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	return True
 
 
-def run_experiment_test(start_scenario=1):
+def run_experiment_test(start_scenario=1, verbose=True):
 	""" run the experiment test for the simulator and return 0 if all parameters have been simulated
 
 	:param start_scenario: scenario to start the experiment test
@@ -1056,16 +1059,17 @@ def run_experiment_test(start_scenario=1):
 		raise ValueError("start_scenario must be between 1 and 4")
 
 	for index in range(len(SCENARIOS)):
-		save_scenario_figures_as_gif(SCENARIOS[index], index + 1)
+		save_scenario_figures_as_gif(SCENARIOS[index], index + 1, verbose=verbose)
 
 	while run_experiment_simulation_test(start_scenario):
 		continue
 
-	print("All parameters have been simulated. Please check your google drive section: 'Shared with me' for results.")
+	if verbose:
+		print("All parameters have been simulated. Please check your google drive section: 'Shared with me' for results.")
 	return 0
 
 
-def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, duration=200, loop=0):
+def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, duration=200, loop=0, verbose=True):
 	"""
 	Save a list of matplotlib Figure objects as an animated GIF.
 
@@ -1114,6 +1118,7 @@ def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, du
 		frames = [Image.open(os.path.join(scenario_figs_dir, f)) for f in os.listdir(scenario_figs_dir) if f.endswith(".png")]
 		frames[0].save(export_path, format="GIF", append_images=frames[1:], save_all=True, duration=duration, loop=loop)
 
-		print(f"Animated GIF saved as: {export_path}")
+		if verbose:
+			print(f"Animated GIF saved as: {export_path}")
 	except Exception as e:
 		print(f"Failed to save the animated GIF: {e}")

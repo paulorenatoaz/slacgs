@@ -115,6 +115,49 @@ class Report:
 
     return intersection_points, n_star
 
+  def plot_with_intersection(self, dims=None):
+    """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
+
+    Parameters:
+      dims (tuple of int or list of int): a pair of dimensionalyties to be compared
+
+    """
+
+    if dims is None:
+      dims = self.sim.dims[-2:]
+
+    Xdata = np.log2(self.sim.model.N)
+    Y_data = self.loss_N
+
+
+    columns = len(self.sim.loss_types)
+    # Create the figure and three subplots
+    fig, axs = plt.subplots(1, columns, figsize=(15, 5))
+
+
+    for i, loss_type in enumerate(self.sim.loss_types):
+      axs[i].plot(Xdata, Y_data[dims[0]][loss_type], label='dim = ' + str(dims[0]) , color='blue')
+      axs[i].plot(Xdata, Y_data[dims[1]][loss_type], label='dim = ' + str(dims[1]) , color='red')
+      intersection_points, n_star = self.intersection_point_(dims, loss_type)
+      if len(intersection_points) > 0:
+        for j in range(0, len(intersection_points)):
+          axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
+          axs[i].text(intersection_points[j][0], intersection_points[j][1], str(n_star[j]))
+
+      axs[i].set_title(loss_type)
+      axs[i].set_xlabel('$\log_2(n)$')
+      axs[i].set_ylabel('$P(error)$')
+      axs[i].set_xlim([0, 12])
+      axs[i].set_ylim([0, 1])
+      axs[i].legend()
+
+
+    # Show the plot
+    plt.tight_layout()
+
+    return fig
+
+
   def compile_N(self, dims=(2,3)):
     """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
 
