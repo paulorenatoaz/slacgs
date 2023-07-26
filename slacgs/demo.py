@@ -62,7 +62,9 @@ def start_google_drive_client(password=None, user_email=None, verbose=True):
 		GDC = GdriveClient(report_service['drive_service'], report_service['spreadsheet_service'], report_service['user_email'])
 
 	if GDC.gdrive_account_email:
-		folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
+		if not GDC.check_folder_existence('slacgs.demo.' + GDC.gdrive_account_email):
+			folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
+
 		GDC.share_folder_with_gdrive_account(folder_id)
 
 
