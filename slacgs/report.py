@@ -86,9 +86,10 @@ class Report:
 
     """
 
-    xdata = self.sim.model.N
+
     ydata1 = self.loss_N[dims[0]][loss_type]
     ydata2 = self.loss_N[dims[1]][loss_type]
+    xdata = self.sim.model.N[:len(ydata1)]
 
     line_1 = LineString(np.column_stack((np.log2(xdata), ydata1)))
     line_2 = LineString(np.column_stack((np.log2(xdata), ydata2)))
@@ -138,7 +139,7 @@ class Report:
     for i, loss_type in enumerate(self.sim.loss_types):
       axs[i].plot(Xdata, Y_data[dims[0]][loss_type], label='dim = ' + str(dims[0]) , color='blue')
       axs[i].plot(Xdata, Y_data[dims[1]][loss_type], label='dim = ' + str(dims[1]) , color='red')
-      if len(self.loss_N[dims[0]][loss_type]) > 0:
+      if len(self.loss_N[dims[0]][loss_type]) > 1:
         intersection_points, n_star = self.intersection_point_(dims, loss_type)
         if len(intersection_points) > 0:
           for j in range(0, len(intersection_points)):
