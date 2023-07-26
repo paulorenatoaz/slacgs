@@ -158,7 +158,7 @@ class Report:
       axs[i].set_title(loss_type)
       axs[i].set_xlabel('$\log_2(n)$')
       axs[i].set_ylabel('$P(error)$')
-      axs[i].set_xlim([0, max(12, max(Xdata))])
+      axs[i].set_xlim([0, max(12, len(self.sim.model.N))])
       axs[i].set_ylim([0, 1])
       axs[i].legend()
 
