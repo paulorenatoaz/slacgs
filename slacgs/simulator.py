@@ -218,7 +218,7 @@ class Simulator:
 
     if fig :
       plt.show()
-      plt.figure()
+      # plt.figure()
       fm = plt.get_current_fig_manager()
       fm.canvas.figure = fig
       fig.canvas = fm.canvas
