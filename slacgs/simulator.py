@@ -231,9 +231,9 @@ class Simulator:
         for d in dims_to_compare:
           loss_N[d][loss_type] = [round(value, 2) for value in loss_N[d][loss_type]]
 
-      print('loss_bayes: ', loss_bayes)
-      print('d: ', d)
-      print('intersection_points: ', intersection_point_dict)
+      print('d: ', self.report.d)
+      print('bayes error rate: ', self.report.loss_bayes)
+      print('intersection_points: ', pd.DataFrame(intersection_point_dict))
       print('loss_N: ', pd.DataFrame(loss_N))
       print('iter_N: ', pd.DataFrame(iter_N))
 
@@ -255,9 +255,8 @@ class Simulator:
         for d in dims_to_compare:
           loss_N[d][loss_type] = [round(value,2) for value in loss_N[d][loss_type]]
 
-
-      print('loss_bayes: ', loss_bayes)
-      print('d: ', d)
+      print('d: ', self.report.d)
+      print('bayes error rate: ', self.report.loss_bayes)
       print('inter: ', pd.DataFrame(intersection_point_dict))
       print('loss_N: ', pd.DataFrame(loss_N))
       print('iter_N: ', pd.DataFrame(iter_N))
@@ -317,10 +316,10 @@ class Simulator:
     print('n: ' + str(n))
     print('N = ' + str(self.model.N))
     print('max_iter = ' + str(max_iter))
-    print('iter_per_step: ', iter_per_step)
+    print('iter_per_step = ', iter_per_step)
     print('Model: ',self.report.model_tag)
     print('Simulator: ',self.report.sim_tag)
-    print('d = ', self.report.d)
+    print('d: ', self.report.d)
     print('bayes error rate: ', self.report.loss_bayes)
     for dim in self.dims:
       if self.report.loss_bayes[dim] == 0:
