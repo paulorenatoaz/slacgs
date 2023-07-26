@@ -42,14 +42,17 @@ class GdriveClient:
 				raise ValueError('gdrive_account_email must be a valid email address.')
 
 		else:
-			while True:
-				gdrive_account_email = input(
-					"Please enter your google account email address so I can share results with you\n(if you don't have a google account, create one at https://accounts.google.com/signup)\ngoogle account email:")
-				if re.match(r"[^@]+@[^@]+\.[^@]+", gdrive_account_email):
-					print("Valid email address!")
-					break
-				else:
-					print("Invalid email address. Please try again.")
+			if report_service['user_email']:
+				gdrive_account_email = report_service['user_email']
+			else:
+				while True:
+					gdrive_account_email = input(
+						"Please enter your google account email address so I can share results with you\n(if you don't have a google account, create one at https://accounts.google.com/signup)\ngoogle account email:")
+					if re.match(r"[^@]+@[^@]+\.[^@]+", gdrive_account_email):
+						print("Valid email address!")
+						break
+					else:
+						print("Invalid email address. Please try again.")
 
 		## If drive_service and sheets_service are not provided, try to get them from report_service. If report_service is not running, start it.
 		if not drive_service and not sheets_service:
