@@ -706,7 +706,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 
-def run_custom_simulation_test(params, dims_to_compare, verbose=True):
+def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 	""" run a custom simulation
 
 	:param params: list containning Sigmas and Rhos
@@ -759,21 +759,20 @@ def run_custom_simulation_test(params, dims_to_compare, verbose=True):
 	if not all(isinstance(x, (int, float)) for x in params):
 		raise TypeError("params must be a list or tuple of int or float")
 
-	if not isinstance(dims_to_compare, (list, tuple)):
+	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
 		raise TypeError("dims_to_compare must be a list or tuple")
 
-	if not all(isinstance(x, int) for x in dims_to_compare):
+	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
 	## initialize gdrive client if it hasn't been initialized yet
 	start_gdc()
 
-
 	## create model object
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, dims=dims_to_compare, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
+	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 
@@ -801,7 +800,7 @@ def run_custom_simulation_test(params, dims_to_compare, verbose=True):
 	slacgs.run()
 
 	## write results to spreadsheet
-	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
+	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
 
 	return True
 
