@@ -159,7 +159,7 @@ def run_custom_simulation(param, dims_to_compare):
 	:param param: parameters list
 	:type param: list[float|int] or tuple[float|int]
 
-	:param dims_to_compare: dimensions to compare
+	:param dims_to_compare: dimensionalities to compare
 	:type dims_to_compare: list[int] or tuple[int]
 
 	:returns: 0 if simulation was successful
@@ -171,7 +171,7 @@ def run_custom_simulation(param, dims_to_compare):
 
 	:raises ValueError:
 		if param is not a valid parameter list;
-		if dims_to_compare is not a valid dimensions list;
+		if dims_to_compare is not a valid dimensionalities list;
 
 	"""
 
@@ -231,10 +231,10 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 	:param scenario_list: scenario list
 	:type scenario_list: list[list[float|int]] or tuple[list[float|int]]
 
-	:param dims_to_simulate: dimensions to simulate
+	:param dims_to_simulate: dimensionalities to simulate (if None, all dimensionalities will be simulated)
 	:type dims_to_simulate: list[int] or tuple[int]
 
-	:param dims_to_compare: dimensions to compare
+	:param dims_to_compare: dimensionalities to compare
 	:type dims_to_compare: list[int] or tuple[int]
 
 	:returns: 0 if simulation was successful
@@ -327,11 +327,11 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 			slacgs.report.write_to_spreadsheet(gsc)
 
 
-def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
+def add_simulation_to_experiment_scenario_spreadsheet(scenario_number, param):
 	""" add simulation results to the scenario spreadsheet on google drive
 
-	:param scenario: scenario number
-	:type scenario: int
+	:param scenario_number: scenario number
+	:type scenario_number: int
 
 	:param param: parameters list
 	:type param: list[float|int] or tuple[float|int]
@@ -350,7 +350,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
 
 	"""
 
-	if not isinstance(scenario, int):
+	if not isinstance(scenario_number, int):
 		raise TypeError("scenario must be an int")
 
 	if not isinstance(param, (list, tuple)):
@@ -359,29 +359,29 @@ def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
 	if not all(isinstance(x, (int, float)) for x in param):
 		raise TypeError("param must be a list or tuple of int or float")
 
-	if scenario < 1 or scenario > 4:
+	if scenario_number < 1 or scenario_number > 4:
 		raise ValueError("scenario must be between 1 and 4")
 
 	if len(param) != 6:
 		raise ValueError("param must be a list or tuple of 6 elements for this experiment")
 
-	if scenario == 1:
+	if scenario_number == 1:
 		if param[0] != 1 or param[1] != 1 or param[3] != 0 or param[4] != 0 or param[5] != 0:
 			raise ValueError("for scenario 1, param must be a list or tuple of 6 elements where param[0] = 1, param[1] = 1, param[3] = 0, param[4] = 0 and param[5] = 0")
 
-	elif scenario == 2:
+	elif scenario_number == 2:
 		if param[0] != 1 or param[1] != 1 or param[2] != 2 or param[4] != 0 or param[5] != 0:
 			raise ValueError("for scenario 2, param must be a list or tuple of 6 elements where param[0] = 1, param[1] = 1, param[2] = 2, param[4] = 0 and param[5] = 0")
 		if param[3] < -0.8 or param[3] > 0.8:
 			raise ValueError("for scenario 2, param[3] must be between -0.8 and 0.8")
 
-	elif scenario == 3:
+	elif scenario_number == 3:
 		if param[0] != 1 or param[1] != 1 or param[2] != 2 or param[3] != 0:
 			raise ValueError("for scenario 3, param must be a list or tuple of 6 elements where param[0] = 1, param[1] = 1, param[2] = 2 and param[3] = 0")
 		if param[4] < -0.7 or param[4] > 0.7 or param[4] != param[5]:
 			raise ValueError("for scenario 3, param[4] must be between -0.7 and 0.7 and param[4] must be equal to param[5]")
 
-	elif scenario == 4:
+	elif scenario_number == 4:
 		if param[0] != 1 or param[1] != 1 or param[2] != 2 or param[3] != -0.1:
 			raise ValueError("for scenario 4, param must be a list or tuple of 6 elements where param[0] = 1, param[1] = 1, param[2] = 2 and param[3] = -0.1")
 		if param[4] < -0.6 or param[4] > 0.6 or param[4] != param[5]:
@@ -397,7 +397,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
 		GDC.share_folder_with_gdrive_account(folder_id)  # share folder with user's google drive account
 
 	## define spreadsheet title
-	SPREADSHEET_TITLE = 'scenario' + str(scenario)
+	SPREADSHEET_TITLE = 'scenario' + str(scenario_number)
 
 	## create spreadsheet if it doesn't exist
 	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
@@ -412,7 +412,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(scenario, param):
 	model = Model(param)
 
 	## update scenario gif
-	save_scenario_figures_as_gif([model], scenario_number, verbose=verbose)
+	save_scenario_figures_as_gif([model], scenario_number)
 
 	## create simulator object
 	slacgs = Simulator(model)
@@ -505,11 +505,43 @@ def doctest_next_parameter():
 
 
 def run_experiment_simulation_test(start_scenario=1, verbose=True):
-	""" run a simulation test for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise
+	""" run a simulation test for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise.
+
+	Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario
+	and another one for the Custom Simulations.
+	The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service
+	account and shared with the user's Google Drive account.
+	Also, images with data visualization will be exported to a local folder inside project's root folder ( slacgs/images/ )
+
+	Reports Exported:
+		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
+		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
+		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+
+	Images Exported:
+		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
+		Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
+		Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
+
+	Loss Functions:
+		- Theoretical Loss: estimated using probability theory
+		- Empirical Loss with Train Data: estimated using empirical approach with train data
+		- Empirical Loss with Test Data: estimated using empirical approach with test data
+
+	Dimensions simulated:
+		- 1D: 1 feature
+		- 2D: 2 features
+		- 3D: 3 features
+
+	Dimensions compared:
+		- 2D vs 3D: 2 features vs 3 features
+
+	Cardinalities simulated:
+		N = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]  (+ [2048, 4096, 8192] if L_3 > L_2)
 
 	Parameters:
 		start_scenario (int): scenario to start the simulation test
-		verbose (bool): if True, print simulation progress
+		verbose (bool): if True, print simulation progress to stdout (default is True)
 
 	Returns:
 		bool: True if there are still parameters to be simulated and False otherwise
@@ -602,7 +634,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	Parameters:
 		params (list[float|int] or tuple[float|int]): a list containnong Sigmas and Rhos
 		scenario_number (int): scenario number
-		verbose (bool): if True, print simulation progress
+		verbose (bool): if True, print simulation progress (default: True)
 
 	Returns:
 		int: 0 if simulation was successful
@@ -718,13 +750,14 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, verbose=True):
-	""" run a custom test scenario and write the results to a Google Spreadsheet shared with the user
+	""" run a custom test scenario and write the results to a Google Spreadsheet shared with the user.
+	A Scenario is a list with params to simulate.
 
 	Parameters:
 		scenario_list (list[list[float|int]] or tuple[list[float|int]]): scenario list
 		scenario_number (int): scenario number
-		dims_to_simulate (list[int] or tuple[int]): dimensions to simulate
-		dims_to_compare (list[int] or tuple[int]): dimensions to compare
+		dims_to_simulate (list[int] or tuple[int]): dimensionalities to simulate (if None, all possible dimensionalities will be simulated) (default: None)
+		dims_to_compare (list[int] or tuple[int]): dimensionalities to compare (if None, the last two dimensionalities of dims_to_simulate will be compared) (default: None)
 		verbose (bool): whether to print messages to stdout or not
 
 	Returns:
@@ -740,7 +773,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 		ValueError:
 			if scenario_list is not a valid scenario list;
 			if scenario_number is not a valid scenario number;
-			if dims_to_simulate is not a valid dimensions list;
+			if dims_to_simulate is not a valid dimensionalities list;
 
 
 	Example:
@@ -840,15 +873,15 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	return True
 
 
-def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, dims_to_simulate, dims_to_compare, verbose=True):
+def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, dims_to_simulate=None, dims_to_compare=None, verbose=True):
 	""" add a simulation to a custom test scenario
 
 	Parameters:
 		params (list[float|int] or tuple[float|int]): a list containnong Sigmas and Rhos
 		scenario_number (int): scenario number
-		dims_to_simulate (list[int] or tuple[int]): dimensionalities to simulate
-		dims_to_compare (list[int] or tuple[int]): dimensionalities to compare
-		verbose (bool): whether to print progress to console output
+		dims_to_simulate (list[int] or tuple[int]): dimensionalities to simulate (if None, all dimensionalities will be simulated) (default: None)
+		dims_to_compare (list[int] or tuple[int]): dimensionalities to compare (if None, the last two dimensionalities of dims_to_simulate will be compared) (default: None)
+		verbose (bool): whether to print progress to console output (default: True)
 
 	Returns:
 		bool: True if successful, False otherwise
@@ -884,14 +917,19 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	if not isinstance(scenario_number, int):
 		raise TypeError("scenario_number must be an int")
 
-	if not isinstance(dims_to_simulate, (list, tuple)):
+	if dims_to_simulate and not isinstance(dims_to_simulate, (list, tuple)):
 		raise TypeError("dims_to_simulate must be a list or tuple")
 
-	if not isinstance(dims_to_compare, (list, tuple)):
+	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
 		raise TypeError("dims_to_compare must be a list or tuple")
 
 	if scenario_number < 1:
 		raise ValueError("scenario_number must be a positive integer")
+
+
+	if dims_to_compare and not set(dims_to_compare).issubset(set(dims_to_simulate)):
+		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
+
 
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
@@ -938,25 +976,26 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	return True
 
 
-def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
-	""" run a custom simulation
+def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=None, verbose=True):
+	""" run a custom simulation for any dimensionality and cardinality
 
-	:param params: list containning Sigmas and Rhos
-	:type params: list[float|int] or tuple[float|int]
+	Parameters:
+		params (list[float|int] or tuple[float|int]): a list containnong Sigmas and Rhos
+		dims_to_simulate (list[int] or tuple[int]): dimensionalities to simulate (if None, all dimensionalities will be simulated) (default: None)
+		dims_to_compare (list[int] or tuple[int]): dimensionalities to compare (if None, the last two dimensionalities of dims_to_simulate will be compared) (default: None)
+		verbose (bool): whether to print progress to console output (default: True)
 
-	:param dims_to_compare: dimensions to compare
-	:type dims_to_compare: list[int] or tuple[int]
+	Returns:
+		bool: True if successful, False otherwise
 
-	:returns: 0 if simulation was successful
-	:rtype: int
+	Raises:
+		TypeError:
+			if params is not a list[float|int] or tuple[float|int];
+			if dims_to_compare is not a list[int] or tuple[int]
 
-	:raises TypeError:
-		if params is not a list[int|float] or tuple[int|float];
-		if dims_to_compare is not a list[int] or tuple[int];
+		ValueError:
+			if dims_to_compare is not a subset of dims_to_simulate
 
-	:raises ValueError:
-		if params is not a valid parameter list;
-		if dims_to_compare is not a valid dimensions list;
 
 	:Example:
 		>>> from slacgs.demo import *
@@ -996,6 +1035,9 @@ def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 
 	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
+
+	if dims_to_compare and not set(dims_to_compare).issubset(set(dims_to_simulate)):
+		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
 	## initialize gdrive client if it hasn't been initialized yet
 	start_google_drive_service()
@@ -1037,11 +1079,53 @@ def run_custom_simulation_test(params, dims_to_compare=None, verbose=True):
 	return True
 
 
-
-
-
 def run_experiment_test(start_scenario=1, verbose=True):
-	""" run the experiment test for the simulator and return 0 if all parameters have been simulated
+	""" run all simulations in all experiment scenarios
+
+	Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario
+	and another one for the Custom Simulations.
+	The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service
+	account and shared with the user's Google Drive account.
+	Also, images with data visualization will be exported to a local folder inside project's root folder ( slacgs/images/ )
+
+	Reports Exported:
+		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
+		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
+		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+
+	Images Exported:
+		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
+		Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
+		Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
+
+	Loss Functions:
+		- Theoretical Loss: estimated using probability theory
+		- Empirical Loss with Train Data: estimated using empirical approach with train data
+		- Empirical Loss with Test Data: estimated using empirical approach with test data
+
+	Dimensions simulated:
+		- 1D: 1 feature
+		- 2D: 2 features
+		- 3D: 3 features
+
+	Dimensions compared:
+		- 2D vs 3D: 2 features vs 3 features
+
+	Cardinalities simulated:
+		N = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]  (+ [2048, 4096, 8192] if L_3 > L_2)
+
+	Parameters:
+		start_scenario: scenario to start the experiment test
+		verbose: if True, prints messages to console output
+
+	Returns:
+	 		0 if all parameters have been simulated
+
+
+	Raises:
+		ValueError: if start_scenario is not between 1 and 4
+		TypeError: if start_scenario is not an int
+
 
 	:param start_scenario: scenario to start the experiment test
 	:type start_scenario: int
@@ -1099,7 +1183,7 @@ def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, du
 		export_path += ".gif"
 
 	# Get the list of figure objects
-	param_figures_list = [(model.params, model.fig) for model in [Model(params) for params in scenario]]
+	param_figures_list = [(model.params, model.data_points_plot) for model in [Model(params) for params in scenario]]
 
 	# Create a temporary directory to store the individual frame images
 	scenario_figs_dir = get_grandparent_folder_path()
@@ -1129,3 +1213,27 @@ def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, du
 			print(f"Animated GIF saved as: {export_path}")
 	except Exception as e:
 		print(f"Failed to save the animated GIF: {e}")
+
+
+
+def print_experiment_scenarios():
+
+    ## fill lists with empty strings to make them the same length
+    def fill_lists(lst, fill_value=''):
+        max_len = max(len(sublist) for sublist in lst)
+
+        # Fill the shorter lists
+        for sublist in lst:
+            sublist.extend([fill_value] * (max_len - len(sublist)))
+
+        return lst
+
+    ## convert to numpy array, transpose, convert back to list
+    data = np.array(fill_lists(SCENARIOS), dtype=object).T.tolist()
+
+    ## add index column
+    indexed_data = [[i] + sublist for i, sublist in enumerate(data)]
+
+    ## make table and print
+    table = tabulate(indexed_data , tablefmt='grid', headers=['Scenario 1','Scenario 2','Scenario 3','Scenario 4'])
+    print(table)

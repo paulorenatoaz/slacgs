@@ -195,13 +195,12 @@ class Simulator:
 
   def print_end(self):
 
-
     # terminal output setting
     progress_stream = '----------------------------------------------------------------------------------------------------'
     n_index = len(self.model.N)
     N_size = len(self.model.N)
     p = int(n_index * 100 / N_size)
-    datapoints_fig = self.model.fig
+    datapoints_fig = self.model.data_points_plot
 
     if self.is_notebook:
       clear_output()
@@ -211,8 +210,8 @@ class Simulator:
         fm = plt.get_current_fig_manager()
         fm.canvas.figure = datapoints_fig
         datapoints_fig.canvas = fm.canvas
-
         plt.figure(datapoints_fig.number)
+
       plt.figure(self.report.plot_with_intersection().number)
       plt.show()
 
@@ -267,8 +266,8 @@ class Simulator:
         fm = plt.get_current_fig_manager()
         fm.canvas.figure = datapoints_fig
         datapoints_fig.canvas = fm.canvas
-
         plt.figure(datapoints_fig.number)
+
       plt.figure(self.report.plot_with_intersection().number)
       plt.show()
 
@@ -648,7 +647,7 @@ class Simulator:
 
   def run(self):
 
-    """start the simulation
+    """run the simulation
 
     :param self: simulation object
     :type self: Simulator
@@ -667,8 +666,8 @@ class Simulator:
     # compute min(L(h)) and d for each dimension
     self.report.loss_bayes = { d : self.loss_bayes(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = { d : self.intersect_elip_dist_from_origin(d) for d in self.dims}
-    fig = self.model.fig
-    self.model.save_figure_as_png(verbose=self.verbose)
+    fig = self.model.data_points_plot
+    self.model.save_data_points_plot_as_png(verbose=self.verbose)
 
 
     N = self.model.N
@@ -790,29 +789,37 @@ class Simulator:
             self.report.loss_N[d][loss_type].append(loss_sum[d][loss_type]/iter_N[d][loss_type])
             self.report.iter_N[d][loss_type].append(iter_N[d][loss_type])
 
-      ## test if intersection point between dim d and dim d-1 is found and continue simulation for one more cardinality n if not
+      ## after simulation for each cardinality n in self.dims is finished, some tests are performed to check if simulation should be continued
       finish = True
+
       if 'EMPIRICAL_TEST' in self.loss_types:
+
+        ## test if intersection point between dim d and dim d-1 is found and continue simulation for one more cardinality n if not
         if self.report.loss_N[self.dims[-1]]['EMPIRICAL_TEST'][-1] > self.report.loss_N[self.dims[-2]]['EMPIRICAL_TEST'][-1]:
           finish = False
+
+        ## test if Loss Functions are not yet converged and continue simulation for one more cardinality n if not in order to estimate the Bayes risk
         if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-2]) > 0.001:
           finish = False
         if 'EMPIRICAL_TRAIN' in self.loss_types:
           if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > 0.001:
             finish = False
 
+
       if 'THEORETICAL' in self.loss_types:
+
+        ## test if intersection point between dim d and dim d-1 is found and continue simulation for one more cardinality n if not
         if self.report.loss_N[self.dims[-1]]['THEORETICAL'][-1] > self.report.loss_N[self.dims[-2]]['THEORETICAL'][-1]:
           finish = False
-        # print('theo-1-2',self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2])
+
+        ## test if Loss Functions are not yet converged and continue simulation for one more cardinality n if not in order to estimate the Bayes risk
         if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2]) > 0.001:
           finish = False
         if 'EMPIRICAL_TRAIN' in self.loss_types:
-          # print('theo-train', self.report.loss_bayes[self.model.dim] == 0 and self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1])
           if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > 0.001:
             finish = False
 
-
+      ## stop simulation if all Loss Functions are converged and intersection points are found, or if max cardinality model.max_n is reached
       if finish == True or max(N) >= self.model.max_n:
         break
       else:
@@ -825,12 +832,17 @@ class Simulator:
           self.model.N.append(new_N)
           N = [new_N]
 
+    ## estimate Bayes risk for each dimension if not yet estimated by analytical method
     for d in list(self.report.loss_bayes.keys()):
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.infered_loss_bayes(d)
 
+    ## print final report
     if self.verbose:
       self.print_end()
+
+    ## save loss plot as png
+    self.report.save_loss_plot_as_png()
 
     # get the end time
     et = time.time()

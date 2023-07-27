@@ -55,21 +55,21 @@ class Model:
 
 		:Example:
 			>>> model = Model([1, 1, 2, 0, 0, 0])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, 0.5, 0, 0])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 			>>> model = Model([1, 2, -0.1])
-			>>> model.save_figure_as_png(verbose=False)
+			>>> model.save_data_points_plot_as_png(verbose=False)
 
 		"""
 		if not isinstance(params, list) and not isinstance(params, tuple):
@@ -158,9 +158,9 @@ class Model:
 		if not all(dictionary in DictionaryType.__members__ for dictionary in dictionary):
 			raise ValueError('invalid dictionary, implemented dictionaries are: ' + ', '.join(DictionaryType.__members__))
 
-		self.fig = self.plot_surrounding_ellipsis_and_ellipsoids() if dim == 3 else None
+		self.data_points_plot = self.plot_surrounding_ellipsis_and_ellipsoids() if dim == 3 else None
 
-	def save_figure_as_png(self, export_path=None, verbose=True):
+	def save_data_points_plot_as_png(self, export_path=None, verbose=True):
 		"""
 		Save a matplotlib Figure object as a PNG image.
 
@@ -169,19 +169,19 @@ class Model:
 		Returns:
 				None
 		"""
-		if self.fig is not None:
+		if self.data_points_plot is not None:
 			if export_path is None:
 				export_path = get_grandparent_folder_path()
 				export_path += '\\images\\' if os.name == 'nt' else '/images/'
-				export_path +=  str(self.params) + '.png'
+				export_path +=  'data_points' +  str(self.params) + '.png'
 			elif not export_path.endswith(".png"):
 				export_path = get_grandparent_folder_path()
 				export_path += '\\images\\' if os.name == 'nt' else '/images/'
-				export_path += str(self.params) + '.png'
+				export_path += 'data_points' +  str(self.params) + '.png'
 
 			if not os.path.exists(export_path):
 				try:
-					self.fig.savefig(export_path, format="png", dpi=300)
+					self.data_points_plot.savefig(export_path, format="png", dpi=300)
 					if verbose:
 						print(f"Figure saved as: {export_path}")
 				except Exception as e:
@@ -206,7 +206,7 @@ class Model:
 		:Example:
 
 		>>> model = Model((1, 1, 2, 0.5, 0, 0))
-		>>> plot_fig = model.fig
+		>>> plot_fig = model.data_points_plot
 
 		"""
 

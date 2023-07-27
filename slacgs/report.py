@@ -1,10 +1,12 @@
+import os
 import itertools
-import IPython
 import googleapiclient
 import numpy as np
-from shapely.geometry import LineString
 import matplotlib.pyplot as plt
+from shapely.geometry import LineString
+
 from .enumtypes import LossType
+from .utils import get_grandparent_folder_path
 
 
 
@@ -35,6 +37,7 @@ class Report:
     self.loss_iter_N_df = []
     self.compare = []
     self.delta_L_ = []
+    self.loss_plot = None
 
   def compile_delta_L_(self):
     """return ΔL estimations
@@ -151,7 +154,7 @@ class Report:
           if len(intersection_points) > 0:
             for j in range(0, len(intersection_points)):
               axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
-              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.3f}".format(intersection_points[j][0]) + ',' + "{:.3f}".format(intersection_points[j][1]) + ')' )
+              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.1f}".format(intersection_points[j][0]) + ',' + "{:.2f}".format(intersection_points[j][1]) + ')' )
 
 
 
@@ -170,6 +173,38 @@ class Report:
 
     return fig
 
+  def save_loss_plot_as_png(self, export_path=None, verbose=True):
+    """
+		Save a matplotlib Figure object as a PNG image.
+
+		Parameters:
+				export_path (str): The file path where the PNG image will be saved.
+		Returns:
+				None
+		"""
+    if self.fig is not None:
+      if export_path is None:
+        export_path = get_grandparent_folder_path()
+        export_path += '\\images\\' if os.name == 'nt' else '/images/'
+        export_path += 'data_points' + str(self.params) + '.png'
+      elif not export_path.endswith(".png"):
+        export_path = get_grandparent_folder_path()
+        export_path += '\\images\\' if os.name == 'nt' else '/images/'
+        export_path += 'loss' + str(self.params) + '.png'
+
+      if not os.path.exists(export_path):
+        try:
+          self.fig.savefig(export_path, format="png", dpi=300)
+          if verbose:
+            print(f"Figure saved as: {export_path}")
+        except Exception as e:
+          print(f"Failed to save the figure: {e}")
+      else:
+        if verbose:
+          print(f"File already exists: {export_path}")
+    else:
+      if verbose:
+        print("No figure to save.")
 
   def compile_N(self, dims=(2,3)):
     """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
