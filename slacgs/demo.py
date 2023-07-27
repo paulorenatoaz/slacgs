@@ -2,8 +2,12 @@ import math
 import contextlib
 import io
 import os
+import numpy as np
+
+
 from PIL import Image
 from matplotlib import pyplot as plt
+from tabulate import tabulate
 
 from .model import Model
 from .simulator import Simulator
