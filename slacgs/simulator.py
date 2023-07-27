@@ -323,6 +323,7 @@ class Simulator:
     for dim in self.dims:
       if self.report.loss_bayes[dim] == 0:
         print('when BR = 0, it will be infered after simulation')
+        break
 
   def print_step_report(self, i, iter_per_step, loss_sum, iter_N):
     """
