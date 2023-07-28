@@ -17,7 +17,9 @@ setup(
         'cryptography>=41.0.2',
         'Pillow>=8.1.0',
         'pandas>=1.5.3',
-        'setuptools>=51.3.3'
+        'setuptools>=51.3.3',
+        'tabulate>=0.9.0',
+        'reportlab>=4.0.4'
 
     ],
     author='Paulo Azevedo',
