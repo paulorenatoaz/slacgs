@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-from IPython.core.display_functions import clear_output
+from IPython.display import clear_output
 from shapely.geometry import LineString
 from tabulate import tabulate
 
