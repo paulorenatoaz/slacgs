@@ -10,8 +10,9 @@ from googleapiclient.discovery import build
 import pygsheets
 
 
+## this is a report service configuration dictionary
 report_service_conf = {
-  """ This is a global variable that is used to store the services that are used by the report service."""
+
   'user_email' : None,
   'drive_service' : None,
   'spreadsheet_service' : None,

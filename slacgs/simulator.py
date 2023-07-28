@@ -1,12 +1,14 @@
+import os
 import math
 import time
+
 import numpy as np
+
 from matplotlib import pyplot as plt
 from sklearn import svm
 from scipy.stats import multivariate_normal, norm
 from IPython.display import clear_output
-import os
-import pandas as pd
+
 from .enumtypes import LossType
 from .model import Model
 from .report import Report
@@ -190,86 +192,11 @@ class Simulator:
     self.time_spent_test = 0
     self.verbose = verbose
     self.is_notebook = is_notebook()
-    self.dims_to_compare = dims_to_compare
 
 
-  def print_end(self):
+    self.dims_to_compare = dims_to_compare if dims_to_compare else self.dims[-2:]
 
-    # terminal output setting
-    progress_stream = '----------------------------------------------------------------------------------------------------'
-    n_index = len(self.model.N)
-    N_size = len(self.model.N)
-    p = int(n_index * 100 / N_size)
-    datapoints_fig = self.model.data_points_plot
 
-    if self.is_notebook:
-      clear_output()
-      plt.close()
-      if datapoints_fig:
-        plt.figure(figsize=(14, 4))
-        fm = plt.get_current_fig_manager()
-        fm.canvas.figure = datapoints_fig
-        datapoints_fig.canvas = fm.canvas
-        plt.figure(datapoints_fig.number)
-
-      plt.figure(self.report.plot_with_intersection().number)
-      plt.show()
-
-      print(' progress: ', end='')
-      print(progress_stream[0:p], end='')
-      print("\033[91m {}\033[00m".format(progress_stream[p:-1]) + ' ' + str(n_index) + '/' + str(N_size))
-      print('n: ' + str(self.model.N[-1]))
-      print('N = ' + str(self.model.N))
-      print('Model: ', self.report.model_tag)
-      print('Simulator: ', self.report.sim_tag)
-
-      dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
-      loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
-
-      for loss_type in self.loss_types:
-        for d in dims_to_compare:
-          loss_N[d][loss_type] = [round(value, 2) for value in loss_N[d][loss_type]]
-
-      print('d: ', self.report.d)
-      print('bayes error rate: ', self.report.loss_bayes)
-      print('intersection_points: ', pd.DataFrame(intersection_point_dict))
-      print('loss_N: ', pd.DataFrame(loss_N))
-      print('iter_N: ', pd.DataFrame(iter_N))
-
-    else:
-      cls()
-
-      print(' progress: ', end='')
-      print(progress_stream[0:p], end='')
-      print("\033[91m {}\033[00m".format(progress_stream[p:-1]) + ' ' + str(n_index) + '/' + str(N_size))
-      print('n: ' + str(self.model.N[-1]))
-      print('N = ' + str(self.model.N))
-      print('Model: ', self.report.model_tag)
-      print('Simulator: ', self.report.sim_tag)
-
-      dims_to_compare = self.dims_to_compare if self.dims_to_compare else self.dims[-2:]
-      loss_N, iter_N, loss_bayes, d, intersection_point_dict, _, _ = self.report.compile_compare(dims=dims_to_compare)
-
-      for loss_type in self.loss_types:
-        for d in dims_to_compare:
-          loss_N[d][loss_type] = [round(value,2) for value in loss_N[d][loss_type]]
-
-      print('d: ', self.report.d)
-      print('bayes error rate: ', self.report.loss_bayes)
-      print('inter: ', pd.DataFrame(intersection_point_dict))
-      print('loss_N: ', pd.DataFrame(loss_N))
-      print('iter_N: ', pd.DataFrame(iter_N))
-
-      plt.close()
-      if datapoints_fig:
-        plt.figure(figsize=(10, 4))
-        fm = plt.get_current_fig_manager()
-        fm.canvas.figure = datapoints_fig
-        datapoints_fig.canvas = fm.canvas
-        plt.figure(datapoints_fig.number)
-
-      plt.figure(self.report.plot_with_intersection().number)
-      plt.show()
 
   def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure):
 
@@ -838,12 +765,17 @@ class Simulator:
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.infered_loss_bayes(d)
 
-    ## print final report
-    if self.verbose:
-      self.print_end()
 
-    ## save loss plot as png
-    self.report.save_loss_plot_as_png()
+
+    ## set and save the final plot
+    self.report.loss_plot = self.report.plot_with_intersection()
+
+    ## print the final report
+    self.report.print_report()
+
+    ## save the final plot
+    self.report.save_loss_plot_as_png(verbose=self.verbose)
+    plt.close()
 
     # get the end time
     et = time.time()
@@ -852,7 +784,7 @@ class Simulator:
     elapsed_time = et - st
 
     if self.verbose:
-      print('Execution time:', elapsed_time/3600, 'h')
+      print('Execution time:', elapsed_time/3600, 'h\n')
 
     ## transform time spent from seconds to hours
     self.report.duration = elapsed_time/3600

@@ -61,7 +61,7 @@ def start_google_drive_service(password=None, user_email=None, verbose=True):
 
 	## create GdriveClient object and connect to Google Drive for reports service
 	if report_service_conf['drive_service'] is None:
-		set_report_service_conf(password=password, user_google_account_email=user_email)
+		set_report_service_conf(slags_password=password, user_google_account_email=user_email)
 
 	global GDC
 	if GDC is None:
@@ -775,9 +775,9 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 			if dims_to_compare is not a list[int] or tuple[int];
 
 		ValueError:
-			if scenario_list is not a valid scenario list;
 			if scenario_number is not a valid scenario number;
-			if dims_to_simulate is not a valid dimensionalities list;
+			if dims_to_compare is not a subset of dims_to_simulate;
+			if dims_to_compare length is not 2;
 
 
 	Example:
@@ -816,6 +816,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	if scenario_number < 5:
 		raise ValueError("Custom scenario_number must be >= 5")
 
+
 	start_google_drive_service()
 
 	## create Model objects to test each parameter set before continuing
@@ -827,13 +828,16 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	simulators = []
 	for model in models:
 		simulators.append(
-			Simulator(model, dims=dims_to_simulate, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
+			Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 			          augmentation_until_n=1024, verbose=verbose))
 
 	save_scenario_figures_as_gif(scenario_list, scenario_number, verbose=verbose)
 
 	if dims_to_compare and not all(dim in dims_to_simulate for dim in dims_to_compare):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
+
+	if dims_to_compare and len(dims_to_compare) != 2:
+		raise ValueError("dims_to_compare length must be 2")
 
 
 	## define folder name for storing reports
@@ -898,8 +902,9 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 			if dims_to_compare is not a list[int] or tuple[int]
 
 		ValueError:
-			if scenario_number is not a positive integer;
-			if dims_to_compare is not a subset of dims_to_simulate
+			if scenario_number is < 5;
+			if dims_to_compare is not a subset of dims_to_simulate;
+			if dims_to_compare length is not 2
 
 
 	Example:
@@ -912,6 +917,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 		>>> dims_to_simulate = (1, 2, 3)
 		>>> dims_to_compare = (2, 3)
 		>>> add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, dims_to_simulate, dims_to_compare, verbose=False)
+
 
 	"""
 
@@ -944,11 +950,17 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	model = Model(params)
 
 	## create Simulator object to test parameters before continuing
-	slacgs = Simulator(model, dims=dims_to_simulate, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
-	if not set(dims_to_compare).issubset(set(dims_to_simulate)):
+	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
+
+	if dims_to_compare and len(dims_to_compare) != 2:
+		raise ValueError("dims_to_compare length must be 2")
+
+	if dims_to_compare < 5:
+		raise ValueError("scenario_number must be >= 5 for a Custom Scenario")
 
 
 	## define folder name for storing reports
@@ -998,6 +1010,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 			if dims_to_compare is not a list[int] or tuple[int]
 
 		ValueError:
+			if dims_to_compare length is not 2;
 			if dims_to_compare is not a subset of dims_to_simulate
 
 
@@ -1007,12 +1020,10 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 
 		>>> ## 2 features
 		>>> params = [1, 2, 0.4]
-		>>> dims_to_compare = (1, 2)
 		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
 
 		>>> ## 3 features
 		>>> params = [1, 1, 4, -0.2, 0.1, 0.1]
-		>>> dims_to_compare = (2, 3)
 		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
 
 		>>> ## 4 features
@@ -1024,6 +1035,9 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 		>>> params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
 		>>> dims_to_compare = (2, 5)
 		>>> run_custom_simulation_test(params, dims_to_compare, verbose=False)
+
+		>>> params = [1, 2, 3, 4, 5, 6, -0.3, -0.3, -0.2, -0.2, -0.1, -0.1, 0, 0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]
+		>>> run_custom_simulation_test(params)
 
 
 	"""
@@ -1040,7 +1054,10 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	if dims_to_compare and not all(isinstance(x, int) for x in dims_to_compare):
 		raise TypeError("dims_to_compare must be a list or tuple of int")
 
-	if dims_to_compare and not set(dims_to_compare).issubset(set(dims_to_simulate)):
+	if dims_to_compare and len(dims_to_compare) != 2:
+		raise ValueError("dims_to_compare must be a list or tuple of length 2")
+
+	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
 	## initialize gdrive client if it hasn't been initialized yet
@@ -1050,7 +1067,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 
@@ -1217,7 +1234,6 @@ def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, du
 			print(f"Animated GIF saved as: {export_path}")
 	except Exception as e:
 		print(f"Failed to save the animated GIF: {e}")
-
 
 
 def print_experiment_scenarios():

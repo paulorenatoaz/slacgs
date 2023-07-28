@@ -7,25 +7,22 @@ import math
 class GspreadClient:
   """GspreadClient performs operations using gspread, a Python API for Google Sheets. It is used to write simulation results to a spreadsheet."""
 
-  def __init__(self, pygsheets_service, spreadsheet_title):
+  def __init__(self, pygsheets_service, spreadsheet_title, verbose=True):
     """Constructor for GspreadClient class.
 
-    :param self: GspreadClient object
-    :type self: GspreadClient
+    Parameters:
+      pygsheets_service (pygsheets.service.client.Client): pygsheets service
+      spreadsheet_title (str): title of the spreadsheet
+      verbose (bool, optional): print messages to console, defaults to True
 
-    :param pygsheets_service: pygsheets service
-    :type pygsheets_service: pygsheets.service.client.Client
+    Raises:
+      TypeError:
+        if pygsheets_service is not a pygsheets.service.client.Client object
+        if spredsheet_title is not a string
+        if verbose is not a boolean
 
-    :param spredsheet_title: title of the spreadsheet
-    :type spredsheet_title: str
-
-    :raises TypeError:
-      if pygsheets_service is not a pygsheets.service.client.Client object
-      if spredsheet_title is not a string
-
-    :raises ValueError:
-      if spredsheet_title is empty
-
+      ValueError:
+        if spredsheet_title is empty
 
     """
 
@@ -38,168 +35,24 @@ class GspreadClient:
     if spreadsheet_title == '':
       raise ValueError('spredsheet_title cannot be empty')
 
+    if not isinstance(verbose, bool):
+      raise TypeError('verbose must be a boolean')
+
     self.sh = pygsheets_service.open(spreadsheet_title)
+    self.verbose = verbose
 
-  def write_compare_report_to_spreadsheet(self, report, dims, verbose=True):
-    """write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.
+  def print_first_call_to_spreadsheet_writing_service(fn):
+    def wrapper(self, *args, **kwargs):
+      if not hasattr(self, '_method_called'):
+        self._method_called = True
+        print('Starting to write to spreadsheet: ', self.sh.title, )
+        print('(This may take a while, ignore the warning messages)')
+        print('link to spreadsheet: ', self.sh.url, '\n')
+      return fn(self, *args, **kwargs)
 
-    :param self: GspreadClient object
-    :type self: GspreadClient
-    :param report: Report containnig simulation results
-    :type report: Report
-    :param dims: a pair of dimensionalyties to be compared
-    :type dims: list of int or tuple of int
-    :param verbose: if True, print messages to stdout
-    :type verbose: bool
-    :return: None
-    :rtype: None
+    return wrapper
 
-
-    """
-
-    parameters = ['compare' + str(dims[0]) + '&' + str(dims[1])] + report.sim.model.params
-
-    sh = self.sh
-    ws_title_index = 0
-    sim = report.sim
-
-    ## define sheet title
-    if(report.sim.iters_per_step*report.sim.max_steps<1000):
-      sheet_title = '[TEST]' + str(parameters)
-    else:
-      sheet_title = str(parameters)
-
-    chart_height = 18
-    ## create worksheet
-    while True:
-      try:
-        if ws_title_index == 0:
-          sh.add_worksheet(sheet_title, rows=3+len(report.sim.model.N) + 3*chart_height, cols=45)
-        else:
-          sh.add_worksheet(sheet_title +'[' + str(ws_title_index) + ']', rows=(len(sim.model.N)+60), cols=45)
-      except googleapiclient.errors.HttpError:
-        ws_title_index += 1
-      else:
-        ws = sh.worksheet_by_title(sheet_title) if ws_title_index == 0 else sh.worksheet_by_title(sheet_title + '[' + str(ws_title_index) + ']')
-        break
-
-    ## compile report
-    loss_N, iter_N, bayes_loss, d, intersection_points, model_tag, sim_tag = report.compile_compare(dims)
-    N = report.sim.model.N
-    loss_types = report.sim.loss_types
-    matrix_N, matrix_N_log2 , matrix_loss_N, matrix_iter_N, bayes_loss_matrix, d_matrix, intersection_points_matrix, model_tag_matrix, sim_tag_matrix = [],[],[],[],[],[],[],[],[]
-    colum_pointer = 0
-
-    ## link to home
-    try:
-      ws_home = sh.worksheet_by_title('home')
-    except pygsheets.exceptions.WorksheetNotFound:
-      matrix_N.append([None])
-    else:
-      matrix_N.append(['=HYPERLINK( "' + ws_home.url + '"; "🏠Home" )'])
-
-    matrix_N.append([None])
-    matrix_N.append(['N'])
-    matrix_N = matrix_N + np.matrix(report.sim.model.N).T.tolist()
-    colum_pointer += 1
-    ws.update_values((1,colum_pointer), matrix_N)
-
-    matrix_N_log2.append([None])
-    matrix_N_log2.append(['dim=>>'])
-    matrix_N_log2.append(['log_2(N)'])
-    matrix_N_log2 = matrix_N_log2 + np.log2(np.matrix(report.sim.model.N)).T.tolist()
-    colum_pointer += len(matrix_N[3])
-    ws.update_values((1,colum_pointer), matrix_N_log2)
-
-    matrix_loss_N.append(['simulated loss results (P(Error)):'])
-    matrix_loss_N.append([ str(dims[int(i/len(loss_types))]) + ' feat' for i in range(2*len(loss_types))])
-    matrix_loss_N.append([list(loss_N[i].keys())[j] for i in list(loss_N.keys()) for j in range(len(list(loss_N[i].keys())))])
-    aux = [np.matrix(loss_N[i][j]).T for i in list(loss_N.keys()) for j in list(loss_N[i].keys())]
-    matrix_loss_N = matrix_loss_N + np.concatenate(aux, axis=1).tolist()
-    colum_pointer += len(matrix_N_log2[2])
-    ws.update_values((1,colum_pointer), matrix_loss_N)
-
-    matrix_iter_N.append(['#iterations (=Datasets/N): '])
-    matrix_iter_N.append([str(dims[int(i/len(loss_types))]) + ' feat' for i in range(2*len(loss_types))])
-    matrix_iter_N.append([list(iter_N[i].keys())[j] for i in list(iter_N.keys()) for j in range(len(list(iter_N[i].keys())))])
-    aux = [np.matrix(iter_N[i][j]).T for i in list(iter_N.keys()) for j in list(iter_N[i].keys())]
-    matrix_iter_N = matrix_iter_N + np.concatenate(aux,axis=1).tolist()
-    colum_pointer += len(matrix_loss_N[2])
-    ws.update_values((1,colum_pointer), matrix_iter_N)
-
-    bayes_loss_matrix.append(['theoretical bayes error rate (min(h)∈H L(h)) : '])
-    bayes_loss_matrix.append(['BR_' + str(dim) + ' (min(L))' if isinstance(dim,int) else dim for dim in list(bayes_loss.keys())])
-    aux = [bayes_loss[i] for i in list(bayes_loss.keys())]
-    bayes_loss_matrix = bayes_loss_matrix + [aux]
-    colum_pointer += len(matrix_iter_N[2])
-    ws.update_values((1,colum_pointer), bayes_loss_matrix)
-
-    d_matrix.append(['(d_n) as dist(P_n,P_origin), \nP_n=intersect(Line_n,Ellipsse_n)\nLine_n = Line(x_1=x_2=...=x_n)\nEllipse_n = Ellip(X_n^t . cov_n^(-1) . X_n = 1))'])
-    d_matrix.append(['d_' + str(dim) if isinstance(dim,int) else dim for dim in list(d.keys())])
-    aux = [ d[i] for i in list(d.keys()) ]
-    d_matrix = d_matrix + [aux]
-    colum_pointer += len(bayes_loss_matrix[2])
-    ws.update_values((1,colum_pointer), d_matrix)
-
-    intersection_points_matrix.append(['intersect points between P(E) curves'])
-    intersection_points_matrix.append([list(intersection_points.keys())[int(i/3)] for i in range(3*len(list(intersection_points.keys())))])
-    intersection_points_matrix.append(len(list(intersection_points.keys()))*list(intersection_points[list(intersection_points.keys())[0]].keys()))
-    aux = []
-    max_len = max([len(intersection_points[loss_type]['log_2(N*)']) for loss_type in intersection_points.keys() ])
-    for i in range(max_len):
-      for loss_type in list(intersection_points.keys()):
-        for key in list(intersection_points[loss_type].keys()):
-          aux = aux + [intersection_points[loss_type][key][i]] if i < len(intersection_points[loss_type][key]) else  aux + [None]
-      intersection_points_matrix.append(aux)
-      aux=[]
-    colum_pointer += len(d_matrix[2])
-    ws.update_values((1,colum_pointer), intersection_points_matrix)
-
-    model_tag_matrix.append(['model parameters'])
-    model_tag_matrix.append(list(model_tag.keys()))
-    aux = [[ model_tag[key][i] if isinstance(model_tag[key], list) and i < len(model_tag[key]) else model_tag[key] if i==0 else None for key in list(model_tag.keys())] for i in range(len(model_tag['rho'])) ]
-    model_tag_matrix = model_tag_matrix + aux
-    colum_pointer += len(intersection_points_matrix[2])
-    ws.update_values((1,colum_pointer), model_tag_matrix)
-
-    sim_tag_matrix.append(['simulator parameters'])
-    sim_tag_matrix.append(list(sim_tag.keys()))
-    aux = [[sim_tag[key][i] if isinstance(sim_tag[key], list) else sim_tag[key] if i==0 else None for key in list(sim_tag.keys())] for i in range(len(sim_tag['dims'])) ]
-    sim_tag_matrix = sim_tag_matrix + aux
-    colum_pointer += len(model_tag_matrix[2])
-    ws.update_values((1,colum_pointer),sim_tag_matrix)
-
-    colum_pointer += len(sim_tag_matrix[2])
-    ws.update_value((2,colum_pointer), 'Duration (h)')
-    ws.update_value((3,colum_pointer), report.duration)
-
-    class ChartType(Enum):
-      SCATTER = 'SCATTER'
-      LINE = 'LINE'
-
-    ws.adjust_column_width(1,2, pixel_size=None)
-    ws.update_value((1,8),'---->\nDATA\nIN\nHIDDEN\nCELLS\n---->')
-    ws.hide_dimensions(9, 14, dimension='COLUMNS')
-
-    #add charts
-    for i in range(len(loss_types)):
-      columns = [((2,3+i),(2+len(N),3+i)),((2,3+i+len(loss_types)),(2+len(N),3+i+len(loss_types)))]
-      ws.add_chart(((2,2),(2+len(N),2)), columns, loss_types[i] + ': P(E) vs log2(N)', chart_type=ChartType.LINE, anchor_cell=(4 + len(N) + chart_height*i,3))
-
-    #set chart headers
-    for chart in ws.get_charts():
-        spec = chart.get_json()
-        spec['basicChart'].update({'headerCount' : 1})
-        request = {
-                    'updateChartSpec':{
-                        'chartId': chart.id, "spec": spec}
-                }
-
-        ws.client.sheet.batch_update(sh.id,request)
-    if verbose:
-      print('sheet is over! id: ', ws.index, ' title:', ws.title)
-      print('link to Compare Report: ', ws.url)
-
+  @print_first_call_to_spreadsheet_writing_service
   def write_loss_report_to_spreadsheet(self, report, verbose=True):
     """write loss_report to spreadsheet, a report that contains all results of Loss estimations
 
@@ -400,8 +253,170 @@ class GspreadClient:
         ws.client.sheet.batch_update(sh.id,request)
     if verbose:
       print('sheet is over! id: ', ws.index, ' title:', ws.title)
-      print('link to Loss Report: ', sh.url)
+      print('link to Loss Report: ', ws.url)
 
+  @print_first_call_to_spreadsheet_writing_service
+  def write_compare_report_to_spreadsheet(self, report, dims, verbose=True):
+    """write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.
+
+    :param self: GspreadClient object
+    :type self: GspreadClient
+    :param report: Report containnig simulation results
+    :type report: Report
+    :param dims: a pair of dimensionalyties to be compared
+    :type dims: list of int or tuple of int
+    :param verbose: if True, print messages to stdout
+    :type verbose: bool
+    :return: None
+    :rtype: None
+
+
+    """
+
+    parameters = ['compare' + str(dims[0]) + '&' + str(dims[1])] + report.sim.model.params
+
+    sh = self.sh
+    ws_title_index = 0
+    sim = report.sim
+
+    ## define sheet title
+    if(report.sim.iters_per_step*report.sim.max_steps<1000):
+      sheet_title = '[TEST]' + str(parameters)
+    else:
+      sheet_title = str(parameters)
+
+    chart_height = 18
+    ## create worksheet
+    while True:
+      try:
+        if ws_title_index == 0:
+          sh.add_worksheet(sheet_title, rows=3+len(report.sim.model.N) + 3*chart_height, cols=45)
+        else:
+          sh.add_worksheet(sheet_title +'[' + str(ws_title_index) + ']', rows=(len(sim.model.N)+60), cols=45)
+      except googleapiclient.errors.HttpError:
+        ws_title_index += 1
+      else:
+        ws = sh.worksheet_by_title(sheet_title) if ws_title_index == 0 else sh.worksheet_by_title(sheet_title + '[' + str(ws_title_index) + ']')
+        break
+
+    ## compile report
+    loss_N, iter_N, bayes_loss, d, intersection_points, model_tag, sim_tag = report.compile_compare(dims)
+    N = report.sim.model.N
+    loss_types = report.sim.loss_types
+    matrix_N, matrix_N_log2 , matrix_loss_N, matrix_iter_N, bayes_loss_matrix, d_matrix, intersection_points_matrix, model_tag_matrix, sim_tag_matrix = [],[],[],[],[],[],[],[],[]
+    colum_pointer = 0
+
+    ## link to home
+    try:
+      ws_home = sh.worksheet_by_title('home')
+    except pygsheets.exceptions.WorksheetNotFound:
+      matrix_N.append([None])
+    else:
+      matrix_N.append(['=HYPERLINK( "' + ws_home.url + '"; "🏠Home" )'])
+
+    matrix_N.append([None])
+    matrix_N.append(['N'])
+    matrix_N = matrix_N + np.matrix(report.sim.model.N).T.tolist()
+    colum_pointer += 1
+    ws.update_values((1,colum_pointer), matrix_N)
+
+    matrix_N_log2.append([None])
+    matrix_N_log2.append(['dim=>>'])
+    matrix_N_log2.append(['log_2(N)'])
+    matrix_N_log2 = matrix_N_log2 + np.log2(np.matrix(report.sim.model.N)).T.tolist()
+    colum_pointer += len(matrix_N[3])
+    ws.update_values((1,colum_pointer), matrix_N_log2)
+
+    matrix_loss_N.append(['simulated loss results (P(Error)):'])
+    matrix_loss_N.append([ str(dims[int(i/len(loss_types))]) + ' feat' for i in range(2*len(loss_types))])
+    matrix_loss_N.append([list(loss_N[i].keys())[j] for i in list(loss_N.keys()) for j in range(len(list(loss_N[i].keys())))])
+    aux = [np.matrix(loss_N[i][j]).T for i in list(loss_N.keys()) for j in list(loss_N[i].keys())]
+    matrix_loss_N = matrix_loss_N + np.concatenate(aux, axis=1).tolist()
+    colum_pointer += len(matrix_N_log2[2])
+    ws.update_values((1,colum_pointer), matrix_loss_N)
+
+    matrix_iter_N.append(['#iterations (=Datasets/N): '])
+    matrix_iter_N.append([str(dims[int(i/len(loss_types))]) + ' feat' for i in range(2*len(loss_types))])
+    matrix_iter_N.append([list(iter_N[i].keys())[j] for i in list(iter_N.keys()) for j in range(len(list(iter_N[i].keys())))])
+    aux = [np.matrix(iter_N[i][j]).T for i in list(iter_N.keys()) for j in list(iter_N[i].keys())]
+    matrix_iter_N = matrix_iter_N + np.concatenate(aux,axis=1).tolist()
+    colum_pointer += len(matrix_loss_N[2])
+    ws.update_values((1,colum_pointer), matrix_iter_N)
+
+    bayes_loss_matrix.append(['theoretical bayes error rate (min(h)∈H L(h)) : '])
+    bayes_loss_matrix.append(['BR_' + str(dim) + ' (min(L))' if isinstance(dim,int) else dim for dim in list(bayes_loss.keys())])
+    aux = [bayes_loss[i] for i in list(bayes_loss.keys())]
+    bayes_loss_matrix = bayes_loss_matrix + [aux]
+    colum_pointer += len(matrix_iter_N[2])
+    ws.update_values((1,colum_pointer), bayes_loss_matrix)
+
+    d_matrix.append(['(d_n) as dist(P_n,P_origin), \nP_n=intersect(Line_n,Ellipsse_n)\nLine_n = Line(x_1=x_2=...=x_n)\nEllipse_n = Ellip(X_n^t . cov_n^(-1) . X_n = 1))'])
+    d_matrix.append(['d_' + str(dim) if isinstance(dim,int) else dim for dim in list(d.keys())])
+    aux = [ d[i] for i in list(d.keys()) ]
+    d_matrix = d_matrix + [aux]
+    colum_pointer += len(bayes_loss_matrix[2])
+    ws.update_values((1,colum_pointer), d_matrix)
+
+    intersection_points_matrix.append(['intersect points between P(E) curves'])
+    intersection_points_matrix.append([list(intersection_points.keys())[int(i/3)] for i in range(3*len(list(intersection_points.keys())))])
+    intersection_points_matrix.append(len(list(intersection_points.keys()))*list(intersection_points[list(intersection_points.keys())[0]].keys()))
+    aux = []
+    max_len = max([len(intersection_points[loss_type]['log_2(N*)']) for loss_type in intersection_points.keys() ])
+    for i in range(max_len):
+      for loss_type in list(intersection_points.keys()):
+        for key in list(intersection_points[loss_type].keys()):
+          aux = aux + [intersection_points[loss_type][key][i]] if i < len(intersection_points[loss_type][key]) else  aux + [None]
+      intersection_points_matrix.append(aux)
+      aux=[]
+    colum_pointer += len(d_matrix[2])
+    ws.update_values((1,colum_pointer), intersection_points_matrix)
+
+    model_tag_matrix.append(['model parameters'])
+    model_tag_matrix.append(list(model_tag.keys()))
+    aux = [[ model_tag[key][i] if isinstance(model_tag[key], list) and i < len(model_tag[key]) else model_tag[key] if i==0 else None for key in list(model_tag.keys())] for i in range(len(model_tag['rho'])) ]
+    model_tag_matrix = model_tag_matrix + aux
+    colum_pointer += len(intersection_points_matrix[2])
+    ws.update_values((1,colum_pointer), model_tag_matrix)
+
+    sim_tag_matrix.append(['simulator parameters'])
+    sim_tag_matrix.append(list(sim_tag.keys()))
+    aux = [[sim_tag[key][i] if isinstance(sim_tag[key], list) else sim_tag[key] if i==0 else None for key in list(sim_tag.keys())] for i in range(len(sim_tag['dims'])) ]
+    sim_tag_matrix = sim_tag_matrix + aux
+    colum_pointer += len(model_tag_matrix[2])
+    ws.update_values((1,colum_pointer),sim_tag_matrix)
+
+    colum_pointer += len(sim_tag_matrix[2])
+    ws.update_value((2,colum_pointer), 'Duration (h)')
+    ws.update_value((3,colum_pointer), report.duration)
+
+    class ChartType(Enum):
+      SCATTER = 'SCATTER'
+      LINE = 'LINE'
+
+    ws.adjust_column_width(1,2, pixel_size=None)
+    ws.update_value((1,8),'---->\nDATA\nIN\nHIDDEN\nCELLS\n---->')
+    ws.hide_dimensions(9, 14, dimension='COLUMNS')
+
+    #add charts
+    for i in range(len(loss_types)):
+      columns = [((2,3+i),(2+len(N),3+i)),((2,3+i+len(loss_types)),(2+len(N),3+i+len(loss_types)))]
+      ws.add_chart(((2,2),(2+len(N),2)), columns, loss_types[i] + ': P(E) vs log2(N)', chart_type=ChartType.LINE, anchor_cell=(4 + len(N) + chart_height*i,3))
+
+    #set chart headers
+    for chart in ws.get_charts():
+        spec = chart.get_json()
+        spec['basicChart'].update({'headerCount' : 1})
+        request = {
+                    'updateChartSpec':{
+                        'chartId': chart.id, "spec": spec}
+                }
+
+        ws.client.sheet.batch_update(sh.id,request)
+    if verbose:
+      print('sheet is over! id: ', ws.index, ' title:', ws.title)
+      print('link to Compare Report: ', ws.url)
+
+  @print_first_call_to_spreadsheet_writing_service
   def update_N_report_on_spreadsheet(self, report, dims, verbose=True):
     """update N_report to spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
 
@@ -810,7 +825,6 @@ class GspreadClient:
     if verbose:
       print('sheet is over! id: ', ws.index, ' title:', ws.title)
       print('link to home: ', ws.url)
-
 
 
   def param_not_in_home(self, param):

@@ -1,13 +1,23 @@
 import os
 import itertools
 import googleapiclient
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+from IPython.core.display_functions import clear_output
 from shapely.geometry import LineString
+from tabulate import tabulate
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 from .enumtypes import LossType
-from .utils import get_grandparent_folder_path
-
+from .utils import get_grandparent_folder_path, cls
 
 
 class Report:
@@ -74,6 +84,7 @@ class Report:
     self.delta_L_ = (delta_L1, delta_L2)
     return self.delta_L_
 
+
   def intersection_point_(self, dims, loss_type):
     """return intersection points between Loss curves of a pair of compared dimensionalyties
 
@@ -119,92 +130,48 @@ class Report:
 
     return intersection_points, n_star
 
-  def plot_with_intersection(self):
-    """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
+
+  def compile_compare(self, dims=None):
+    """return compare_report images for pair of compared dimensionalyties
 
     Parameters:
       dims (tuple of int or list of int): a pair of dimensionalyties to be compared
 
+    Returns:
+      compare_report results
+
     """
 
-    sim_dims = self.sim.dims
+    dims = dims if dims else self.sim.dims[-2:]
 
-    unique_pairs = []
-    n = len(sim_dims)
+    intersection_point_ = {loss_type : self.intersection_point_( dims, loss_type)[0] for loss_type in self.sim.loss_types}
+    n_star_ = {loss_type : self.intersection_point_( dims, loss_type)[1] for loss_type in self.sim.loss_types}
 
-    for i in range(n):
-      for j in range(i + 1, n):
-        pair = (sim_dims[i], sim_dims[j])
-        unique_pairs.append(pair)
+    loss_N = {d : { loss_type : self.loss_N[d][loss_type] for loss_type in list(self.loss_N[d].keys())} for d in dims}
+    iter_N = {d : { loss_type : self.iter_N[d][loss_type] for loss_type in list(self.iter_N[d].keys())} for d in dims}
 
-    Xdata = np.log2(self.sim.model.N)[:len(self.loss_N[sim_dims[0]][LossType.THEORETICAL.value])]
-    Y_data = self.loss_N
+    intersection_point_dict = { loss_type: { 'log_2(N*)' : np.array(intersection_point_[loss_type]).T[0] if intersection_point_[loss_type] else ['n/a'],
+                                                 'P(E)': np.array(intersection_point_[loss_type]).T[1] if intersection_point_[loss_type] else ['n/a'],
+                                                 'N*' : n_star_[loss_type] if n_star_[loss_type] else ['NO INTERSECT'] }
+                               for loss_type in self.sim.loss_types}
 
-    columns = len(self.sim.loss_types)
-    # Create the figure and three subplots
-    fig, axs = plt.subplots(1, columns, figsize=(14, 4))
+    bayes_ratio = self.loss_bayes[dims[0]]/self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
+    bayes_diff = self.loss_bayes[dims[0]] - self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
 
-    for i, loss_type in enumerate(self.sim.loss_types):
-      for d in sim_dims:
-        axs[i].plot(Xdata, Y_data[d][loss_type], label='dim = ' + str(d))
+    loss_bayes = {dims[0] : self.loss_bayes[dims[0]] , dims[1] : self.loss_bayes[dims[1]] }
 
-      if len(self.loss_N[sim_dims[0]][loss_type]) > 1:
-        for dims in unique_pairs:
-          intersection_points, n_star = self.intersection_point_(dims, loss_type)
-          if len(intersection_points) > 0:
-            for j in range(0, len(intersection_points)):
-              axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
-              axs[i].text(intersection_points[j][0], intersection_points[j][1], '(' + "{:.1f}".format(intersection_points[j][0]) + ',' + "{:.2f}".format(intersection_points[j][1]) + ')' )
+    loss_bayes.update({'ratio': bayes_ratio , 'diff': bayes_diff })
 
+    d_ratio = self.d[dims[0]]/self.d[dims[1]]
+    d_diff = self.d[dims[0]] - self.d[dims[1]]
 
+    d = {dims[0] : self.d[dims[0]] , dims[1] : self.d[dims[1]]}
 
-      axs[i].set_title(loss_type)
-      axs[i].set_xlabel('$\log_2(n)$')
-      axs[i].set_ylabel('$P(error)$')
-      axs[i].set_xlim([0, max(12, len(self.sim.model.N))])
-      axs[i].set_ylim([0, 1])
-      axs[i].legend()
+    d.update({'ratio': d_ratio , 'diff': d_diff })
 
+    self.compare = (loss_N, iter_N, loss_bayes, d, intersection_point_dict, self.model_tag, self.sim_tag)
+    return self.compare
 
-    # Show the plot
-    plt.tight_layout()
-
-
-
-    return fig
-
-  def save_loss_plot_as_png(self, export_path=None, verbose=True):
-    """
-		Save a matplotlib Figure object as a PNG image.
-
-		Parameters:
-				export_path (str): The file path where the PNG image will be saved.
-		Returns:
-				None
-		"""
-    if self.fig is not None:
-      if export_path is None:
-        export_path = get_grandparent_folder_path()
-        export_path += '\\images\\' if os.name == 'nt' else '/images/'
-        export_path += 'data_points' + str(self.params) + '.png'
-      elif not export_path.endswith(".png"):
-        export_path = get_grandparent_folder_path()
-        export_path += '\\images\\' if os.name == 'nt' else '/images/'
-        export_path += 'loss' + str(self.params) + '.png'
-
-      if not os.path.exists(export_path):
-        try:
-          self.fig.savefig(export_path, format="png", dpi=300)
-          if verbose:
-            print(f"Figure saved as: {export_path}")
-        except Exception as e:
-          print(f"Failed to save the figure: {e}")
-      else:
-        if verbose:
-          print(f"File already exists: {export_path}")
-    else:
-      if verbose:
-        print("No figure to save.")
 
   def compile_N(self, dims=(2,3)):
     """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
@@ -260,9 +227,9 @@ class Report:
     index = len(loss_types)*len(dims)
     iter_ratio_per_n = [np.average(iter_ratio_per_n_aux[index*i:index*(i+1)]) for i in range(10)]
 
-    iter_ratio_per_dim = [ self.iter_N[d][loss_type][i]/self.max_iter_N[i] for d in dims for loss_type in loss_types for i in range(10)]
+    iter_ratio_per_dim_aux = [ self.iter_N[d][loss_type][i]/self.max_iter_N[i] for d in dims for loss_type in loss_types for i in range(10)]
     index = len(loss_types)*10
-    iter_ratio_per_dim = [np.average(iter_ratio_per_n_aux[index*i:index*(i+1)]) for i in range(len(dims))]
+    iter_ratio_per_dim = [np.average(iter_ratio_per_dim_aux[index*i:index*(i+1)]) for i in range(len(dims))]
 
     cost = ( time_spent_gen, time_spent_loss_type, time_spent_n, time_spent_dim, time_ratio_gen , time_ratio_loss_type, time_ratio_n, time_ratio_dim, iter_ratio_per_loss_type, iter_ratio_per_n, iter_ratio_per_dim)
 
@@ -270,97 +237,309 @@ class Report:
 
     return N_report_params
 
-  def compile_compare(self, dims=(2,3)):
-    """return compare_report images for pair of compared dimensionalyties
 
-    :self: report object
-    :type self: Report
-    :param dims: a pair of dimensionalyties to be compared
-    :type dims: tuple of int or list of int
-    :return: compare_report images for a pair of compared dimensionalyties
-    :rtype: tuple
-
+  def save_loss_plot_as_png(self, export_path=None, verbose=True):
     """
+    Save a matplotlib Figure object as a PNG image.
 
-    intersection_point_ = {loss_type : self.intersection_point_( dims, loss_type)[0] for loss_type in self.sim.loss_types}
-    n_star_ = {loss_type : self.intersection_point_( dims, loss_type)[1] for loss_type in self.sim.loss_types}
-
-    loss_N = {d : { loss_type : self.loss_N[d][loss_type] for loss_type in list(self.loss_N[d].keys())} for d in dims}
-    iter_N = {d : { loss_type : self.iter_N[d][loss_type] for loss_type in list(self.iter_N[d].keys())} for d in dims}
-
-    intersection_point_dict = { loss_type: { 'log_2(N*)' : np.array(intersection_point_[loss_type]).T[0] if intersection_point_[loss_type] else ['n/a'],
-                                                 'P(E)': np.array(intersection_point_[loss_type]).T[1] if intersection_point_[loss_type] else ['n/a'],
-                                                 'N*' : n_star_[loss_type] if n_star_[loss_type] else ['NO INTERSECT'] }
-                               for loss_type in self.sim.loss_types}
-
-    bayes_ratio = self.loss_bayes[dims[0]]/self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
-    bayes_diff = self.loss_bayes[dims[0]] - self.loss_bayes[dims[1]] if  self.loss_bayes[dims[1]] > 0 else 'n/a'
-
-    loss_bayes = {dims[0] : self.loss_bayes[dims[0]] , dims[1] : self.loss_bayes[dims[1]] }
-
-    loss_bayes.update({'ratio': bayes_ratio , 'diff': bayes_diff })
-
-    d_ratio = self.d[dims[0]]/self.d[dims[1]]
-    d_diff = self.d[dims[0]] - self.d[dims[1]]
-
-    d = {dims[0] : self.d[dims[0]] , dims[1] : self.d[dims[1]]}
-
-    d.update({'ratio': d_ratio , 'diff': d_diff })
-
-    self.compare = (loss_N, iter_N, loss_bayes, d, intersection_point_dict, self.model_tag, self.sim_tag)
-    return self.compare
-
-  def print_compare_report(self, dims, loss_type):
-    """print compare_report images for a pair of compared dimensionalyties
-
-    :self: report object
-    :type self: Report
-    :param dims: pair of dimensionalyties to be compared
-    :type dims: list of int or tuple of int
-    :param loss_type: loss estimation method
-    :type loss_type: str
-
+    Parameters:
+        export_path (str): The file path where the PNG image will be saved.
+        verbose (bool): If True, print the export path.
+    Returns:
+        None
     """
+    if self.loss_plot is not None:
+      if export_path is None:
+        export_path = get_grandparent_folder_path()
+        export_path += '\\images\\' if os.name == 'nt' else '/images/'
+        export_path += 'loss' + str(self.sim.model.params) + '.png'
+      elif not export_path.endswith(".png"):
+        export_path = get_grandparent_folder_path()
+        export_path += '\\images\\' if os.name == 'nt' else '/images/'
+        export_path += 'loss' + str(self.sim.model.params) + '.png'
 
-    intersection_points, n_star = self.intersection_point_( dims, loss_type)
-
-    xdata = self.sim.model.N
-    ydata1 = self.loss_N[dims[0]][loss_type]
-    ydata2 = self.loss_N[dims[1]][loss_type]
-
-    #P(Erro) plot for 2feat and 3feat
-    fig2 = plt.figure()
-    ax2 = fig2.add_subplot(1, 1, 1)
-    ax2.plot(np.log2(xdata), ydata1, color='tab:blue', label = str(dims[0]) + ' features')
-    ax2.plot(np.log2(xdata), ydata2, color='tab:orange', label = str(dims[1]) + ' features')
-    plt.xlabel("log_2(N)")
-    plt.ylabel("P(Erro)")
-    ax2.legend()
-
-    if not n_star:
-      n_star = 'NO INTERSECT'
-
-    elif n_star[0] == 'N/A':
-      n_star = 'N/A'
-
+      if not os.path.exists(export_path):
+        try:
+          self.loss_plot.savefig(export_path, format="png", dpi=300)
+          if verbose:
+            print(f"Figure saved as: {export_path}")
+        except Exception as e:
+          print(f"Failed to save the figure: {e}")
+      else:
+        if verbose:
+          print(f"File already exists: {export_path}")
     else:
-      n_star = []
-      for i in range(len(intersection_points)) :
-        plt.plot(*intersection_points[i], 'ro')
-        point = '(' + f"{intersection_points[i][0]:.3f}" + ', ' + f"{intersection_points[i][1]:.3f}" + ')'
-        plt.text(intersection_points[i][0] , intersection_points[i][1] , point)
-        n_star.append(f"{(2**intersection_points[i][0]):.2f}")
-        intersection_points[i] = point
+      if verbose:
+        print("No figure to save.")
 
-    ax2.set_title('N* = ' + str(n_star))
 
-    print(self.model_tag)
-    print(self.sim.report.loss_bayes)
-    print('instersection_points = ', intersection_points)
-    print('N* = ' , n_star  )
+  def plot_with_intersection(self):
+    """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
+
+    """
+
+    sim_dims = self.sim.dims
+
+    unique_pairs = []
+    n = len(sim_dims)
+
+    for i in range(n):
+      for j in range(i + 1, n):
+        pair = (sim_dims[i], sim_dims[j])
+        unique_pairs.append(pair)
+
+    Xdata = np.log2(self.sim.model.N)[:len(self.loss_N[sim_dims[0]][LossType.THEORETICAL.value])]
+    Y_data = self.loss_N
+
+    columns = len(self.sim.loss_types)
+    # Create the figure and three subplots
+    fig, axs = plt.subplots(1, columns, figsize=(14, 4))
+
+    for i, loss_type in enumerate(self.sim.loss_types):
+      for d in sim_dims:
+        axs[i].plot(Xdata, Y_data[d][loss_type], label='dim = ' + str(d))
+
+      if len(self.loss_N[sim_dims[0]][loss_type]) > 1:
+        for dims in unique_pairs:
+          intersection_points, n_star = self.intersection_point_(dims, loss_type)
+          if len(intersection_points) > 0:
+            for j in range(0, len(intersection_points)):
+              axs[i].plot(intersection_points[j][0], intersection_points[j][1], 'ro')
+              axs[i].text(intersection_points[j][0], intersection_points[j][1],
+                          '(' + "{:.1f}".format(intersection_points[j][0]) + ',' + "{:.2f}".format(
+                            intersection_points[j][1]) + ')')
+
+      axs[i].set_title(loss_type)
+      axs[i].set_xlabel('$\log_2(n)$')
+      axs[i].set_ylabel('$P(error)$')
+      axs[i].set_xlim([0, max(12, len(self.sim.model.N))])
+      axs[i].set_ylim([0, 1])
+      axs[i].legend()
+
+    # Show the plot
+    plt.tight_layout()
+
+    return fig
+
+
+  def print_loss(self):
+
+    for loss_type in self.sim.loss_types:
+      data = np.array([ np.round(self.loss_N[dim][loss_type],4) for dim in self.sim.dims]).T.tolist()
+
+      ## add index column
+      indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+
+      ## make table and print
+      table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
+      print(loss_type, ' Loss: ')
+      print(table)
+
+      data = np.array([self.iter_N[dim][loss_type] for dim in self.sim.dims]).T.tolist()
+
+      ## add index column
+      indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+
+      ## make table and print
+      table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
+      print(loss_type, ' # iterations: ')
+      print(table)
+
+
+  def print_N_star(self, dims_to_compare=None):
+    """Print N_star for theoretical and empirical loss
+
+    Parameters:
+      dims_to_compare (list of int or tuple of int): list of dimensionalities to be compared
+
+    Returns:
+      None
+
+    Raises:
+      TypeError: if dims_to_compare is not a list of int or tuple of int;
+      ValueError: if the number of compared dimensionalities is not 2;
+                  if the list of dioemnsionalities to be compared is not a subset of the list of simulated dimensionalities
+
+    """
+
+    dims_to_compare = self.sim.dims[:2] if dims_to_compare is None else dims_to_compare
+
+    intersection_point_t, n_star_t = self.intersection_point_( dims_to_compare, 'THEORETICAL')
+    intersection_point_e, n_star_e = self.intersection_point_( dims_to_compare, 'EMPIRICAL_TEST')
+
+    data_theo = [['THEO'] + [np.round(intersection_point_t[i], 4).tolist()] + [n_star_t[i]] for i in range(len(n_star_t))] if n_star_t else []
+    data_emp = [['EMPI'] + [np.round(intersection_point_e[i], 4).tolist()] + [n_star_e[i]] for i in range(len(n_star_e))] if n_star_e else []
+
+    data = data_theo + data_emp
+
+    ## make table and print
+    table = tabulate(data, tablefmt='grid', headers=['Loss', 'intersection point', 'N_star'])
+    print('N* between ' + str(dims_to_compare[0]) + 'D and ' + str(dims_to_compare[1]) + 'D classifiers: ')
+    print(table)
+
+
+  def print_tags_and_tables(self, dims_to_compare=None):
+
+    progress_stream = '----------------------------------------------------------------------------------------------------'
+    n_index = len(self.sim.model.N)
+    N_size = len(self.sim.model.N)
+    p = int(n_index * 100 / N_size)
+    dims_to_compare = dims_to_compare if dims_to_compare else self.sim.dims[-2:]
+    _, _, loss_bayes, d, _, _, _ = self.compile_compare(dims=dims_to_compare)
+
+    print(' progress: ', end='')
+    print(progress_stream[0:p], end='')
+    print("\033[91m {}\033[00m".format(progress_stream[p:-1]) + ' ' + str(n_index) + '/' + str(N_size))
+    print('n: ' + str(self.sim.model.N[-1]))
+    print('N = ' + str(self.sim.model.N))
+    print('Model: ', self.model_tag)
+    print('Simulator: ', self.sim_tag)
+    print('d: ', { key : round(self.d[key],4) for key in self.d.keys() })
+    print('bayes error rate: ', { key : round(self.loss_bayes[key],4) for key in self.loss_bayes.keys() })
+    self.print_N_star(dims_to_compare)
+    self.print_loss()
+
+
+  def show_plots(self):
+    datapoints_fig = self.sim.model.data_points_plot
+    loss_fig = self.plot_with_intersection()
+
+    if datapoints_fig:
+      plt.figure(figsize=(14, 4))
+      fm = plt.get_current_fig_manager()
+      fm.canvas.figure = datapoints_fig
+      datapoints_fig.canvas = fm.canvas
+      plt.figure(datapoints_fig.number)
+
+    plt.figure(loss_fig.number)
     plt.show()
+    plt.close()
 
-    # return self.intersection_point_( dims, loss_type)
+
+  def print_report(self, dims_to_compare=None):
+    """Print report
+
+    Parameters:
+      dims_to_compare (list of int or tuple of int): list of dimensionalities to be compared
+
+    Returns:
+      None
+
+    Raises:
+      TypeError: if dims_to_compare is not a list of int or tuple of int;
+      ValueError: if the number of compared dimensionalities is not 2;
+                  if the list of dioemnsionalities to be compared is not a subset of the list of simulated dimensionalities
+
+    """
+
+    if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
+      print(type(dims_to_compare))
+      print(dims_to_compare)
+      raise TypeError('dims_to_compare must be a list or tuple of int')
+
+    if dims_to_compare and len(dims_to_compare) != 2:
+      raise ValueError('dims_to_compare must contain exactly 2 elements')
+
+    if dims_to_compare and not set(dims_to_compare).issubset(set(self.sim.dims)):
+      raise ValueError('dims_to_compare must be a subset of the list of simulated dimensionalities')
+
+
+    dims_to_compare = dims_to_compare if dims_to_compare else self.sim.dims[-2:]
+
+    ## if in notebook, show figures before printing tables
+    if self.sim.is_notebook:
+      clear_output()
+      plt.close()
+
+      # show plots
+      self.show_plots()
+
+      # print sim tags and tables
+      self.print_tags_and_tables(dims_to_compare)
+
+    ## if in terminal, print tables before showing figures
+    else:
+      cls()
+      plt.close()
+
+      # print sim tags and tables
+      self.print_tags_and_tables(dims_to_compare)
+
+      # show plots
+      self.show_plots()
+
+
+  def print_report_to_pdf(self, dims_to_compare=None, file_path=None):
+    """Print report to a PDF file.
+
+    Parameters:
+      file_path (str): The path of the PDF file to be created. If None, the file will be created in the default reports folder (<project_folder>/reports/).
+      dims_to_compare (list of int or tuple of int): List of dimensionalities to be compared.
+
+    Returns:
+      None
+
+    Raises:
+      TypeError:
+        If dims_to_compare is not a list of int or tuple of int.
+      ValueError:
+        If the number of compared dimensionalities is not 2;
+        if the list of dimensionalities to be compared is not a subset of the list of simulated dimensionalities.
+    """
+
+    if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
+      raise TypeError('dims_to_compare must be a list or tuple of int')
+
+    if dims_to_compare and len(dims_to_compare) != 2:
+      raise ValueError('dims_to_compare must contain exactly 2 elements')
+
+    if dims_to_compare and not set(dims_to_compare).issubset(set(self.sim.dims)):
+      raise ValueError('dims_to_compare must be a subset of the list of simulated dimensionalities')
+
+
+    file_path = file_path if file_path \
+      else get_grandparent_folder_path() + '\\reports\\sim_report_' + str(self.sim.model.params) + '.pdf' if os.name == 'nt' \
+      else get_grandparent_folder_path() + '/reports/sim_report_' + str(self.sim.model.params) + '.pdf'
+
+    # Create a new PDF file
+    pdf = PdfPages(file_path)
+
+    # Create the plots and save them to the PDF
+    datapoints_fig = self.sim.model.data_points_plot
+    loss_fig = self.plot_with_intersection()
+
+    pdf.savefig(datapoints_fig)
+    pdf.savefig(loss_fig)
+
+    # Close the PDF file
+    pdf.close()
+
+    # Continue with the existing code for printing tables and other content
+
+    # Create a new SimpleDocTemplate object with the specified filename
+    doc = SimpleDocTemplate(file_path, pagesize=letter)
+
+    # Initialize the list to hold the content for the PDF
+    elements = []
+
+    # ... (your existing code for generating the content)
+    self.print_tags_and_tables(dims_to_compare)
+
+    # Create a story with the collected elements
+    doc.build(elements)
+
+    # Close the PDF file
+    pdf.close()
+
+    # try:
+    #
+    #
+    # except Exception as e:
+    #   print('Error while writing PDF file: ' + str(e))
+    # else:
+    #   if self.sim.verbose:
+    #     print('PDF file saved to: ' + file_path)
+
 
   def write_to_spreadsheet(self, gc, dims_to_compare = None, verbose=True):
 
