@@ -1,10 +1,10 @@
 from slacgs.demo import *
 
-##You can opt to build your own Report Service Configuration
+## You can opt to build your own Report Service Configuration
 path_to_google_cloud_service_account_api_key = 'path/to/key.json'
 set_report_service_conf(path_to_google_cloud_service_account_api_key)
 
-##Or you can use our Report Service Configuration if you have the password
+## Or you can use our Report Service Configuration if you have the password
 set_report_service_conf()
 
 
@@ -53,7 +53,7 @@ run_custom_simulation_test(params)
 
 ### 5 features
 params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
-dims_to_compare = _test(2, 5)
+dims_to_compare = (2, 5)
 run_custom_simulation_test(params, dims_to_compare)
 
 ### 6 features
