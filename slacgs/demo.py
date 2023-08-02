@@ -534,13 +534,14 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
 		raise TypeError("dims_to_compare must be a list or tuple")
 
-	if scenario_number < 1:
-		raise ValueError("scenario_number must be a positive integer")
+	if scenario_number < 5:
+		raise ValueError("scenario_number must be >= 5 for a Custom Scenario")
 
-
-	if dims_to_compare and not set(dims_to_compare).issubset(set(dims_to_simulate)):
+	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
+	if dims_to_compare and len(dims_to_compare) != 2:
+		raise ValueError("dims_to_compare length must be 2")
 
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
@@ -552,16 +553,6 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 
 	## create Simulator object to test parameters before continuing
 	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose)
-
-	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
-		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
-
-	if dims_to_compare and len(dims_to_compare) != 2:
-		raise ValueError("dims_to_compare length must be 2")
-
-	if dims_to_compare < 5:
-		raise ValueError("scenario_number must be >= 5 for a Custom Scenario")
-
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -1289,12 +1280,14 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
 		raise TypeError("dims_to_compare must be a list or tuple")
 
-	if scenario_number < 1:
-		raise ValueError("scenario_number must be a positive integer")
+	if scenario_number < 5:
+		raise ValueError("scenario_number must be >= 5 for a Custom Scenario")
 
-
-	if dims_to_compare and not set(dims_to_compare).issubset(set(dims_to_simulate)):
+	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
+
+	if dims_to_compare and len(dims_to_compare) != 2:
+		raise ValueError("dims_to_compare length must be 2")
 
 	## update scenario gif
 	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
@@ -1308,14 +1301,8 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
-	if dims_to_compare and dims_to_simulate and not set(dims_to_compare).issubset(set(dims_to_simulate)):
-		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
-	if dims_to_compare and len(dims_to_compare) != 2:
-		raise ValueError("dims_to_compare length must be 2")
 
-	if dims_to_compare < 5:
-		raise ValueError("scenario_number must be >= 5 for a Custom Scenario")
 
 
 	## define folder name for storing reports
