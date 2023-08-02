@@ -47,11 +47,11 @@ def is_notebook():
 
 report_service_conf = {
   'images_path': '/content/slacgs/images/' if is_colab_notebook()
-  else get_user_folder_path() +'\\.slags\\images\\' if os.name == 'nt'
-  else get_user_folder_path() + '/.slags/images/',
+  else get_user_folder_path() +'\\slags\\images\\' if os.name == 'nt'
+  else get_user_folder_path() + '/slags/images/',
   'reports_path': '/content/slacgs/reports/' if is_colab_notebook()
-  else get_user_folder_path() + '\\.slags\\reports\\' if os.name == 'nt'
-  else get_user_folder_path() + '/.slags/reports/',
+  else get_user_folder_path() + '\\slags\\reports\\' if os.name == 'nt'
+  else get_user_folder_path() + '/slags/reports/',
   'user_email': None,
   'drive_service': None,
   'spreadsheet_service': None,
@@ -59,26 +59,47 @@ report_service_conf = {
 }
 
 
-def set_report_service_conf(slags_password=None, user_google_account_email=None):
+def set_report_service_conf(slacgs_password=None, user_google_account_email=None, path_to_google_cloud_service_account_api_key=None):
   """Set the report service configuration. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
 
   Parameters:
-    slags_password (str): The password used to enable Report Service. Defaults to None.
+    slacgs_password (str): The password used to enable our Report Service. Defaults to None.
     user_google_account_email (str): The user email used to authenticate the Google services. Defaults to None.
+    path_to_google_cloud_service_account_api_key (str): The Google Cloud Service Account API Json Key used to build your own Report Service. Must be able to access Google Drive and Google Sheets API's. Defaults to None.
 
+  Returns:
+    None
+    
+  Raises:
+    TypeError: If slags_password is not a string.
+    TypeError: If user_google_account_email is not a string.
+    TypeError: If google_cloud_service_account_api_key is not a string.
 
   Observations:
-    If slags_password or user_google_account_email is None, then the user will be prompted to enter the missing information.
+    If slags_password or user_google_account_email is None, then the user will be prompted to enter the password or email.
+    If google_cloud_service_account_api_key is given, then the password will be ignored.
 
   """
+
+  if slacgs_password is not None and not isinstance(slacgs_password, str):
+    raise TypeError("slags_password must be a string.")
+
+  if user_google_account_email is not None and not isinstance(user_google_account_email, str):
+    raise TypeError("user_google_account_email must be a string.")
+
+  if path_to_google_cloud_service_account_api_key is not None and not isinstance(path_to_google_cloud_service_account_api_key, str):
+    raise TypeError("google_cloud_service_account_api_key must be a string.")
 
   if user_google_account_email is not None:
     report_service_conf['user_email'] = user_google_account_email
 
   SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 
-  key_obj = eval(get_key(slags_password))
-  credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
+  if path_to_google_cloud_service_account_api_key is not None:
+    credentials = service_account.Credentials.from_service_account_file(path_to_google_cloud_service_account_api_key, scopes=SCOPES)
+  else:
+    key_obj = eval(get_key(slacgs_password))
+    credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
 
   report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)
   report_service_conf['drive_service'] = build('drive', 'v3', credentials=credentials)
