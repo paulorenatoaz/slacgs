@@ -46,10 +46,10 @@ def is_notebook():
 
 
 report_service_conf = {
-  'images_path': '/content/.slacgs/images' if is_colab_notebook()
+  'images_path': '/content/.slacgs/images/' if is_colab_notebook()
   else get_user_folder_path() +'\\.slags\\images\\' if os.name == 'nt'
   else get_user_folder_path() + '/.slags/images/',
-  'reports_path': '/content/.slacgs/reports' if is_colab_notebook()
+  'reports_path': '/content/.slacgs/reports/' if is_colab_notebook()
   else get_user_folder_path() + '\\.slags\\reports\\' if os.name == 'nt'
   else get_user_folder_path() + '/.slags/reports/',
   'user_email': None,
