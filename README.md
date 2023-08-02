@@ -88,22 +88,26 @@ from slacgs.demo import *
 run_experiment_simulation()
   
 ## 2. Add a Simulation to an Experiment Scenario Spreadsheet ##
+### Scenario 1
 scenario_number = 1
 params = [1, 1, 2.1, 0, 0, 0]
 add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
 
+### Scenario 2
 scenario_number = 2
 params = [1, 1, 2, -0.15, 0, 0]
 add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
 
+### Scenario 3
 scenario_number = 3
 params = [1, 1, 2, 0, 0.15, 0.15]
 add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
 
+### Scenario 4
 scenario_number = 4
 params = [1, 1, 2, -0.1, 0.15, 0.15]
 add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
-  
+
 ## 3. Run a Custom Scenario ##
 scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-5,6)]
 scenario_number = 5
