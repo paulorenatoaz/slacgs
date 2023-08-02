@@ -136,7 +136,6 @@ run_custom_simulation(params, dims_to_compare)
 params = [1, 2, 3, 4, 5, 6, -0.3, -0.3, -0.2, -0.2, -0.1, -0.1, 0, 0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]
 run_custom_simulation(params)
 
-
 ## 6. Run All Experiment Simulations ##
 run_experiment()
 
