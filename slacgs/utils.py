@@ -11,11 +11,50 @@ import pygsheets
 
 
 ## this is a report service configuration dictionary
-report_service_conf = {
 
-  'user_email' : None,
-  'drive_service' : None,
-  'spreadsheet_service' : None,
+def get_user_folder_path():
+  """Returns the user's home folder in any operating system."""
+  return os.environ['USERPROFILE'] if os.name == 'nt' else os.environ['HOME']
+
+
+def is_jupyter_notebook():
+  """Check if the environment is a Jupyter notebook."""
+  try:
+    # Check if 'get_ipython' function exists
+    from IPython import get_ipython
+    # Check if running in a notebook
+    if get_ipython() is not None:
+      if 'IPKernelApp' in get_ipython().config:
+        return True
+  except ImportError:
+    pass
+  return False
+
+
+def is_colab_notebook():
+  """Check if the environment is a Google Colab notebook."""
+  try:
+    import google.colab
+    return True
+  except ImportError:
+    return False
+
+
+def is_notebook():
+  """Check if the environment is a notebook."""
+  return is_jupyter_notebook() or is_colab_notebook()
+
+
+report_service_conf = {
+  'images_path': '/content/.slacgs/images' if is_colab_notebook()
+  else get_user_folder_path() +'\\.slags\\images\\' if os.name == 'nt'
+  else get_user_folder_path() + '/.slags/images/',
+  'reports_path': '/content/.slacgs/reports' if is_colab_notebook()
+  else get_user_folder_path() + '\\.slags\\reports\\' if os.name == 'nt'
+  else get_user_folder_path() + '/.slags/reports/',
+  'user_email': None,
+  'drive_service': None,
+  'spreadsheet_service': None,
   'pygsheets_service': None
 }
 
@@ -27,8 +66,10 @@ def set_report_service_conf(slags_password=None, user_google_account_email=None)
     slags_password (str): The password used to enable Report Service. Defaults to None.
     user_google_account_email (str): The user email used to authenticate the Google services. Defaults to None.
 
+
   Observations:
     If slags_password or user_google_account_email is None, then the user will be prompted to enter the missing information.
+
   """
 
   if user_google_account_email is not None:
@@ -42,7 +83,6 @@ def set_report_service_conf(slags_password=None, user_google_account_email=None)
   report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)
   report_service_conf['drive_service'] = build('drive', 'v3', credentials=credentials)
   report_service_conf['spreadsheet_service'] = build('sheets', 'v4', credentials=credentials)
-
 
 
 def get_grandparent_folder_path():
@@ -171,34 +211,6 @@ def get_key(password=None):
 
   return recover(key, content)
 
-
-def is_jupyter_notebook():
-  """Check if the environment is a Jupyter notebook."""
-  try:
-    # Check if 'get_ipython' function exists
-    from IPython import get_ipython
-    # Check if running in a notebook
-    if get_ipython() is not None:
-      if 'IPKernelApp' in get_ipython().config:
-        return True
-  except ImportError:
-    pass
-  return False
-
-
-def is_colab_notebook():
-  """Check if the environment is a Google Colab notebook."""
-  try:
-    import google.colab
-    return True
-  except ImportError:
-    return False
-
-
-def is_notebook():
-  """Check if the environment is a notebook."""
-  return is_jupyter_notebook() or is_colab_notebook()
-
 def cls():
   """
   Clears the terminal screen. Works on both Windows and Linux.
@@ -207,4 +219,5 @@ def cls():
     _ = os.system('cls')
   else:  # For Linux and Mac
     _ = os.system('clear')
+
 

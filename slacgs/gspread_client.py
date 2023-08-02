@@ -45,7 +45,7 @@ class GspreadClient:
     def wrapper(self, *args, **kwargs):
       if not hasattr(self, '_method_called'):
         self._method_called = True
-        print('Starting to write to spreadsheet: ', self.sh.title, )
+        print('\nStarting to write to spreadsheet: ', self.sh.title, )
         print('(This may take a while, ignore the warning messages)')
         print('link to spreadsheet: ', self.sh.url, '\n')
       return fn(self, *args, **kwargs)

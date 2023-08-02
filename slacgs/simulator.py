@@ -192,13 +192,9 @@ class Simulator:
     self.time_spent_test = 0
     self.verbose = verbose
     self.is_notebook = is_notebook()
-
-
     self.dims_to_compare = dims_to_compare if dims_to_compare else self.dims[-2:]
 
-
-
-  def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure):
+  def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure, datapoints_plot_png_path):
 
     """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (iter_per_step). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
 
@@ -247,6 +243,7 @@ class Simulator:
     print('Simulator: ',self.report.sim_tag)
     print('d: ', self.report.d)
     print('bayes error rate: ', self.report.loss_bayes)
+    print('Data Points Plot: ', datapoints_plot_png_path,'\n')
     for dim in self.dims:
       if self.report.loss_bayes[dim] == 0:
         print('when BR = 0, it will be infered after simulation')
@@ -594,14 +591,13 @@ class Simulator:
     # compute min(L(h)) and d for each dimension
     self.report.loss_bayes = { d : self.loss_bayes(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = { d : self.intersect_elip_dist_from_origin(d) for d in self.dims}
-    fig = self.model.data_points_plot
-    self.model.save_data_points_plot_as_png(verbose=self.verbose)
 
+
+    fig = self.model.data_points_plot
+    datapoints_plot_png_path = self.model.save_data_points_plot_as_png(verbose=self.verbose)
 
     N = self.model.N
     N_start_size = len(self.model.N)
-
-
 
     ## for each cardinality n in N  do the simulation for each dimension d in dims
     while True:
@@ -622,7 +618,7 @@ class Simulator:
 
         # terminal output N progress bar
         if self.verbose:
-          self.print_N_progress(n, max_iter,iter_per_step,fig)
+          self.print_N_progress(n, max_iter,iter_per_step,fig,datapoints_plot_png_path)
 
         # for each iteration i in max_iter do the simulation for each dimension d in dims and estimate L(h) for each loss type
         for i in range(max_iter):
@@ -765,9 +761,9 @@ class Simulator:
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.infered_loss_bayes(d)
 
-
-
+    plt.close()
     ## set and save the final plot
+
     self.report.loss_plot = self.report.plot_with_intersection()
 
     ## print the final report

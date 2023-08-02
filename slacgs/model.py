@@ -8,9 +8,8 @@ from matplotlib.patches import Ellipse
 
 
 from .enumtypes import DictionaryType
-from .utils import get_grandparent_folder_path
+from .utils import report_service_conf
 
-# from enumtypes import DictionaryType
 
 class Model:
 	"""Represents a Linear Classifier Loss Analysis Model composed by:
@@ -171,13 +170,11 @@ class Model:
 		"""
 		if self.data_points_plot is not None:
 			if export_path is None:
-				export_path = get_grandparent_folder_path()
-				export_path += '\\images\\' if os.name == 'nt' else '/images/'
+				export_path = report_service_conf['images_path']
 				export_path +=  'data_points' +  str(self.params) + '.png'
 			elif not export_path.endswith(".png"):
-				export_path = get_grandparent_folder_path()
-				export_path += '\\images\\' if os.name == 'nt' else '/images/'
-				export_path += 'data_points' +  str(self.params) + '.png'
+				export_path = report_service_conf['images_path']
+				export_path += 'data_points' + str(self.params) + '.png'
 
 			if not os.path.exists(export_path):
 				try:
@@ -189,9 +186,37 @@ class Model:
 			else:
 				if verbose:
 					print(f"File already exists: {export_path}")
+
 		else:
 			if verbose:
 				print("No figure to save.")
+
+		return export_path
+	def upload_data_points_plot_to_google_drive(self, gdc, verbose=True):
+		"""
+		Upload a matplotlib Figure object as a PNG image to Google Drive.
+
+		Parameters:
+				gdc (GoogleDriveClient): The Google Drive client object.
+		Returns:
+				None
+		"""
+		if self.data_points_plot is not None:
+			export_path = report_service_conf['images_path']
+			export_path += 'data_points' + str(self.params) + '.png'
+
+			gdrive_images_folder_path = 'slacgs.demo.' + gdc.gdrive_account_email + '/images'
+			if not os.path.exists(export_path):
+				self.save_data_points_plot_as_png(export_path=export_path, verbose=verbose)
+			if not gdc.folder_exists_by_path(gdrive_images_folder_path):
+				folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('slacgs.demo.' + gdc.gdrive_account_email), verbose=verbose)
+			else:
+				folder_id = gdc.get_folder_id_by_path(gdrive_images_folder_path)
+
+			gdc.upload_file_to_drive(export_path, folder_id, verbose=verbose)
+		else:
+			if verbose:
+				print("No figure to upload.")
 
 	def plot_surrounding_ellipsis_and_ellipsoids(self) -> Figure:
 

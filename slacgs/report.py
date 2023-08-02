@@ -1,23 +1,19 @@
 import os
 import itertools
 import googleapiclient
-import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 from IPython.display import clear_output
 from shapely.geometry import LineString
 from tabulate import tabulate
 
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
 
 from .enumtypes import LossType
-from .utils import get_grandparent_folder_path, cls
+from .utils import  cls, report_service_conf
 
 
 class Report:
@@ -84,7 +80,6 @@ class Report:
     self.delta_L_ = (delta_L1, delta_L2)
     return self.delta_L_
 
-
   def intersection_point_(self, dims, loss_type):
     """return intersection points between Loss curves of a pair of compared dimensionalyties
 
@@ -130,7 +125,6 @@ class Report:
 
     return intersection_points, n_star
 
-
   def compile_compare(self, dims=None):
     """return compare_report images for pair of compared dimensionalyties
 
@@ -171,7 +165,6 @@ class Report:
 
     self.compare = (loss_N, iter_N, loss_bayes, d, intersection_point_dict, self.model_tag, self.sim_tag)
     return self.compare
-
 
   def compile_N(self, dims=(2,3)):
     """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
@@ -237,7 +230,6 @@ class Report:
 
     return N_report_params
 
-
   def save_loss_plot_as_png(self, export_path=None, verbose=True):
     """
     Save a matplotlib Figure object as a PNG image.
@@ -250,13 +242,15 @@ class Report:
     """
     if self.loss_plot is not None:
       if export_path is None:
-        export_path = get_grandparent_folder_path()
-        export_path += '\\images\\' if os.name == 'nt' else '/images/'
-        export_path += 'loss' + str(self.sim.model.params) + '.png'
+        export_path = report_service_conf['images_path']
+        export_path += 'loss' + str(self.sim.model.params)
+        export_path += '[test]' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else ''
+        export_path += '.png'
       elif not export_path.endswith(".png"):
-        export_path = get_grandparent_folder_path()
-        export_path += '\\images\\' if os.name == 'nt' else '/images/'
-        export_path += 'loss' + str(self.sim.model.params) + '.png'
+        export_path = report_service_conf['images_path']
+        export_path += 'loss' + str(self.sim.model.params)
+        export_path += '[test]' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else ''
+        export_path += '.png'
 
       if not os.path.exists(export_path):
         try:
@@ -271,6 +265,38 @@ class Report:
     else:
       if verbose:
         print("No figure to save.")
+
+
+  def upload_loss_plot_to_drive(self, gdc, verbose=True):
+    """
+    Upload a matplotlib Figure object as a PNG image to Google Drive.
+
+    Parameters:
+        gdc (GoogleDriveClient): The GoogleDriveClient object.
+        verbose (bool): If True, print the export path.
+    Returns:
+        None
+    """
+    if self.loss_plot is not None:
+      export_path = report_service_conf['images_path']
+      export_path += 'loss' + str(self.sim.model.params)
+      export_path += '[test]' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else ''
+      export_path += '.png'
+
+      if not os.path.exists(export_path):
+        self.save_loss_plot_as_png(export_path=export_path, verbose=verbose)
+
+      gdrive_images_folder_path = 'slacgs.demo.' + gdc.gdrive_account_email + '/images'
+
+      if not gdc.folder_exists_by_path(gdrive_images_folder_path):
+        folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('slacgs.demo.' + gdc.gdrive_account_email), verbose=verbose)
+      else:
+        folder_id = gdc.get_folder_id_by_path(gdrive_images_folder_path)
+
+      gdc.upload_file_to_drive(export_path, folder_id, verbose=verbose)
+    else:
+      if verbose:
+        print("No figure to upload.")
 
 
   def plot_with_intersection(self):
@@ -321,7 +347,6 @@ class Report:
 
     return fig
 
-
   def print_loss(self):
 
     for loss_type in self.sim.loss_types:
@@ -332,7 +357,7 @@ class Report:
 
       ## make table and print
       table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
-      print(loss_type, ' Loss: ')
+      print('\n',loss_type, ' Loss: ')
       print(table)
 
       data = np.array([self.iter_N[dim][loss_type] for dim in self.sim.dims]).T.tolist()
@@ -342,9 +367,8 @@ class Report:
 
       ## make table and print
       table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
-      print(loss_type, ' # iterations: ')
+      print('\n', loss_type, ' # iterations: ')
       print(table)
-
 
   def print_N_star(self, dims_to_compare=None):
     """Print N_star for theoretical and empirical loss
@@ -367,16 +391,15 @@ class Report:
     intersection_point_t, n_star_t = self.intersection_point_( dims_to_compare, 'THEORETICAL')
     intersection_point_e, n_star_e = self.intersection_point_( dims_to_compare, 'EMPIRICAL_TEST')
 
-    data_theo = [['THEO'] + [np.round(intersection_point_t[i], 4).tolist()] + [n_star_t[i]] for i in range(len(n_star_t))] if n_star_t else []
-    data_emp = [['EMPI'] + [np.round(intersection_point_e[i], 4).tolist()] + [n_star_e[i]] for i in range(len(n_star_e))] if n_star_e else []
+    data_theo = [['THEO'] + [np.round(intersection_point_t[i], 4).tolist()] + [n_star_t[i]] for i in range(len(n_star_t))] if n_star_t != ['N/A'] else [['THEO'] + ['N/A'] + ['N/A'] ]
+    data_emp = [['EMPI'] + [np.round(intersection_point_e[i], 4).tolist()] + [n_star_e[i]] for i in range(len(n_star_e))] if n_star_e != ['N/A'] else [['EMPI'] + ['N/A'] + ['N/A'] ]
 
     data = data_theo + data_emp
 
     ## make table and print
     table = tabulate(data, tablefmt='grid', headers=['Loss', 'intersection point', 'N_star'])
-    print('N* between ' + str(dims_to_compare[0]) + 'D and ' + str(dims_to_compare[1]) + 'D classifiers: ')
+    print('\n','N* between ' + str(dims_to_compare[0]) + 'D and ' + str(dims_to_compare[1]) + 'D classifiers: ')
     print(table)
-
 
   def print_tags_and_tables(self, dims_to_compare=None):
 
@@ -399,7 +422,6 @@ class Report:
     self.print_N_star(dims_to_compare)
     self.print_loss()
 
-
   def show_plots(self):
     datapoints_fig = self.sim.model.data_points_plot
     loss_fig = self.plot_with_intersection()
@@ -414,7 +436,6 @@ class Report:
     plt.figure(loss_fig.number)
     plt.show()
     plt.close()
-
 
   def print_report(self, dims_to_compare=None):
     """Print report
@@ -467,79 +488,6 @@ class Report:
 
       # show plots
       self.show_plots()
-
-
-  def print_report_to_pdf(self, dims_to_compare=None, file_path=None):
-    """Print report to a PDF file.
-
-    Parameters:
-      file_path (str): The path of the PDF file to be created. If None, the file will be created in the default reports folder (<project_folder>/reports/).
-      dims_to_compare (list of int or tuple of int): List of dimensionalities to be compared.
-
-    Returns:
-      None
-
-    Raises:
-      TypeError:
-        If dims_to_compare is not a list of int or tuple of int.
-      ValueError:
-        If the number of compared dimensionalities is not 2;
-        if the list of dimensionalities to be compared is not a subset of the list of simulated dimensionalities.
-    """
-
-    if dims_to_compare and not isinstance(dims_to_compare, (list, tuple)):
-      raise TypeError('dims_to_compare must be a list or tuple of int')
-
-    if dims_to_compare and len(dims_to_compare) != 2:
-      raise ValueError('dims_to_compare must contain exactly 2 elements')
-
-    if dims_to_compare and not set(dims_to_compare).issubset(set(self.sim.dims)):
-      raise ValueError('dims_to_compare must be a subset of the list of simulated dimensionalities')
-
-
-    file_path = file_path if file_path \
-      else get_grandparent_folder_path() + '\\reports\\sim_report_' + str(self.sim.model.params) + '.pdf' if os.name == 'nt' \
-      else get_grandparent_folder_path() + '/reports/sim_report_' + str(self.sim.model.params) + '.pdf'
-
-    # Create a new PDF file
-    pdf = PdfPages(file_path)
-
-    # Create the plots and save them to the PDF
-    datapoints_fig = self.sim.model.data_points_plot
-    loss_fig = self.plot_with_intersection()
-
-    pdf.savefig(datapoints_fig)
-    pdf.savefig(loss_fig)
-
-    # Close the PDF file
-    pdf.close()
-
-    # Continue with the existing code for printing tables and other content
-
-    # Create a new SimpleDocTemplate object with the specified filename
-    doc = SimpleDocTemplate(file_path, pagesize=letter)
-
-    # Initialize the list to hold the content for the PDF
-    elements = []
-
-    # ... (your existing code for generating the content)
-    self.print_tags_and_tables(dims_to_compare)
-
-    # Create a story with the collected elements
-    doc.build(elements)
-
-    # Close the PDF file
-    pdf.close()
-
-    # try:
-    #
-    #
-    # except Exception as e:
-    #   print('Error while writing PDF file: ' + str(e))
-    # else:
-    #   if self.sim.verbose:
-    #     print('PDF file saved to: ' + file_path)
-
 
   def write_to_spreadsheet(self, gc, dims_to_compare = None, verbose=True):
 
@@ -624,7 +572,7 @@ class Report:
         except googleapiclient.errors.HttpError:
           if tryal <= 3:
             if verbose:
-              print('try again...' + str(tryal) + '/3')
+              print('trying again...' + str(tryal) + '/3')
             tryal += 1
             continue
           else:

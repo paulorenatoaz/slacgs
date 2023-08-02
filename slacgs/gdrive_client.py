@@ -1,5 +1,9 @@
+import io
+import os
 import re
 from googleapiclient.discovery import Resource
+from googleapiclient.http import MediaIoBaseUpload
+
 from .utils import report_service_conf, set_report_service_conf
 
 
@@ -328,7 +332,7 @@ class GdriveClient:
 		print(f"Spreadsheet with path '{path}' has been deleted.")
 
 
-	def check_folder_existence(self, report_folder_name):
+	def folder_exists(self, report_folder_name):
 		"""Check if a folder with the given name exists.
 
 		:param report_folder_name: name of the folder.
@@ -446,3 +450,210 @@ class GdriveClient:
 	def delete_file(self, file_id):
 		self.drive_service.files().delete(fileId=file_id).execute()
 		print(f"File with ID '{file_id}' has been deleted.")
+
+
+	def get_file_id_by_path(self, file_path):
+		"""Get the ID of a file.
+
+		:param file_path: path of the file.
+		:type file_path: str
+
+		:returns: ID of the file.
+		:rtype: str
+
+		:raises ValueError: if file_path is not a string.
+
+		"""
+
+		if not isinstance(file_path, str):
+			raise ValueError('file_path must be a string.')
+
+		file_path = file_path.split('/')
+		file_path = [file for file in file_path if file != '']
+
+		file_id = 'root'
+		for file_name in file_path:
+			response = self.drive_service.files().list(
+				q=f"name='{file_name}' and mimeType!='application/vnd.google-apps.folder' and '{file_id}' in parents",
+				spaces='drive', fields='files(id)').execute()
+			files = response.get('files', [])
+			if len(files) > 0:
+				file_id = files[0]['id']
+			else:
+				return None
+		return file_id
+
+
+	##make a function that check if folder with given path exists and return True if it does and False if it doesn't
+	def folder_exists_by_path(self, folder_path):
+		"""Check if a folder with the given path exists.
+
+		Parameters:
+			folder_path (str): The path to the folder you want to check.
+
+		Returns:
+			True if the folder exists, False otherwise.
+
+		Raises:
+			ValueError: If folder_path is not a string.
+
+
+		"""
+
+		if not isinstance(folder_path, str):
+			raise ValueError('folder_path must be a string.')
+
+		folder_path = folder_path.split('/')
+		folder_path = [folder for folder in folder_path if folder != '']
+
+		folder_id = 'root'
+		for folder_name in folder_path:
+			response = self.drive_service.files().list(
+				q=f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and parents='{folder_id}'",
+				spaces='drive', fields='files(id)').execute()
+			folders = response.get('files', [])
+
+			if len(folders) > 0:
+				folder_id = folders[0].get('id')
+			else:
+				return False
+		return True
+
+	##make a function to get folder id by path
+	def get_folder_id_by_path(self, folder_path):
+		"""Get the ID of a folder by its path.
+
+		Parameters:
+			folder_path (str): The path to the folder you want to get the ID of.
+
+		Returns:
+			The ID of the folder.
+
+		Raises:
+			ValueError: If folder_path is not a string.
+
+		"""
+
+		if not isinstance(folder_path, str):
+			raise ValueError('folder_path must be a string.')
+
+		folder_path = folder_path.split('/')
+		folder_path = [folder for folder in folder_path if folder != '']
+
+		folder_id = 'root'
+		for folder_name in folder_path:
+			response = self.drive_service.files().list(
+				q=f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and parents='{folder_id}'",
+				spaces='drive', fields='files(id)').execute()
+			folders = response.get('files', [])
+
+			if len(folders) > 0:
+				folder_id = folders[0].get('id')
+			else:
+				return None
+		return folder_id
+
+	##make a function to check if file with given path exists and return True if it does and False if it doesn't
+	def file_exists_by_path(self, file_path):
+		"""Check if a file with the given path exists.
+
+		Parameters:
+			file_path (str): The path to the file you want to check.
+
+		Returns:
+			True if the file exists, False otherwise.
+
+		Raises:
+			ValueError: If file_path is not a string.
+
+		"""
+
+		if not isinstance(file_path, str):
+			raise ValueError('file_path must be a string.')
+
+		file_name = os.path.basename(file_path)
+		folder_path = os.path.dirname(file_path)
+
+		folder_id = self.get_folder_id_by_path(folder_path)
+		if folder_id is None:
+			return False
+
+		response = self.drive_service.files().list(
+			q=f"name='{file_name}' and mimeType!='application/vnd.google-apps.folder' and parents='{folder_id}'",
+			spaces='drive', fields='files(id)').execute()
+		files = response.get('files', [])
+
+		if len(files) > 0:
+			return True
+		else:
+			return False
+
+	def file_exists_in_folder(self, file_name, folder_id):
+		"""Check if a file with the given name exists in the given folder.
+
+		Parameters:
+			file_name (str): The name of the file you want to check.
+			folder_id (str): The ID of the folder you want to check.
+
+		Returns:
+			True if the file exists, False otherwise.
+
+		Raises:
+			ValueError: If file_name or folder_id is not a string.
+
+		"""
+
+		if not isinstance(file_name, str):
+			raise ValueError('file_name must be a string.')
+		if not isinstance(folder_id, str):
+			raise ValueError('folder_id must be a string.')
+
+		response = self.drive_service.files().list(
+			q=f"name='{file_name}' and mimeType!='application/vnd.google-apps.folder' and parents='{folder_id}'",
+			spaces='drive', fields='files(id)').execute()
+		files = response.get('files', [])
+
+		if len(files) > 0:
+			return True
+		else:
+			return False
+
+	def upload_file_to_drive(self, file_path, folder_id, verbose=True):
+		"""
+		Uploads a file to a Google Drive folder.
+
+		Args:
+				file_path (str): The path to the file you want to upload.
+				folder_id (str): The ID of the Google Drive folder where you want to upload the file.
+
+		"""
+
+		# Prepare the file metadata
+		file_name = os.path.basename(file_path)
+		file_metadata = {
+			'name': file_name,
+			'parents': [folder_id]
+		}
+
+		# Upload the file
+		media = MediaIoBaseUpload(io.BytesIO(open(file_path, 'rb').read()), mimetype='application/octet-stream', resumable=True)
+
+		try:
+			if self.file_exists_in_folder(file_name, folder_id):
+				file_id = self.get_file_id_by_path(file_path)
+			else:
+				uploaded_file = self.drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+				file_id = uploaded_file.get('id')
+
+			if verbose:
+				print(f"File with path '{file_path}' has been uploaded to folder: "
+				      f"https://drive.google.com/drive/folders/{folder_id}.")
+				print('link to file: https://drive.google.com/file/d/' + file_id)
+		except Exception as e:
+			print('failed to upload file with path: ' + file_path + ' to folder: https://drive.google.com/drive/folders/' + folder_id)
+
+
+
+
+
+

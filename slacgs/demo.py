@@ -68,7 +68,7 @@ def start_google_drive_service(password=None, user_email=None):
 		GDC = GdriveClient(report_service_conf['drive_service'], report_service_conf['spreadsheet_service'], report_service_conf['user_email'])
 
 	if GDC.gdrive_account_email:
-		if not GDC.check_folder_existence('slacgs.demo.' + GDC.gdrive_account_email):
+		if not GDC.folder_exists('slacgs.demo.' + GDC.gdrive_account_email):
 			folder_id = GDC.create_folder('slacgs.demo.' + GDC.gdrive_account_email)
 		else:
 			folder_id = GDC.get_folder_id_by_name('slacgs.demo.' + GDC.gdrive_account_email)
@@ -83,17 +83,17 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	and another one for the Custom Simulations.
 	The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service
 	account and shared with the user's Google Drive account.
-	Also, images with data visualization will be exported to a local folder inside project's root folder ( slacgs/images/ )
+	Also, images with data visualization will be exported to a local folder inside user folder ( <user>/slacgs/images/ )
 
-	Reports Exported:
-		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
-		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+	Reports Exported (Google Spreadsheets):
+		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
+		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
+		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported:
-		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
-		Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
-		Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
+	Images Exported (user/slacgs/images/):
+		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
+		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
+		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
 
 	Loss Functions:
 		- Theoretical Loss: estimated using probability theory
@@ -125,11 +125,10 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 
 	Example:
 		>>> from slacgs.demo import *
-		>>> set_report_service_conf(password, user_email)
-		>>> run_experiment_simulation()
+		>>> set_report_service_conf(slacgs_password, gdrive_user_email)
+		>>> run_experiment_simulation_test(verbose=False)
 
 	"""
-
 
 	if not isinstance(start_scenario, int):
 		raise TypeError("start_scenario must be an int")
@@ -143,11 +142,11 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
-	SPREADSHEET_TITLE = 'scenario1'
+	SPREADSHEET_TITLE = 'scenario1.test'
 	## create spreadsheet for the first simulation if it doesn't exist
 	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
 		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
@@ -157,7 +156,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 		PARAM = SCENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_scenario - 1, len(SCENARIOS)):
-			SPREADSHEET_TITLE = 'scenario' + str(i + 1)
+			SPREADSHEET_TITLE = 'scenario' + str(i + 1) + '.test'
 
 			## create spreadsheet if it doesn't exist
 			if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
@@ -180,7 +179,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 				break
 
 	if not PARAM:
-		print("All parameters have been simulated. check the spreadsheet reports in this link: https://drive.google.com/drive/folders/" + GDC.get_folder_id_by_name(REPORT_FOLDER_NAME))
+		print("All parameters have been simulated. Please check your google drive section: 'Shared with me' for results.")
 		return False
 
 	## create model object
@@ -191,6 +190,10 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -295,7 +298,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -319,6 +322,10 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -390,7 +397,7 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id)  # share folder with user's google drive account
 
@@ -412,6 +419,10 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 				## run simulation
 				slacgs.run()
 
+				## upload png images to drive
+				slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+				slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+
 				## write results to spreadsheet
 				slacgs.report.write_to_spreadsheet(gsc)
 			else:
@@ -420,6 +431,10 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate, dims_t
 		else:
 			## run simulation
 			slacgs.run()
+
+			## upload png images to drive
+			slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+			slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
 			slacgs.report.write_to_spreadsheet(gsc)
@@ -474,7 +489,7 @@ def run_custom_simulation(param, dims_to_compare):
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id)  # share folder with user's google drive account
 
@@ -492,6 +507,10 @@ def run_custom_simulation(param, dims_to_compare):
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc)
@@ -513,7 +532,7 @@ def run_experiment(start_scenario=1, verbose=True):
 	Reports Exported:
 		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+		Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
 	Images Exported:
 		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
@@ -631,17 +650,17 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	and another one for the Custom Simulations.
 	The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service
 	account and shared with the user's Google Drive account.
-	Also, images with data visualization will be exported to a local folder inside project's root folder ( slacgs/images/ )
+	Also, images with data visualization will be exported to a local folder inside user folder ( <user>/slacgs/images/ )
 
-	Reports Exported:
-		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
-		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+	Reports Exported (Google Spreadsheets):
+		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
+		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
+		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported:
-		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
-		Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
-		Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
+	Images Exported (user/slacgs/images/):
+		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
+		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
+		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
 
 	Loss Functions:
 		- Theoretical Loss: estimated using probability theory
@@ -676,9 +695,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 		>>> set_report_service_conf(slacgs_password, gdrive_user_email)
 		>>> run_experiment_simulation_test(verbose=False)
 
-
 	"""
-
 
 	if not isinstance(start_scenario, int):
 		raise TypeError("start_scenario must be an int")
@@ -692,7 +709,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -742,8 +759,13 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	## run simulation
 	slacgs.run()
 
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
+
 
 	return True
 
@@ -843,7 +865,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -868,6 +890,10 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -965,7 +991,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -987,6 +1013,10 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 				## run simulation
 				slacgs.run()
 
+				## upload png images to drive
+				slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+				slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+
 				## write results to spreadsheet
 				slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 			else:
@@ -995,6 +1025,10 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 		else:
 			## run simulation
 			slacgs.run()
+
+			## upload png images to drive
+			slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+			slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
 			slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1088,7 +1122,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -1106,6 +1140,10 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1196,7 +1234,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
-	if not GDC.check_folder_existence(REPORT_FOLDER_NAME):
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
 		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
 		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
 
@@ -1214,6 +1252,10 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 
 	## run simulation
 	slacgs.run()
+
+	## upload png images to drive
+	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
+	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
@@ -1233,7 +1275,7 @@ def run_experiment_test(start_scenario=1, verbose=True):
 	Reports Exported:
 		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-		Home Report: Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+		Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
 	Images Exported:
 		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.

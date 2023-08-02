@@ -7,3 +7,22 @@ from .gdrive_client import GdriveClient
 from .utils import *
 from .demo import *
 
+
+## Report Service Folder Structure
+images_path = report_service_conf['images_path']
+reports_path = report_service_conf['reports_path']
+
+
+if not is_notebook():
+
+	try:
+		os.makedirs(images_path)
+		print(f"Folder created at '{images_path}'.")
+	except OSError as e:
+		print(f"Images Folder at '{images_path}'.")
+
+	try:
+		os.makedirs(reports_path)
+		print(f"Folder created at '{reports_path}'.")
+	except OSError as e:
+		print(f"Reports Folder at '{reports_path}'.\n")
