@@ -27,7 +27,7 @@ A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order
 
 # Experiment
 
-[Download PDF](./experiment.pdf)
+[Download Experiment PDF](./experiment.pdf)
 
 # Demo
 
