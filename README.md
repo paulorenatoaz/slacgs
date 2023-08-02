@@ -25,19 +25,12 @@ A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order
     - Empirical Loss with Train Data: estimated using empirical approach with train data
     - Empirical Loss with Test Data: estimated using empirical approach with test data
 
-# Experiment Scenarios
-
-```python
-from slacgs.demo import print_experiment_scenarios
-
-print_experiment_scenarios()
-```
-
 # Demo
 
 1. Download and Install
 2. Set/Start Report Service
-3. Demo Functions:
+3. Experiment Scenarios
+4. Demo Functions:
     * Run an Experiment Simulation
       * run a simulation for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise
     * Add a Simulation to an Experiment Scenario
@@ -74,7 +67,15 @@ set_report_service_conf()
 
 ```
 
-## 3. Demo Functions
+## 3. Experiment Scenarios
+
+```python
+from slacgs.demo import print_experiment_scenarios
+
+print_experiment_scenarios()
+```
+
+## 4. Demo Functions
 
 ```python
 from slacgs.demo import *
@@ -137,7 +138,7 @@ run_experiment()
 
 ```
 
-### 3.2 Demo Test Functions (simulations running at 1% of its default number of iterations)
+### 4.2 Demo Test Functions (simulations running at 1% of its default number of iterations)
 
 ```python
 from slacgs.demo import *
