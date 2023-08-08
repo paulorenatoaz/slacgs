@@ -519,7 +519,11 @@ class Report:
       >>> from slacgs import doctest_next_parameter
 
       >>> ## run simulation for parameter
-      >>> ## param = [1, 1, 2, 0, 0, 0]
+      >>> ### choose your own parameter
+      >>> ### param = [1, 1, 2, 0, 0, 0]
+
+      >>> ### get parameter from
+      >>> set_report_service_conf(slacgs_password, gdrive_user_email)
       >>> param, _ = doctest_next_parameter()
 
       >>> ## create model object
@@ -531,18 +535,12 @@ class Report:
       >>> ## run simulation
       >>> slacgs.run() # doctest: +ELLIPSIS
 
-      >>> ## define path to key.slac file
-      >>> if os.name == 'nt':
-      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'\\key.slac.py'
-      ... else:
-      ...   key_path = os.path.dirname(os.path.abspath(__file__)) +'/key.slac.py'
-
       >>> ## define spreadsheet title
       >>> ## spreadsheet_title = 'title of spreadsheet'
       >>> _, spreadsheet_title = doctest_next_parameter()
 
       >>> ## create GspreadClient object
-      >>> gc = GspreadClient(key_path, spreadsheet_title)
+      >>> gc = GspreadClient(spreadsheet_title)
 
       >>> ## write simulation results to spreadsheet
       >>> slacgs.report.write_to_spreadsheet(gc, verbose=False)
