@@ -153,7 +153,7 @@ class Report:
       dims (tuple of int or list of int): a pair of dimensionalyties to be compared
 
     Returns:
-      tuple of dicts: compare_report images for pair of compared dimensionalyties
+      tuple[dict, dict, dict[int | str, str], dict[int | str, Any], dict, dict[str, Any], dict[str, Any]]: compare_report images for pair of compared dimensionalyties
 
     """
 
@@ -324,7 +324,7 @@ class Report:
     """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
 
     Returns:
-     matplotlib.pyplot.figure: The figure object.
+      matplotlib.figure.Figure: The figure object.
 
     """
 
