@@ -12,6 +12,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
+from . import Simulator
 from .enumtypes import LossType
 from .utils import  cls, report_service_conf
 
@@ -22,10 +23,29 @@ class Report:
 
   def __init__(self, sim):
     """
-    :param sim: simulation object
-    :type sim: Simulator
+    Args:
+      sim (Simulator): Simulator object
+
+    Attributes:
+      sim (Simulator): Simulator object
+      iter_N (dict): Number of iterations for each dimension and loss type
+      max_iter_N (list): Maximum number of iterations for each dimension
+      loss_N (dict): Loss for each dimension and loss type
+      loss_bayes (dict): Bayes loss for each dimension
+      d (dict): Dictionary size for each dimension
+      duration (float): Duration of the simulation
+      time_spent (dict): Time spent for each dimension and loss type
+      sim_tag (dict): Simulator object attributes
+      model_tag (dict): Model object attributes
+      loss_plot (matplotlib.pyplot): Loss plot
+
+    Raises:
+      ValueError: If sim is not a Simulator object
 
     """
+
+    if not isinstance(sim, Simulator):
+      raise ValueError("sim must be a Simulator object")
 
     self.sim = sim
     self.iter_N = {dim: {loss_type: [] for loss_type in sim.loss_types} for dim in sim.dims}
@@ -40,9 +60,6 @@ class Report:
     self.time_spent.update({'total':0.0})
     self.sim_tag = dict(itertools.islice(self.sim.__dict__.items(), 7))
     self.model_tag = dict(itertools.islice(self.sim.model.__dict__.items(), 6))
-    self.loss_iter_N_df = []
-    self.compare = []
-    self.delta_L_ = []
     self.loss_plot = None
 
   def compile_delta_L_(self):
@@ -77,8 +94,8 @@ class Report:
 
     delta_Ltest = {dim: np.mean(loss_N[dim][LossType.THEORETICAL.value]) - loss_bayes[dim] if loss_bayes[dim] > 0 else 0 for dim in dims}
 
-    self.delta_L_ = (delta_L1, delta_L2)
-    return self.delta_L_
+    delta_L_ = (delta_L1, delta_L2)
+    return delta_L_
 
   def intersection_point_(self, dims, loss_type):
     """return intersection points between Loss curves of a pair of compared dimensionalyties
@@ -163,8 +180,8 @@ class Report:
 
     d.update({'ratio': d_ratio , 'diff': d_diff })
 
-    self.compare = (loss_N, iter_N, loss_bayes, d, intersection_point_dict, self.model_tag, self.sim_tag)
-    return self.compare
+    compare = (loss_N, iter_N, loss_bayes, d, intersection_point_dict, self.model_tag, self.sim_tag)
+    return compare
 
   def compile_N(self, dims=(2,3)):
     """return N* images for report compilation. N* is a threshold beyond which the presence of a new feature X_d becomes advantageous, if the other features [X_0...X_d-1] are already present.
@@ -522,7 +539,7 @@ class Report:
       >>> ### choose your own parameter
       >>> ### param = [1, 1, 2, 0, 0, 0]
 
-      >>> ### get parameter from
+      >>> ### get parameter from demo.dodoctest_next_parameter()
       >>> set_report_service_conf(slacgs_password, gdrive_user_email)
       >>> param, _ = doctest_next_parameter()
 
@@ -557,8 +574,6 @@ class Report:
 
     if not set(dims_to_compare).issubset(set(self.sim.dims)):
       raise ValueError('dims_to_compare must be a subset of the list of simulated dimensionalities')
-
-
 
     gc.write_loss_report_to_spreadsheet(self, verbose=verbose)
     gc.write_compare_report_to_spreadsheet(self, dims_to_compare, verbose=verbose)
