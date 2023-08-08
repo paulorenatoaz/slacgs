@@ -12,9 +12,12 @@ from matplotlib.backends.backend_pdf import PdfPages
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
-from . import Simulator
 from .enumtypes import LossType
-from .utils import  cls, report_service_conf
+from .utils import cls, report_service_conf
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from . import Simulator
 
 
 class Report:
@@ -40,12 +43,13 @@ class Report:
       loss_plot (matplotlib.pyplot): Loss plot
 
     Raises:
-      ValueError: If sim is not a Simulator object
+      TypeError: If sim is not a Simulator object
+
 
     """
 
     if not isinstance(sim, Simulator):
-      raise ValueError("sim must be a Simulator object")
+      raise TypeError("sim must be a Simulator object")
 
     self.sim = sim
     self.iter_N = {dim: {loss_type: [] for loss_type in sim.loss_types} for dim in sim.dims}
