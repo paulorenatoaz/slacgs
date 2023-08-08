@@ -14,6 +14,24 @@ from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
 from .utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
 
+"""
+	This module provides functions and classes that demonstrate the functionality of the slacgs package. 
+	
+	Global Variables:
+		SCENARIO1 (list): list of parameters for scenario 1
+		SCENARIO2 (list): list of parameters for scenario 2
+		SCENARIO3 (list): list of parameters for scenario 3
+		SCENARIO4 (list): list of parameters for scenario 4
+		SCENARIOS (list): list of scenarios for simulation
+		GDC (GdriveClient): Google Drive Client for reports service
+	
+	Functions:
+		start_google_drive_service(): starts Google Drive service
+		run_experiment_simulation( scenario, model, simulator, gdc ): runs experiment simulation
+				
+	
+"""
+
 ## define list of parameters for scenario 1
 SCENARIO1 = [[1, 1, round(1 + 0.1 * sigma3, 2), 0, 0, 0] for sigma3 in range(3, 10)]
 SCENARIO1 += [[1, 1, sigma3 / 2, 0, 0, 0] for sigma3 in range(4, 11, 1)]
@@ -41,7 +59,6 @@ SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4]
 
 ## free global variables
 r = RHO_12 = None
-
 
 # initialize Google Drive Client global variable for demo reports service
 GDC = None
@@ -78,21 +95,19 @@ def start_google_drive_service(password=None, user_email=None):
 def run_experiment_simulation(start_scenario=1, verbose=True):
 	""" run a simulation  for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise.
 
-	Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario
-	and another one for the Custom Simulations.
-	The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service
-	account and shared with the user's Google Drive account.
-	Also, images with data visualization will be exported to a local folder inside project's root folder (<user>/slacgs/images/ or /content/slacgs/images (for G-colab) )
+	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
+	- The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside project's root folder (<user>/slacgs/images/ or /content/slacgs/images (for G-colab) )
 
 	Reports Exported:
-		Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
-		Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-		Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
+		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
+		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
+		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/slacgs/images/ or /content/slacgs/images (for G-colab) ):
-		Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
-		Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
-		Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
+	Images Exported (<user>/slacgs/images/ or /content/slacgs/images [for G-colab] ):
+		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
+		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
+		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
 
 	Loss Functions:
 		- Theoretical Loss: estimated using probability theory
@@ -108,7 +123,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 		- 2D vs 3D: 2 features vs 3 features
 
 	Cardinalities simulated:
-		N = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]  (+ [2048, 4096, 8192] if L_3 > L_2)
+		- N = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]  (+ [2048, 4096, 8192] if L_3 > L_2)
 
 	Parameters:
 		start_scenario (int): scenario to start the simulation
@@ -609,7 +624,7 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 			if dims_to_compare is not a subset of dims_to_simulate
 
 
-	:Example:
+	Examples:
 		>>> from slacgs.demo import *
 		>>> set_report_service_conf(slacgs_password, gdrive_user_email)
 

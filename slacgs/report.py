@@ -40,7 +40,7 @@ class Report:
       time_spent (dict): Time spent for each dimension and loss type
       sim_tag (dict): Simulator object attributes
       model_tag (dict): Model object attributes
-      loss_plot (matplotlib.pyplot): Loss plot
+      loss_plot (matplotlib.figure.Figure): Loss plot
 
     Raises:
       TypeError: If sim is not a Simulator object
