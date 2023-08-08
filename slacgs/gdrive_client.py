@@ -14,22 +14,20 @@ class GdriveClient:
 
 		"""Constructor for GdriveClient class.
 
-		:param drive_service: Google Drive API Resource object.
-		:type drive_service: googleapiclient.discovery.Resource
+		Parameters:
+			drive_service (googleapiclient.discovery.Resource): Google Drive API Resource object.
+			spreadsheet_service (googleapiclient.discovery.Resource): Google Sheets API Resource object.
+			gdrive_account_email (str): email of the Google account to be used to share reports folder.
 
-		:param spreadsheet_service: Google Sheets API Resource object.
-		:type spreadsheet_service: googleapiclient.discovery.Resource
+		Raises:
+			TypeError:
+				if drive_service is not a googleapiclient.discovery.Resource object;
+				if sheets_service is not a googleapiclient.discovery.Resource object;
+				if gdrive_account_email is not a string.
 
-		:param gdrive_account_email: email of the Google account to be used to share reports folder.
-		:type gdrive_account_email: str
+			ValueError:
+				if gdrive_account_email is not a valid email address.
 
-		:raises TypeError:
-			if drive_service is not a googleapiclient.discovery.Resource object;
-			if sheets_service is not a googleapiclient.discovery.Resource object;
-			if gdrive_account_email is not a string.
-
-		:raises ValueError:
-			if gdrive_account_email is not a valid email address.
 		"""
 
 		if drive_service and not isinstance(drive_service, Resource):
@@ -83,6 +81,11 @@ class GdriveClient:
 		:rtype: str or None
 
 		:raises ValueError: if folder_name is not a string.
+
+		Parameters:
+			folder_name (str): name of the folder.
+
+		Returns:
 
 		"""
 
