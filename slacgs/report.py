@@ -70,7 +70,7 @@ class Report:
     """return ΔL estimations
 
     Stochastic error:
-   :math: ∆L_1 = L(\hat{h}(D)) − min(h)∈H L(h)
+    :math: ∆L_1 = L(\hat{h}(D)) − min(h)∈H L(h)
 
     Estimation error of :math: L(hˆ(D)):
     :math: ∆L_2 = |L(\hat{h}(D)) − \hat{L}(\hat{h}(D))|
