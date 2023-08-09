@@ -64,11 +64,9 @@ class GdriveClient:
 			drive_service = report_service_conf['drive_service']
 			spreadsheet_service = report_service_conf['spreadsheet_service']
 
-
 		self.drive_service = drive_service
 		self.sheets_service = spreadsheet_service
 		self.gdrive_account_email = gdrive_account_email
-
 
 	def get_folder_id_by_name(self, folder_name):
 
@@ -102,7 +100,6 @@ class GdriveClient:
 		else:
 			return None  # Return None if no folder with the given name is found
 
-
 	def create_spreadsheet(self, name, verbose=True):
 		"""Create a new spreadsheet with the given name.
 
@@ -132,10 +129,10 @@ class GdriveClient:
 
 		spreadsheet = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()
 		if verbose:
-			print(f"Spreadsheet with path '{self.get_spreadsheet_path_by_id(spreadsheet['spreadsheetId'])}' has been created.")
+			print(
+				f"Spreadsheet with path '{self.get_spreadsheet_path_by_id(spreadsheet['spreadsheetId'])}' has been created.")
 
 		return spreadsheet['spreadsheetId']
-
 
 	def get_spreadsheet_path_by_id(self, spreadsheet_id):
 		"""Get the path of a spreadsheet by its ID.
@@ -155,7 +152,6 @@ class GdriveClient:
 
 		spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
 		return spreadsheet['properties']['title']
-
 
 	def create_folder(self, folder_name, parent_folder_id=None, verbose=True):
 		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID.
@@ -182,7 +178,6 @@ class GdriveClient:
 		if parent_folder_id is not None and not isinstance(parent_folder_id, str):
 			raise ValueError('parent_folder_id must be a string or None.')
 
-
 		folder_metadata = {
 			'name': folder_name,
 			'mimeType': 'application/vnd.google-apps.folder'
@@ -195,7 +190,6 @@ class GdriveClient:
 			print(f"Folder with path '{self.get_folder_path(folder['id'])}' has been created.")
 
 		return folder['id']
-
 
 	def move_file_to_folder(self, file_id, folder_id, verbose=True):
 		"""Move a file to a folder.
@@ -218,10 +212,10 @@ class GdriveClient:
 		previous_parents = ",".join(file.get('parents'))
 
 		self.drive_service.files().update(fileId=file_id, addParents=folder_id, removeParents=previous_parents,
-		                                         fields='id, parents').execute()
+		                                  fields='id, parents').execute()
 		if verbose:
-			print(f"Spreadsheet with path '{file_old_path}' has been moved to the folder with path '{self.get_folder_path(folder_id)}'.")
-
+			print(
+				f"Spreadsheet with path '{file_old_path}' has been moved to the folder with path '{self.get_folder_path(folder_id)}'.")
 
 	def move_folder_to_another_folder(self, folder_id, new_parent_folder_id, verbose=True):
 		"""Move a folder to another folder.
@@ -248,18 +242,16 @@ class GdriveClient:
 		if not isinstance(new_parent_folder_id, str):
 			raise ValueError('new_parent_folder_id must be a string.')
 
-
 		# Retrieve the current parents of the folder
 		folder = self.drive_service.files().get(fileId=folder_id, fields='parents').execute()
 		previous_parents = ",".join(folder.get('parents'))
 
 		# Move the folder to the new parent folder
 		folder = self.drive_service.files().update(fileId=folder_id, addParents=new_parent_folder_id,
-		                                      removeParents=previous_parents, fields='id, parents').execute()
+		                                           removeParents=previous_parents, fields='id, parents').execute()
 		if verbose:
 			print(f"Folder with name '{folder.get('name')}' has been moved to the folder with name "
-		      f"'{self.drive_service.files().get(fileId=new_parent_folder_id, fields='name').execute().get('name')}'.")
-
+			      f"'{self.drive_service.files().get(fileId=new_parent_folder_id, fields='name').execute().get('name')}'.")
 
 	def check_spreadsheet_existence(self, name):
 		"""Check if a spreadsheet with the given name exists.
@@ -287,7 +279,6 @@ class GdriveClient:
 		else:
 			return False  # No spreadsheet with the specified name exists
 
-
 	def get_spreadsheet_id_by_name(self, name):
 		"""Get the ID of a spreadsheet with the given name.
 
@@ -304,17 +295,15 @@ class GdriveClient:
 		if not isinstance(name, str):
 			raise ValueError('name must be a string.')
 
-
 		response = self.drive_service.files().list(
 			q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'",
 			spaces='drive',
 			fields='files(id)').execute()
 		spreadsheets = response.get('files', [])
 		if len(spreadsheets) > 0:
-			return spreadsheets[0]['id'] # Return the ID of the first matching spreadsheet
+			return spreadsheets[0]['id']  # Return the ID of the first matching spreadsheet
 		else:
-			return None # No spreadsheet with the specified name exists
-
+			return None  # No spreadsheet with the specified name exists
 
 	def delete_spreadsheet(self, spreadsheet_id):
 		"""Delete a spreadsheet.
@@ -333,7 +322,6 @@ class GdriveClient:
 
 		self.drive_service.files().delete(fileId=spreadsheet_id).execute()
 		print(f"Spreadsheet with path '{path}' has been deleted.")
-
 
 	def folder_exists(self, report_folder_name):
 		"""Check if a folder with the given name exists.
@@ -359,7 +347,6 @@ class GdriveClient:
 		if len(folders) > 0:
 			return True
 
-
 	def get_root_folder_id(self):
 		"""Get the ID of the root folder.
 
@@ -370,7 +357,6 @@ class GdriveClient:
 
 		response = self.drive_service.files().get(fileId='root', fields='id').execute()
 		return response.get('id')
-
 
 	def get_folder_path(self, folder_id):
 		"""Get the path of a folder.
@@ -388,7 +374,6 @@ class GdriveClient:
 		if not isinstance(folder_id, str):
 			raise ValueError('folder_id must be a string.')
 
-
 		folder_path = []
 		while folder_id != 'root':
 			folder = self.drive_service.files().get(fileId=folder_id, fields='id, name, parents').execute()
@@ -400,7 +385,6 @@ class GdriveClient:
 			else:
 				break
 		return '/'.join(folder_path)
-
 
 	def share_folder_with_gdrive_account(self, folder_id, verbose=True):
 		"""Share a folder with the GDrive account.
@@ -431,7 +415,7 @@ class GdriveClient:
 
 		if verbose:
 			print(f"Folder with path '{self.get_folder_path(folder_id)}' has been shared with the GDrive account with "
-		      f"email address '{self.gdrive_account_email}'.")
+			      f"email address '{self.gdrive_account_email}'.")
 			print(f"link: https://drive.google.com/drive/folders/{folder_id}")
 
 	def delete_folder(self, folder_id):
@@ -451,9 +435,15 @@ class GdriveClient:
 		print(f"Folder with path '{path}' has been deleted.")
 
 	def delete_file(self, file_id):
+		"""Delete a file.
+
+		:param file_id: ID of the file.
+		:type file_id: str
+
+		"""
+
 		self.drive_service.files().delete(fileId=file_id).execute()
 		print(f"File with ID '{file_id}' has been deleted.")
-
 
 	def get_file_id_by_path(self, file_path):
 		"""Get the ID of a file.
@@ -485,7 +475,6 @@ class GdriveClient:
 			else:
 				return None
 		return file_id
-
 
 	##make a function that check if folder with given path exists and return True if it does and False if it doesn't
 	def folder_exists_by_path(self, folder_path):
@@ -639,7 +628,8 @@ class GdriveClient:
 		}
 
 		# Upload the file
-		media = MediaIoBaseUpload(io.BytesIO(open(file_path, 'rb').read()), mimetype='application/octet-stream', resumable=True)
+		media = MediaIoBaseUpload(io.BytesIO(open(file_path, 'rb').read()), mimetype='application/octet-stream',
+		                          resumable=True)
 
 		try:
 			if self.file_exists_in_folder(file_name, folder_id):
@@ -653,10 +643,5 @@ class GdriveClient:
 				      f"https://drive.google.com/drive/folders/{folder_id}.")
 				print('link to file: https://drive.google.com/file/d/' + file_id)
 		except Exception as e:
-			print('failed to upload file with path: ' + file_path + ' to folder: https://drive.google.com/drive/folders/' + folder_id)
-
-
-
-
-
-
+			print(
+				'failed to upload file with path: ' + file_path + ' to folder: https://drive.google.com/drive/folders/' + folder_id)

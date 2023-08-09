@@ -17,7 +17,7 @@ from .utils import cls, report_service_conf
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from . import Simulator
+    from .simulator import Simulator
 
 
 class Report:
@@ -588,7 +588,7 @@ class Report:
       tryal = 1
       while True:
         try:
-          gc.update_N_report_on_spreadsheet(self, dims_to_compare, verbose=verbose)
+          gc.update_home_report_on_spreadsheet(self, dims_to_compare, verbose=verbose)
         except googleapiclient.errors.HttpError:
           if tryal <= 3:
             if verbose:
