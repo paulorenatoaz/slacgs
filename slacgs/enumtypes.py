@@ -2,7 +2,12 @@ from enum import Enum
 
 
 class LossType(Enum):
-  """Implemented Loss Functions
+  """
+  Implemented Loss Functions
+
+  - ":math:`h(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b`" is a linear classifier.
+  - The hyperplane  :math:`h` defined by this equation represents the decision boundary that separates classes in a linearly separable space.
+  - The hypothesis space :math:`H` consists of all possible linear classifiers.
 
   Let :math:`\hat{h}^{(D)}` be the best empirical classifier in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples, i.e., the classifier in :math:`H` with the minimum empirical error rate. Under these conditions, we can define three error rates:
     - :math:`L(\hat{h}^{(D)}) =` the theoretical error rate of the classifier :math:`\hat{h}^{(D)}`
