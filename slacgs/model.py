@@ -219,18 +219,18 @@ class Model:
 				print("No figure to upload.")
 
 	def plot_surrounding_ellipsis_and_ellipsoids(self) -> Figure:
-
 		"""Plots the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points for dim=2,3
 
 		:return: a matplotlib figure containing the plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points for dim=2,3
 		:rtype: Figure
 
 		:raise ValueError:  if cov is not a 3x3 matrix;
-												if cov is not a positive definite matrix;
-												if cov is not a symmetric matrix;
+			if cov is not a positive definite matrix;
+			if cov is not a symmetric matrix;
+
 		:Example:
-		>>> model = Model((1, 1, 2, 0.5, 0, 0))
-		>>> plot_fig = model.data_points_plot
+			>>> model = Model((1, 1, 2, 0.5, 0, 0))
+			>>> plot_fig = model.data_points_plot
 
 		"""
 
