@@ -2,7 +2,7 @@ from slacgs.demo import *
 
 ## You can opt to build your own Report Service Configuration
 path_to_google_cloud_service_account_api_key = 'path/to/key.json'
-set_report_service_conf(path_to_google_cloud_service_account_api_key)
+set_report_service_conf(slacgs_password=path_to_google_cloud_service_account_api_key)
 
 ## Or you can use our Report Service Configuration if you have the password
 set_report_service_conf()

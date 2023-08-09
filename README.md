@@ -62,11 +62,11 @@ pip install slacgs/
 ```python
 from slacgs.demo import *
 
-## You can opts to build your own Report Service Configuration
+## opt-1: set report service configuration with your own google cloud service account key file
 path_to_google_cloud_service_account_api_key = 'path/to/key.json'
 set_report_service_conf(path_to_google_cloud_service_account_api_key)
 
-## Or you can use our Report Service Configuration if you have the password
+# opt-2 set report service configuration to use slacgs' server if you have the access password
 set_report_service_conf()
 
 ```

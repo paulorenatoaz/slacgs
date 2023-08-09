@@ -13,12 +13,22 @@ import pygsheets
 ## this is a report service configuration dictionary
 
 def get_user_folder_path():
-  """Returns the user's home folder in any operating system."""
+  """Returns the user's home folder in any operating system.
+
+  Returns:
+    str: The user's home folder.
+
+  """
   return os.environ['USERPROFILE'] if os.name == 'nt' else os.environ['HOME']
 
 
 def is_jupyter_notebook():
-  """Check if the environment is a Jupyter notebook."""
+  """Check if the environment is a Jupyter notebook.
+
+  Returns:
+    bool: True if the environment is a Jupyter notebook, False otherwise.
+
+  """
   try:
     # Check if 'get_ipython' function exists
     from IPython import get_ipython
@@ -32,7 +42,12 @@ def is_jupyter_notebook():
 
 
 def is_colab_notebook():
-  """Check if the environment is a Google Colab notebook."""
+  """Check if the environment is a Google Colab notebook.
+
+  Returns:
+    bool: True if the environment is a Google Colab notebook, False otherwise.
+
+  """
   try:
     import google.colab
     return True
@@ -41,9 +56,28 @@ def is_colab_notebook():
 
 
 def is_notebook():
-  """Check if the environment is a notebook."""
+  """Check if the environment is a notebook.
+
+  Returns:
+    bool: True if the environment is a notebook, False otherwise.
+
+  """
   return is_jupyter_notebook() or is_colab_notebook()
 
+
+"""
+report_service_conf: dict
+    A dictionary holding the configuration for the report service. It contains the following keys:
+
+    - 'images_path': str, the path where images are stored. This path depends on whether the code is running on Google Colab, Windows, or another operating system.
+    - 'reports_path': str, the path where reports are stored. This path also depends on the operating environment.
+    - 'user_email': str or None, the user's email used for Google services authentication. It defaults to None.
+    - 'drive_service': object or None, the Google Drive service object. It defaults to None.
+    - 'spreadsheet_service': object or None, the Google Sheets service object. It defaults to None.
+    - 'pygsheets_service': object or None, the Pygsheets service object. It defaults to None.
+
+    This dictionary is used throughout the module to configure and use Google services.
+"""
 
 report_service_conf = {
   'images_path': '/content/slacgs/images/' if is_colab_notebook()
@@ -59,7 +93,8 @@ report_service_conf = {
 }
 
 
-def set_report_service_conf(slacgs_password=None, user_google_account_email=None, path_to_google_cloud_service_account_api_key=None):
+def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, user_google_account_email=None,
+                            slacgs_password=None):
   """Set the report service configuration. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
 
   Parameters:
