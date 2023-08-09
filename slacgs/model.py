@@ -32,8 +32,8 @@ class Model:
 		:type N: list[int] or tuple[int]
 		:param dictionary: A dictionary (also known as search space bias) is a family of classifiers (e.g., linear classifiers, quadratic classifiers,...)
 		:type dictionary: list[str] or tuple[str]
-		:raise ValueError:
-			if length of params is less than 3,
+		
+		:raise ValueError: if length of params is less than 3,
 			if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...),
 			if max_n is not a power of 2,
 			if N is not a list of powers of 2,
@@ -46,29 +46,36 @@ class Model:
 			if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
 
 
-		:raise TypeError:
-			if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
+		:raise TypeError:	if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
 			if max_n is not an int;
 			if N is not a list of ints;
 			if dictionary is not a list of strings;
+			
+		
+		:Example:		
+		>>> model = Model([1, 1, 2, 0, 0, 0])
+		>>> model.save_data_points_plot_as_png()
 
-		:Example:
-			>>> model = Model([1, 1, 2, 0, 0, 0])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 1, 2, 0.5, 0, 0])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
-			>>> model.save_data_points_plot_as_png(verbose=False)
-			>>> model = Model([1, 2, -0.1])
-			>>> model.save_data_points_plot_as_png(verbose=False)
+		>>> model = Model([1, 1, 2, 0.5, 0, 0])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
+		>>> model.save_data_points_plot_as_png()
+
+		>>> model = Model([1, 2, -0.1])
+		>>> model.save_data_points_plot_as_png()
 
 		"""
 		if not isinstance(params, list) and not isinstance(params, tuple):
@@ -164,7 +171,9 @@ class Model:
 		Save a matplotlib Figure object as a PNG image.
 
 		Parameters:
-				export_path (str): The file path where the PNG image will be saved.
+			export_path (str): The file path where the PNG image will be saved.
+			verbose (bool): If True, print the export path.
+
 		Returns:
 				None
 		"""
@@ -197,7 +206,9 @@ class Model:
 		Upload a matplotlib Figure object as a PNG image to Google Drive.
 
 		Parameters:
-				gdc (GoogleDriveClient): The Google Drive client object.
+			gdc (GoogleDriveClient): The Google Drive client object.
+			verbose (bool): If True, print the export path.
+
 		Returns:
 				None
 		"""
@@ -229,8 +240,8 @@ class Model:
 			if cov is not a symmetric matrix;
 
 		:Example:
-			>>> model = Model((1, 1, 2, 0.5, 0, 0))
-			>>> plot_fig = model.data_points_plot
+		>>> model = Model((1, 1, 2, 0.5, 0, 0))
+		>>> plot_fig = model.data_points_plot
 
 		"""
 
