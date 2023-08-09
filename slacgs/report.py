@@ -67,13 +67,14 @@ class Report:
     self.loss_plot = None
 
   def compile_delta_L_(self):
-    """return ΔL estimations
+    """return :math:`∆L` estimations
+
 
     Stochastic error:
-    :math: ∆L_1 = L(\hat{h}(D)) − min(h)∈H L(h)
+      - :math:`∆L_1 = L(\hat{h}(D)) − min_{h∈H} L(h)`
 
-    Estimation error of :math: L(hˆ(D)):
-    :math: ∆L_2 = |L(\hat{h}(D)) − \hat{L}(\hat{h}(D))|
+    Estimation error of :math:`L(\hat{h}(D))`:
+      - :math:`∆L_2 = |L(\hat{h}(D)) − \hat{L}(\hat{h}(D))|`
 
     :param self: report object
     :type self: Report
