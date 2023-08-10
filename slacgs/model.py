@@ -12,70 +12,65 @@ from .utils import report_service_conf
 
 
 class Model:
-	"""Represents a Linear Classifier Loss Analysis Model composed by:
-
-	• A set of Dataset cardinalities N = {n0...ni} , ni ∈ {2*k | k ∈ int*}, i.e., the cardinality on each Dataset to be analysed.
-	• Each feature discrimination power, either alone or in the presence of the others features. This is represented by the Sigmas and Rhos parameters.
-	• The problem dimensionality "dim", i.e., the number of available features.
-	• Dictionary "dictionary", from which we will pick our classifier
-	"""
+	"""Represents a Model for this Simulator for Loss Analysis of a Classifier."""
 
 
 	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]), dictionary=('LINEAR',)):
-		"""Constructor for Model class objects.
+		"""This Model for SLACGS contains:
+			- :math:`d`: dimensionality of the Model
+			- :math:`\mathbf{\sigma} = \\bigcup_{i=1}^{d} \sigma_i` : list of standard deviations for each feature
+			- :math:`\mathbf{\\rho} = \\bigcup_{i=1}^{d} \\bigcup_{j=i+1}^{d}  \\rho_{ij}`: list of correlations between each pair of features
+			- :math:`\mathbf{N} = \\bigcup_{i=1}^{k} 2^i`, where :math:`k` is the length of :math:`\mathbf{N}` : list of cardinalities of the model
+			- :math:`H`: dictionary of classifiers
 
-		:param max_n:  last Dataset cardinality, assuming N = [2,...,max_n]
-		:type max_n: int
-		:param params: list containning Sigmas and Rhos
-		:type params: list  of numbers (floats or ints) or tuple of numbers (floats or ints)
-		:param N: set of Dataset cardinalities N = {n0...ni} , ni ∈ {2*k | k ∈ int*}
-		:type N: list[int] or tuple[int]
-		:param dictionary: A dictionary (also known as search space bias) is a family of classifiers (e.g., linear classifiers, quadratic classifiers,...)
-		:type dictionary: list[str] or tuple[str]
-		
-		:raise ValueError: if length of params is less than 3,
-			if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...),
-			if max_n is not a power of 2,
-			if N is not a list of powers of 2,
-			if dictionary is not a list of strings and is equal to ['linear'];
-			if self.cov is not a positive definite matrix;
-			if self.cov is not a symmetric matrix;
-			if Sigma's are not positive numbers;
-			if Rho's are not numbers between -1 and 1
-			if dictionary is not a valid list of strings (see enumtypes.py for valid strings);
-			if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
+		Parameters:
+			params (list of numbers): list containing the standard deviation vector :math:`\mathbf{\sigma}` and the correlation vector :math:`\mathbf{\\rho}`, formally :math:`\mathbf{\sigma} \cup \mathbf{\\rho}`
+			max_n (int): upper bound cardinality for the set :math:`\mathbf{N}`
 
+		Raises:
+			ValueError:
+				if length of params is less than 3;
+				if the length of params is not equal to the sum of the natural numbers from 1 to dim (dim = 2,3,4,...);
+				if max_n is not a power of 2;
+				if N is not a list of powers of 2;
+				if dictionary is not a list of strings and is equal to ['linear'];
+				if self.cov is not a positive definite matrix;
+				if self.cov is not a symmetric matrix;
+				if Sigma's are not positive numbers;
+				if Rho's are not numbers between -1 and 1
+				if dictionary is not a valid list of strings (see enumtypes.py for valid strings);
+				if abs(rho_13) is not smaller than sqrt((1 + rho_12) / 2)
 
-		:raise TypeError:	if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
-			if max_n is not an int;
-			if N is not a list of ints;
-			if dictionary is not a list of strings;
-			
-		
-		:Example:		
-		>>> model = Model([1, 1, 2, 0, 0, 0])
-		>>> model.save_data_points_plot_as_png()
+			TypeError:
+				if params is not a list of numbers (floats or ints) or tuple of numbers (floats or ints);
+				if max_n is not an int;
+				if N is not a list of ints;
+				if dictionary is not a list of strings (see enumtypes.py for valid strings);
 
-		>>> model = Model([1, 1, 2, 0.5, 0, 0])
-		>>> model.save_data_points_plot_as_png()
+		Example:
+			>>> model = Model([1, 1, 2, 0, 0, 0])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 1, 2, 0.5, 0, 0])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 1, 2, 0, 0.3, 0.3])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 1, 2, -0.2, -0.5, -0.5])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 1, 1, -0.1, 0.5, 0.5], max_n=2**15, N=[2**i for i in range(1,14)])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 2, 4, 0, 0.5, 0.5], max_n=2**10, N=[2**i for i in range(1,11)])
+			>>> model.save_data_points_plot_as_png()
 
-		>>> model = Model([1, 2, -0.1])
-		>>> model.save_data_points_plot_as_png()
+			>>> model = Model([1, 1, 1, 2, 0.1, 0, 0, 0, 0, 0])
+			>>> model.save_data_points_plot_as_png()
+
+			>>> model = Model([1, 2, -0.1])
+			>>> model.save_data_points_plot_as_png()
 
 		"""
 		if not isinstance(params, list) and not isinstance(params, tuple):
@@ -176,6 +171,10 @@ class Model:
 
 		Returns:
 				None
+
+		Warning:
+			this method is available only for 3D models.
+
 		"""
 		if self.data_points_plot is not None:
 			if export_path is None:
@@ -211,6 +210,10 @@ class Model:
 
 		Returns:
 				None
+
+		Warning:
+			this method is available only for 3D models.
+
 		"""
 		if self.data_points_plot is not None:
 			export_path = report_service_conf['images_path']
@@ -230,18 +233,28 @@ class Model:
 				print("No figure to upload.")
 
 	def plot_surrounding_ellipsis_and_ellipsoids(self) -> Figure:
-		"""Plots the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points for dim=2,3
+		"""
+		Plots the ellipsoids for this model's covariance matrix :math:`\Sigma` and a dataset sample with :math:`n=1024` sample points for :math:`d \in [2,3]`.
 
-		:return: a matplotlib figure containing the plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points for dim=2,3
-		:rtype: Figure
+		Parameters:
+			self (Model): The model object.
 
-		:raise ValueError:  if cov is not a 3x3 matrix;
-			if cov is not a positive definite matrix;
-			if cov is not a symmetric matrix;
+		Returns:
+			Figure: The matplotlib Figure object.
 
-		:Example:
-		>>> model = Model((1, 1, 2, 0.5, 0, 0))
-		>>> plot_fig = model.data_points_plot
+		Raises:
+			ValueError:
+				if cov is not a 3x3 matrix;
+				if cov is not a positive definite matrix;
+				if cov is not a symmetric matrix;
+
+		Warning:
+			This method is available only for 3D models.
+
+		Example:
+			>>> from slacgs.model import Model
+			>>> model = Model((1, 1, 2, 0.5, 0, 0))
+			>>> plot_fig = model.data_points_plot
 
 		"""
 

@@ -533,6 +533,9 @@ class GspreadClient:
         if dims length is not 2
         if dims is not a subset of report.sim.dims
 
+    Warning:
+			this report is available only for 3D models.
+
     """
 		# create worksheet
 		chart_height = 18

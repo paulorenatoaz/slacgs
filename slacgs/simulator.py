@@ -49,11 +49,21 @@ def h_error_rate(h_bias, h_weights, cov):
     - :math:`d` is the dimensionality of the classifier :math:`h`
     - :math:`\mathbf{w}` is the weights vector of the classifier :math:`h`
     - :math:`\mathbf{w} = [w_0, ..., w_{d-1}]`
-    - :math:`b` is the bias of the classifier- :math:`h`
+    - :math:`b` is the bias of the classifier :math:`h`
     - :math:`\lambda` is the Lower-triangular Cholesky factor of :math:`\Sigma`
-    - :math:`\\vec{\delta} = (\mathbf{w}|[-1]) \cdot \lambda^T = [w_0, ..., w_{d-1},-1]\cdot \lambda^T =  [\delta_0,...,\delta_{d}]`
-    - :math:`\Delta = \sum_{\delta_i \in \\vec{\delta}} \delta_i^2 = \delta_0^2 + ... + \delta_{d}^2`
+    - :math:`\mathbf{\delta} = [\delta_i]` for :math:`i \in [1,...,d] = [\delta_0,...,\delta_{d}]`
+    - :math:`\mathbf{\delta} = (\mathbf{w}|[-1]) \cdot \lambda^T = [w_0, ..., w_{d-1},-1]\cdot \lambda^T`
+    - :math:`\Delta = \sum_{\delta_i \in \\mathbf{\delta}} \delta_i^2 = \delta_0^2 + ... + \delta_{d}^2`
     - :math:`\Phi(\cdot)` is the cumulative distribution function of a Gaussian with zero mean and variance one.
+    - :math:`Distance(+)` and :math:`Distance(-)` are the distances from the hyperplane :math:`h` to the mean of the positive and negative classes, :math:`\mathbf{\mu_+}` and :math:`\mathbf{\mu_-}`, respectively.
+    - :math:`\mathbf{\mu_+}` : mean vector for class :math:`(+)`
+    - :math:`\mathbf{\mu_-}` : mean vector for class :math:`(-)`
+    - :math:`\mathbf{\mu_+} = \\bigcup_{i=1}^{d} \mu_{+i}`
+    - :math:`\mathbf{\mu_+} = \\bigcup_{i=1}^{d} \mu_{-i}`
+    - :math:`\mu_{+i} = 1` and :math:`\mu_{-i} = -1`, for :math:`i \in [1,...,d]`
+    - :math:`\mathbf{\mu_-} = [\mu_{-i}]` for :math:`i \in [1,...,d] = [\mu_{-1}, ..., \mu_{-d}] = [1,...,1]`
+    - :math:`\mathbf{\mu_+} = [\mu_{+i}]` for :math:`i \in [1,...,d] = [\mu_{+1}, ..., \mu_{+d}] = [-1,...,-1]`
+
 
   Parameters:
     h_bias (float): bias of the classifier :math:`h(\mathbf{x})`
@@ -61,7 +71,7 @@ def h_error_rate(h_bias, h_weights, cov):
     cov (list[list]): covariance matrix of the gaussian samples used to train the model
 
   Returns:
-    float: probability of error for the classifier :math:`h(\mathbf{x})` trained with the gaussian samples generated with the covariance matrix :math: and means :math:`\mu_+=[1,...,1]` and :math:`\mu_=[-1,...,-1]`
+    float: probability of error for the classifier :math:`h(\mathbf{x})` trained with the gaussian samples generated with the covariance matrix :math:`\Sigma` and means :math:`\mu_+=[1,...,1]` and :math:`\mu_=[-1,...,-1]`
 
 
 
@@ -82,35 +92,38 @@ def h_error_rate(h_bias, h_weights, cov):
 
 
 def loss_empirical(clf, dataset_test):
-  """calculate empirical loss for given svm model and test dataset
+  """
+  this function calculates an empirical loss :math:`\hat{L}(h)`, given:
+    - SVM trained model containing the best empirical classifier :math:`\hat{h}^{(D)}` in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples.
+    - a test set :math:`D_{test} = D_{(+)test} \cup D_{(-)test}`
 
-  |
-  Let :math:`\hat{h}^{(D)}` be the best empirical classifier in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples, i.e., the classifier in :math:`H` with the minimum empirical error rate. Under these conditions, we can define three error rates:
-    - :math:`\hat{L}(\hat{h}^{(D)}) =` the empirical error rate of the classifier :math:`\hat{h}^{(D)}`
-    - :math:`\hat{L}(\hat{h}^{(D)},D') =` the empirical error rate of the classifier :math:`\hat{h}^{(D)}` using a test dataset :math:`D'`
+  For each classifier :math:`h` in :math:`H`, we can calculate its empirical error rate :math:`\hat{L}(h)`, i.e., its proportion of misclassified observations in the dataset :math:`D`:
+    - :math:`\hat{L}(h) = \\frac{1}{n} \sum_{i=1}^{n} 1(y_i \\neq h(x_i))`
 
+  Let :math:`\hat{h}^{(D)}` be the best empirical classifier in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples, i.e., the classifier in :math:`H` with the minimum empirical error rate. Under these conditions, we can define two error rates:
+    - :math:`\hat{L}(\hat{h}^{(D)}) =` the empirical error rate of the classifier :math:`\hat{h}^{(D)}`, when :math:`D_{test} = D_{train}`
+    - :math:`\hat{L}(\hat{h}^{(D)},D') =` the empirical error rate of the classifier :math:`\hat{h}^{(D)}` using a test dataset :math:`D'`, when :math:`D_{test} \\neq D_{train}`
 
+  Parameters:
+    clf (sklearn.svm.SVC): SVM trained model containing the best empirical classifier :math:`\hat{h}^{(D)}` in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples.
+    dataset_test (dict): a test set :math:`D_{test} = D_{(+)test} \cup D_{(-)test}`
 
-  :param self: this simulator
-  :type self: Simulator
-  :param clf: svm model
-  :type clf: sklearn.svm._classes.SVC
-  :param dataset_test: dataset to evaluate the loss on prediction by svm trained model
-  :type dataset_test: dict
-  :return: empirical loss
-  :rtype: float
+  Returns:
+    float: empirical error rate of the classifier :math:`\hat{h}^{(D)}`, :math:`\hat{L}(\hat{h}^{(D)})` when :math:`D_{test} = D_{train}` or :math:`\hat{L}(\hat{h}^{(D)},D')` when :math:`D_{test} \\neq D_{train}`
 
   """
 
-  dims_to_remove = [i for i in range(len(dataset_test['images'][0])-1,len(clf.coef_[0])-1,-1)]
+  dims_to_remove = [i for i in range(len(dataset_test['data'][0])-1,len(clf.coef_[0])-1,-1)]
 
-  X_test, y_test = np.delete(dataset_test['images'], dims_to_remove, 1) , dataset_test['target']
+  X_test, y_test = np.delete(dataset_test['data'], dims_to_remove, 1) , dataset_test['target']
 
   return 1 - clf.score(X_test,y_test)
 
 
-def linear_svm_train(dim, dataset_train):
-  """This function trains a linear SVM model and find the best empirical linear classifier :math:`\hat{h}^{(D)}` in the hypothesis space :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples.
+def linear_svm_train(dim, training_set):
+  """This function trains a linear SVM model and find the best empirical linear classifier :math:`\hat{h}^{(D)}` in the hypothesis space :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples, given:
+    - Training set :math:`D = D_{(+)train} \cup D_{(-)train}`
+    - dimensionality :math:`d`, :math:`d` < nuber of features in the dataset
 
   Linear Classifier?
     - ":math:`h(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b`" is a linear classifier.
@@ -121,17 +134,17 @@ def linear_svm_train(dim, dataset_train):
   :type self: Simulator
   :param dim: dimensionality of the model, :math:`d` features
   :type dim: int
-  :param dataset_train: dataset :math:`D` to train the model
-  :type dataset_train: dict
+  :param training_set: dataset :math:`D` to train the model
+  :type training_set: dict
   :return: trained SVM model containing the best empirical hyperplane :math:`h` in the hypothesis space :math:`H` for the given dataset :math:`D` with :math:`d` features and :math:`n` samples
   :rtype: sklearn.svm._classes.SVC
 
   """
 
   # remove k columns from sample_data for model.dim-k features
-  dims_to_remove = [i for i in range(len(dataset_train['images'][0])-1,dim-1,-1)]
+  dims_to_remove = [i for i in range(len(training_set['data'][0]) - 1, dim - 1, -1)]
 
-  X_train, y_train = np.delete(dataset_train['images'], dims_to_remove, 1) , dataset_train['target']
+  X_train, y_train = np.delete(training_set['data'], dims_to_remove, 1) , training_set['target']
 
   # train
   C = 1.0  # SVM regularization parameter
@@ -199,8 +212,8 @@ def loss_theoretical(h_clf, cov):
 
 
 def loss_bayes_analytical(cov):
-  """calculate the theoretical bayes error rate estimated analytically for given:
-    - covariance matrix of a gaussian model
+  """calculate the theoretical Bayes Error Rate (or Bayes Risk) analytically, given:
+    - covariance matrix :math:`\Sigma` of a Gaussian distribution
 
   The Bayes Error (also: Bayes Risk) is defined as the minimum theoretical achievable error rate:
     - :math:`\min_{h\in H} L(h) =` the smallest theoretically achievable error rate for a classifier :math:`h` in dictionary :math:`H`.
@@ -208,10 +221,11 @@ def loss_bayes_analytical(cov):
   Warning:
     This function is only valid for 1D, 2D and 3D gaussian models.
 
-  :param cov: covariance matrix
-  :type cov: numpy.ndarray
-  :return: Bayes Error Rate (or Bayes Risk), the minimum theoretical achievable error rate for a dataset :math:`D` with :math:`d` features and any number of samples
-  :rtype: float
+  Parameters:
+    cov(list[list] or np.ndarray): covariance matrix :math:`\Sigma`
+
+  Returns:
+    float: The smallest theoretically achievable error rate for a classifier :math:`h` in dictionary :math:`H` for the given covariance matrix :math:`\Sigma`, also called Bayes Error Rate (or Bayes Risk), represented by :math:`\min_{h\in H} L(h)`.
 
   """
   # Extract sigma (standard deviations)
@@ -256,7 +270,7 @@ def loss_bayes_analytical(cov):
 
 def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal(cov):
   """
-  This function calculates the distance from origin :math:`[0,0,...,0]` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]`.
+  This function calculates the distance from origin :math:`[0,0,...,0]` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]`, given:
     - the covariance matrix :math:`\Sigma` of the ellipsoid
 
   Parameters:
@@ -555,7 +569,8 @@ class Simulator:
       d (int): dimensionality :math:`d` for which the bayes error rate is estimated
 
     Returns:
-      float: bayes error rate for dimensionality :math:`d`
+      float: An estimation for the smallest theoretically achievable error rate for a classifier :math:`h` in dictionary :math:`H` for the given covariance matrix :math:`\Sigma`, also called Bayes Error Rate (or Bayes Risk), represented by :math:`\min_{h\in H} L(h)`.
+
 
     """
 
@@ -570,17 +585,40 @@ class Simulator:
     return np.mean(losses)
 
   def generate_dataset(self, n, i):
-    """generate the dataset for the simulation for given number of samples and random seed i for the bivariate gaussian distribution for each dimension in the simulation
+    """This method generates all simulation required datasets for all dimensionalities :math:`d` set to be simulated, given:
+      - covariance matrix :math:`\Sigma` contained in the simulator object
+      - class means :math:`\mathbf{\mu_+}` and :math:`\mathbf{\mu_+}` contained in the simulator object
+      - random seed :math:`i`
+      - cardinality :math:`n`
 
-    :param self: this simulator
-    :type self: Simulator
-    :param n: number of samples
-    :type n: int
-    :param i: random seed
-    :type i: int
-    :return: dataset containing the trainning and testing images for both classes generated from the bivariate gaussian distribution for each dimension in the simulation
-    :rtype: dict
+    Required Simulation Datasets:
+      - :math:`D = D_{train} \cup D_{test}` : dataset
+      - :math:`D_{train} = D_{(+)train} \cup D_{(-)train}` : training set
+      - :math:`D_{test} = D_{(+)test} \cup D_{(-)test}` : test set
+      - :math:`D_{(+)train} = (\mathbf{X}_{(+)train}, \mathbf{y}_{(+)train})` : training set for class :math:`(+)`
+      - :math:`D_{(-)train} = (\mathbf{X}_{(-)train}, \mathbf{y}_{(-)train})` : training set for class :math:`(-)`
+      - :math:`D_{(+)test} = (\mathbf{X}_{(+)test}, \mathbf{y}_{(+)test})` : test set for class :math:`(+)`
+      - :math:`D_{(-)test} = (\mathbf{X}_{(-)test}, \mathbf{y}_{(-)test})` : test set for class :math:`(-)`
 
+    Gaussian Distribution Parameters:
+      - :math:`\mathbf{\Sigma}` : covariance matrix :math:`d \\times d` for training and test sets for both classes
+      - :math:`n` : cardinality for training and test sets for both classes
+      - :math:`\mathbf{\mu_+}` : mean vector for class :math:`(+)`
+      - :math:`\mathbf{\mu_-}` : mean vector for class :math:`(-)`
+      - :math:`\mathbf{\mu_+} = \\bigcup_{i=1}^{d} \mu_{+i}`
+      - :math:`\mathbf{\mu_+} = \\bigcup_{i=1}^{d} \mu_{-i}`
+      - :math:`\mu_{+i} = 1` and :math:`\mu_{-i} = -1`, for :math:`i \in [1,...,d]`
+      - :math:`\mathbf{\mu_-} = [\mu_{-i}]` for :math:`i \in [1,...,d] = [\mu_{-1}, ..., \mu_{-d}] = [1,...,1]`
+      - :math:`\mathbf{\mu_+} = [\mu_{+i}]` for :math:`i \in [1,...,d] = [\mu_{+1}, ..., \mu_{+d}] = [-1,...,-1]`
+
+
+    Parameters:
+      self (Simulator): self object of the class Simulator
+      n (int): cardinality :math:`n` for training and testing sets for both classes
+      i (int): random seed :math:`i`
+
+    Returns:
+      dict: A dictionary containing all required simulation datasets for all dimensionalities :math:`d` set to be simulated, represented by :math:`D_{(+)train}`, :math:`D_{(-)train}`, :math:`D_{(+)test}`, :math:`D_{(-)test}`.
 
     """
 
@@ -618,8 +656,8 @@ class Simulator:
     sample_target_test = np.append(sample_target_class_pos_test, sample_target_class_neg_test , axis=0)
     self.time_spent_test = time.time() - self.time_spent_test
 
-    dataset = {'train': {'images': sample_data_train, 'target':sample_target_train},
-          'test': {'images': sample_data_test, 'target':sample_target_test}}
+    dataset = {'train': {'data': sample_data_train, 'target':sample_target_train},
+          'test': {'data': sample_data_test, 'target':sample_target_test}}
 
     return dataset
 
