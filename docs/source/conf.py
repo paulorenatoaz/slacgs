@@ -22,6 +22,7 @@ import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('..'))
 extensions = ['sphinx.ext.autodoc',
               # "sphinx_rtd_theme",
+              'readthedocs-sphinx-ext',
               'sphinx.ext.napoleon',
               'sphinx.ext.mathjax']
 
@@ -50,6 +51,7 @@ html_theme_options = {
     "titles_only": False  # If True, only the titles of documents are included in the navigation, not the headers
 }
 
-html_theme = "sphinx_rtd_theme"
+# html_theme = "sphinx_rtd_theme"
+html_theme = 'readthedocs-sphinx-ext'
 
 html_static_path = ['_static']
