@@ -21,12 +21,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 extensions = ['sphinx.ext.autodoc',
-              # "sphinx_rtd_theme",
-              'readthedocs-sphinx-ext',
+              "sphinx_rtd_theme",
+              #'readthedocs-sphinx-ext',
               'sphinx.ext.napoleon',
               'sphinx.ext.mathjax']
 
-templates_path = ['_templates']
+# templates_path = ['_templates']
 exclude_patterns = []
 autoclass_content = 'both'
 
@@ -51,7 +51,9 @@ html_theme_options = {
     "titles_only": False  # If True, only the titles of documents are included in the navigation, not the headers
 }
 
-# html_theme = "sphinx_rtd_theme"
-html_theme = 'readthedocs-sphinx-ext'
+html_theme = "sphinx_rtd_theme"
+# html_theme = 'readthedocs-sphinx-ext'
+
 
 html_static_path = ['_static']
+html_baseurl = 'https://<username>.github.io/<repository>/'
