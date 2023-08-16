@@ -34,6 +34,7 @@ autoclass_content = 'both'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+
 html_theme_options = {
     "canonical_url": "",
     "analytics_id": "",  # Provided by Google in your dashboard, if you want to use Google Analytics
@@ -51,5 +52,7 @@ html_theme_options = {
     "titles_only": False  # If True, only the titles of documents are included in the navigation, not the headers
 }
 
+
 html_theme = "sphinx_rtd_theme"
+html_baseurl = 'https://paulorenatoaz.github.io/slacgs/'
 # html_theme = 'readthedocs-sphinx-ext'
