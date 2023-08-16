@@ -1,9 +1,9 @@
-# SLACGS
+# SLACGS [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://slacgs.netlify.app/)
 
 A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order to evaluate Trade Off Between Samples and Features sizes in Classification Problems on gaussian Samples.
 
 Documentation: https://slacgs.netlify.app/
-[![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://slacgs.netlify.app/)
+
 
 * Reports with results will be stored in different Google Spreadsheet:  
     - Experiment Scenario
