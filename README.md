@@ -55,9 +55,7 @@ Documentation: https://slacgs.netlify.app/
 ## 1. Download And Install
 
 ```bash
-git clone https://github.com/paulorenatoaz/slacgs
-
-pip install slacgs/
+pip install slacgs
 ```
 
 ## 2. Set Report Service

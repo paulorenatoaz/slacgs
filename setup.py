@@ -24,6 +24,6 @@ setup(
     ],
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',
-    description='A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples.',
+    description='A Simulator for Loss Analysis of Classifiers on Gaussian Samples.',
     url='https://github.com/paulorenatoaz/slacgs',
 )
