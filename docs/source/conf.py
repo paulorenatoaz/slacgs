@@ -55,5 +55,5 @@ html_theme = "sphinx_rtd_theme"
 # html_theme = 'readthedocs-sphinx-ext'
 
 
-html_static_path = ['_static']
+# html_static_path = ['_static']
 html_baseurl = 'https://paulorenatoaz.github.io/slacgs/'
