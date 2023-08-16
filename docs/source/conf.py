@@ -16,7 +16,7 @@ release = '1.0'
 
 import os
 import sys
-# import sphinx_rtd_theme
+import sphinx_rtd_theme
 
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -26,8 +26,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.mathjax']
 
-# templates_path = ['_templates']
-exclude_patterns = []
+
+# exclude_patterns = []
 autoclass_content = 'both'
 
 
@@ -53,7 +53,3 @@ html_theme_options = {
 
 html_theme = "sphinx_rtd_theme"
 # html_theme = 'readthedocs-sphinx-ext'
-
-
-# html_static_path = ['_static']
-html_baseurl = 'https://paulorenatoaz.github.io/slacgs/'
