@@ -1,43 +1,43 @@
 slacgs Package
 ==============
 
-model
+Model
 ------------
 
 .. automodule:: slacgs.model
    :members:
 
-simulator
+Simulator
 ----------------
 
 .. automodule:: slacgs.simulator
    :members:
 
-report
+Report
 -------------
 
 .. automodule:: slacgs.report
    :members:
 
-enumtypes
+Enumtypes
 ----------------
 
 .. automodule:: slacgs.enumtypes
    :members:
 
-gspread_client
+Gspread_client
 ---------------------
 
 .. automodule:: slacgs.gspread_client
    :members:
 
-gdrive_client
+Gdrive_client
 --------------------
 
 .. automodule:: slacgs.gdrive_client
    :members:
 
-utils
+Utils
 ------------
 
 .. automodule:: slacgs.utils
@@ -45,7 +45,7 @@ utils
 
 .. autodata:: slacgs.utils.report_service_conf
 
-demo
+Demo
 -----------
 
 .. automodule:: slacgs.demo

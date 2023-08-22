@@ -1,8 +1,13 @@
 from setuptools import setup, find_packages
 
+# Read the contents of the README file
+with open('README.md', 'r', encoding='utf-8') as file:
+    long_description = file.read()
+
+
 setup(
     name='slacgs',
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(),
     install_requires=[
         # List any dependencies your package requires
@@ -25,5 +30,7 @@ setup(
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',
     description='A Simulator for Loss Analysis of Classifiers on Gaussian Samples.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',  # Use 'text/x-rst' for reStructuredText
     url='https://github.com/paulorenatoaz/slacgs',
 )

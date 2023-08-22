@@ -15,19 +15,19 @@ from .gdrive_client import GdriveClient
 from .utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
 
 """
-	This module provides functions and classes that demonstrate the functionality of the slacgs package. 
-	
-	Global Variables:
-		SCENARIO1 (list): list of parameters for scenario 1
-		SCENARIO2 (list): list of parameters for scenario 2
-		SCENARIO3 (list): list of parameters for scenario 3
-		SCENARIO4 (list): list of parameters for scenario 4
-		SCENARIOS (list): list of scenarios for simulation
-		GDC (GdriveClient): Google Drive Client for reports service
-	
-	Functions:
-		start_google_drive_service(): starts Google Drive service
-		run_experiment_simulation( scenario, model, simulator, gdc ): runs experiment simulation
+This module provides functions and classes that demonstrate the functionality of the slacgs package. 
+
+Attributes:
+	SCENARIO1 (list): list of parameters for scenario 1
+	SCENARIO2 (list): list of parameters for scenario 2
+	SCENARIO3 (list): list of parameters for scenario 3
+	SCENARIO4 (list): list of parameters for scenario 4
+	SCENARIOS (list): list of scenarios for simulation
+	GDC (GdriveClient): Google Drive Client for reports service
+
+Functions:
+	start_google_drive_service(): starts Google Drive service
+	run_experiment_simulation( scenario, model, simulator, gdc ): runs experiment simulation
 				
 	
 """
