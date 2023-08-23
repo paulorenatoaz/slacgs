@@ -325,7 +325,7 @@ def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_d
     cov (list): covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
   Returns:
-    float: distance from origin :math:`[0,...,0]_{1 \times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,...,1]_{1 \times d}`.
+    float: distance from origin :math:`[0,...,0]_{1 \\times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,...,1]_{1 \\times d}`.
 
   """
 
