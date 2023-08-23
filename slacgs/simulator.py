@@ -273,6 +273,37 @@ def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_d
   This function calculates the distance from origin :math:`[0,0,...,0]_{1 \\times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]_{1 \\times d}`, given:
     - the covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
+  A Model to Understand the Behavior of Bayes' Risk in Two Dimensions
+  --------------------------------------------------------------------
+  Suppose that only :math:`X1` and :math:`X2` are present. Let's consider an ellipse in :math:`\\mathbb{R}^2` (say, centered at the origin :math:`(0,0)`) whose equation is
+
+  .. math::
+     x^T \\Sigma^{-1} x = 1.
+
+
+  For each class, we have an ellipse, and for each ellipse, we have a centroid.
+  The line that joins the two centroids :math:`(1,1)` and :math:`(-1,-1)` is the set of all vectors in :math:`\\mathbb{R}^2` of the type
+
+  .. math::
+     (c,c),
+
+  whose two coordinates are equal. This line cuts the mentioned ellipse at some point that has two equal and positive coordinates,
+
+  .. math::
+     (c_2,c_2) \\cdot \\Sigma^{-1} \\left(\\begin{array}{c} c_2 \\\\ c_2 \\end{array}\\right) = 1.
+
+  Let :math:`d_2` be the distance from this point to the origin,
+
+  .. math::
+     d_2 = \\sqrt{2} c_2.
+
+  The greater this distance, the lower the discriminative power of the classifier, with :math:`X_1` and :math:`X_2` present.
+
+  For the general case, we have
+
+  .. math::
+      d_{dim} = \\sqrt{dim} c_{dim}.,\ dim = 1,2,3,...
+
   Parameters:
     cov (list): covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
@@ -343,7 +374,7 @@ class Simulator:
 
     After simulation for each cardinality n in N is finished, some tests are performed to check if simulation should be continued for one more cardinality :math:`n = max(N)*2`:
       - test if intersection point between :math:`L_d(n)` and :math:`L_{d-1}(n)` has been found and continue simulation if not
-      - test if Loss Functions are not yet converged and continue simulation if not, :math:`\\forall d \in \mathbf{d},\ L_{d}(n) - L_{d-1}(n) > 10^{-3}`
+      - test if Loss Functions are not yet converged and continue simulation if not, :math:`\\forall d \in \mathbf{d},\ L_{d}(n) - L_{d}(n-1) < 10^{-3}`
 
 
     Parameters:
