@@ -91,8 +91,8 @@ class GspreadClient:
 
     """
 
-		if not isinstance(report, Report):
-			raise TypeError('report must be a Report object')
+		# if not isinstance(report, Report):
+		# 	raise TypeError('report must be a Report object')
 
 		if not isinstance(verbose, bool):
 			raise TypeError('verbose must be a boolean')
