@@ -1013,7 +1013,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024,
+	slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n=1024,
 	                   verbose=verbose)
 
 	## run simulation
@@ -1152,7 +1152,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n=1024,
+	slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n=1024,
 	                   verbose=verbose)
 
 	## run simulation
@@ -1267,8 +1267,8 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	simulators = []
 	for model in models:
 		simulators.append(
-			Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10,
-			          first_step=5, precision=1e-4,
+			Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
+			          min_steps=5, precision=1e-4,
 			          augmentation_until_n=1024, verbose=verbose))
 
 	save_scenario_figures_as_gif(scenario_list, scenario_number, verbose=verbose)
@@ -1402,8 +1402,8 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	model = Model(params)
 
 	## create Simulator object to test parameters before continuing
-	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10,
-	                   first_step=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
+	                   min_steps=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	## define folder name for storing reports
@@ -1542,8 +1542,8 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, iters_per_step=1, max_steps=10,
-	                   first_step=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
+	                   min_steps=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	## define folder name for storing reports

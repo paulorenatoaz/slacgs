@@ -315,83 +315,111 @@ def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_d
 
 
 class Simulator:
-  """A simulator for Linear classifier Loss analysis in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
+  """Represents a Simulator for a Classifier Loss Analysis on Gaussian samples in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
 
-  def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, iters_per_step=5, max_steps=200, first_step=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
+  def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, step_size=5, max_steps=200, min_steps=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
 
     """
-    :param model: Linear Classifier Loss Analysis Model
-    :param dims: dimensionalities to be simulated
-    :type dims: list[int] or tuple[int]
-    :param loss_types: types of Loss comparation graphs wich will be compiled by the Simulator
-    :type loss_types: list[str] or tuple[str]
-    :param test_samples_amt: number of test samples to be genarated for prediction Loss evaluation
-    :param iters_per_step: number of datasets generated in one simulation step equals iters_per_step*sqrt(augmentation_until_n)/sqrt(n), if n < augmentation_until_n, else it equals iters_per_step
-    :param max_steps: max number of steps per n ∈ N
-    :param first_step: min number of steps per n ∈ N
-    :param precision: stop criteria. The simulation finishes when 'difference between E[predict_loss] calculated on two consecutive steps' < precision
-    :param augmentation_until_n: increase number of generated datasets for n < augmentation_until_n
-    :param verbose: if True, prints simulation progress
-
-    :raise TypeError: if model is not a Model object;
-                      if dims is not a list or tuple of integers;
-                      if loss_types is not a list or tuple of strings;
-                      if test_samples_amt is not an integer;
-                      if iters_per_step is not an integer;
-                      if max_steps is not an integer;
-                      if first_step is not an integer;
-                      if precision is not a float;
-                      if augmentation_until_n is not an integer;
-                      if verbose is not a boolean;
+    This Simulator for a SLACGS' Model Contains:
+      - :math:`m`: a Model object for SLACGS
+      - :math:`\mathbf{d}`: an array of dimensionalities :math:`d_i` to be simulated
+      - :math:`\mathbf{d_{comp}}`: a pair of dimensionalities :math:`(d_a, d_b)` to be compared
+      - :math:`\mathbf{L_{types}}`: a list of Loss functions :math:`L` to be estimated for each dimensionality :math:`d`
+      - :math:`n_{test}`: the number of test samples :math:`x_{test}` to be generated for dataset :math:`D_{test}`
 
 
-    :raise ValueError: if max_steps < first_step;
-                      if precision < 0 or if precision > 1;
-                      if augmentation_until_n < 1024;
-                      if test_samples_amt < 2;
-                      if iters_per_step < 1;
-                      if max_steps < 10;
-                      if first_step < 1
-                      if loss_types is not a valid list or tuple of strings (see enumtypes.py for valid strings) or if loss_types is empty;
-                      if dims is not a valid list or tuple of integers or if dims is empty;
+    Also contins args for the simulation:
+      - :math:`n_{aug}`: upper bound cardinality to apply data augmentation> Defined as :math:`arg_{augmentation\_until\_n}`
+      - :math:`cte_{aug}(n)`: augmenttation factor to multiply the number of datasets generated for a cardinality of :math:`n` samples. It is defined as :math:`\\frac{\sqrt{n_{aug}}}{\sqrt{n}}`, if :math:`n < n_{aug}`, else it equals :math:`1`
+      - :math:`r_{step}(n)`: number of rounds (iterations) per simulation step for a cardinality of :math:`n` samples. Defined as :math:`arg_{step\_size}*cte_{aug}(n)`
+      - :math:`max_{steps}(n)`: maximum number of simulation steps for a cardinality of :math:`n` samples. Defined as :math:`arg_{max\_steps}*cte_{aug}(n)`
+      - :math:`min_{steps}(n)`: minimum number of simulation steps for a cardinality of :math:`n` samples. Defined as :math:`arg_{min\_steps}*cte_{aug}(n)`
+      - :math:`\epsilon`: precision for the simulation stop criteria. Defined as :math:`arg_{precision}`
+
+    Loss convergence stop criterias:
+      - :math:`\Delta L_{train}(n,d) < \epsilon`: difference between :math:`E[L_{train}]` calculated on two consecutive steps must be less than :math:`\epsilon` for a cardinality of :math:`n` samples and a dimensionality of :math:`d` features
+      - :math:`\Delta L_{test}(n,d) < \epsilon`: difference between :math:`E[L_{test}]` calculated on two consecutive steps must be less than :math:`\epsilon` for a cardinality of :math:`n` samples and a dimensionality of :math:`d` features
+      - :math:`\Delta L_{theoretical}(n,d) < \epsilon`: difference between :math:`E[L_{theoretical}]` calculated on two consecutive steps must be less than :math:`\epsilon` for a cardinality of :math:`n` samples and a dimensionality of :math:`d` features
+
+    After simulation for each cardinality n in N is finished, some tests are performed to check if simulation should be continued for one more cardinality :math:`n = max(N)*2`:
+      - test if intersection point between :math:`L_d(n)` and :math:`L_{d-1}(n)` has been found and continue simulation if not
+      - test if Loss Functions are not yet converged and continue simulation if not, :math:`\\forall d \in \mathbf{d},\ L_{d}(n) - L_{d-1}(n) > 10^{-3}`
 
 
-    :Example:
+    Parameters:
+      model (Model): :math:`m`: Linear Classifier Loss Analysis Model
+      dims (list): :math:`\mathbf{d}`: dimensionalities to be simulated
+      dims_to_compare (list): :math:`\mathbf{d_{comp}}`: a pair of dimensionalities :math:`(d_a, d_b)` to be compared
+      loss_types (list): :math:`\mathbf{L_{types}}`: a list of Loss functions :math:`L` to be estimated for each dimensionality :math:`d`
+      test_samples_amt (int): :math:`n_{test}`: the number of test samples :math:`x_{test}` to be generated for dataset :math:`D_{test}`
+      step_size (int): :math:`arg_{step\_size}` number of datasets generated in one simulation step equals :math:`r_{step}(n)`, if :math:`n < n_{aug}`, else it equals :math:`arg_{step\_size}`
+      max_steps (int): :math:`arg_{max\_steps}` max number of steps per :math:`n \in N`
+      min_steps (int): :math:`arg_{min\_steps}` min number of steps per :math:`n \in N`
+      precision (float): :math:`\epsilon` stop criteria. For each cardinality :math:`n` The Loss estimation for each dimensionality :math:`d` and Loss function :math:`L_{type}` must be converged when :math:`\Delta L_{type}(n,d) < \epsilon`
+      augmentation_until_n (int): :math:`n_{aug}`: upper bound cardinality to apply data augmentation> Defined as :math:`arg_{augmentation\_until\_n}`
+
+    Raises:
+      TypeError:
+        if model is not a Model object;
+        if dims is not a list or tuple of integers;
+        if loss_types is not a list or tuple of strings;
+        if test_samples_amt is not an integer;
+        if iters_per_step is not an integer;
+        if max_steps is not an integer;
+        if min_steps is not an integer;
+        if precision is not a float;
+        if augmentation_until_n is not an integer;
+        if verbose is not a boolean;
+
+      ValueError:
+        if max_steps < min_steps;
+        if precision < 0 or if precision > 1;
+        if augmentation_until_n < 1024;
+        if test_samples_amt < 2;
+        if iters_per_step < 1;
+        if max_steps < 10;
+        if min_steps < 1
+        if loss_types is not a valid list or tuple of strings (see enumtypes.py for valid strings) or if loss_types is empty;
+        if dims is not a valid list or tuple of integers or if dims is empty;
+
+
+
+    Examples:
       >>> from slacgs import Model
 
       >>> param = [1,1,2,0,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,-0.1,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,0,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,-0.1,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,2,-0.1]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, dims=(1,2), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, dims=(1,2), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,1,2,0,0,0,0,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> slacgs = Simulator(model, dims=(3,4), iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> slacgs = Simulator(model, dims=(3,4), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
       >>> slacgs.run() # doctest: +ELLIPSIS
 
 
@@ -410,14 +438,14 @@ class Simulator:
     if not isinstance(test_samples_amt, int):
         raise TypeError('test_samples_amt must be an integer')
 
-    if not isinstance(iters_per_step, int):
+    if not isinstance(step_size, int):
         raise TypeError('iters_per_step must be an integer')
 
     if not isinstance(max_steps, int):
         raise TypeError('max_steps must be an integer')
 
-    if not isinstance(first_step, int):
-        raise TypeError('first_step must be an integer')
+    if not isinstance(min_steps, int):
+        raise TypeError('min_steps must be an integer')
 
     if not isinstance(precision, float):
         raise TypeError('precision must be a float')
@@ -434,8 +462,8 @@ class Simulator:
     if not isinstance(verbose, bool):
         raise TypeError('verbose must be a boolean')
 
-    if max_steps < first_step:
-        raise ValueError('first_step must be less than max_steps')
+    if max_steps < min_steps:
+        raise ValueError('min_steps must be less than max_steps')
 
     if precision < 0 or precision > 1:
         raise ValueError('precision must be greater than 0 and less than 1')
@@ -446,14 +474,14 @@ class Simulator:
     if test_samples_amt < 2:
         raise ValueError('test_samples_amt must be greater than 2')
 
-    if iters_per_step < 1:
+    if step_size < 1:
         raise ValueError('iters_per_step must be greater than 1')
 
     if max_steps < 10:
         raise ValueError('max_steps must be greater than 10')
 
-    if first_step < 1:
-        raise ValueError('first_step must be greater than 1')
+    if min_steps < 1:
+        raise ValueError('min_steps must be greater than 1')
 
     loss_types_enum_values = [loss_type.value for loss_type in list(LossType)]
     if not all(loss_type in loss_types_enum_values for loss_type in loss_types):
@@ -469,9 +497,9 @@ class Simulator:
 
 
     self.test_samples_amt = test_samples_amt
-    self.iters_per_step = iters_per_step
+    self.iters_per_step = step_size
     self.max_steps = max_steps
-    self.first_step = first_step
+    self.min_steps = min_steps
     self.precision = precision
     self.augmentation_until_n = augmentation_until_n
     self.loss_types = list(loss_types)
@@ -482,14 +510,14 @@ class Simulator:
     self.is_notebook = is_notebook()
     self.dims_to_compare = dims_to_compare if dims_to_compare else self.dims[-2:]
 
-  def print_N_progress(self,n: int, max_iter: int, iter_per_step: int,datapoints_fig: plt.Figure, datapoints_plot_png_path):
+  def print_N_progress(self, n: int, max_iter: int, iter_per_step: int, datapoints_fig: plt.Figure, datapoints_plot_png_path):
 
-    """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (iter_per_step). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
+    """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (step_size). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
 
 
     :param n: cardinality of the dataset
     :param max_iter: max number of iterations per n ∈ N
-    :param iter_per_step: number of datasets generated in one simulation step equals iter_per_step*sqrt(augmentation_until_n)/sqrt(n), if n < augmentation_until_n, else it equals iter_per_step
+    :param iter_per_step: number of datasets generated in one simulation step equals step_size*sqrt(augmentation_until_n)/sqrt(n), if n < augmentation_until_n, else it equals step_size
     :param datapoints_fig: a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points
 
 
@@ -662,6 +690,13 @@ class Simulator:
     return dataset
 
 
+
+
+
+
+
+
+
   def run(self):
 
     """run the simulation
@@ -677,19 +712,19 @@ class Simulator:
     st = time.time()
 
 
-    # iniciate  counters
+    # Inicialize auxiliary variable for convergence check containing the last means mesures for each dimension and loss type
     prev_mean_mesure = {dim : {loss_type: 0 for loss_type in self.loss_types} for dim in self.dims}
 
-    # compute min(L(h)) and d for each dimension
+    # Compute min(L(h)) and d for each dimension
     self.report.loss_bayes = {d : loss_bayes_analytical(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = {d : distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
 
-
+    # Save data points plot as PNG
     fig = self.model.data_points_plot
     datapoints_plot_png_path = self.model.save_data_points_plot_as_png(verbose=self.verbose)
 
+    # Initialize N from the model
     N = self.model.N
-    N_start_size = len(self.model.N)
 
     ## for each cardinality n in N  do the simulation for each dimension d in dims
     while True:
@@ -706,7 +741,7 @@ class Simulator:
         iter_N = {d : {loss_type : 0 for loss_type in self.loss_types} for d in self.dims}
 
         #iniciate control switches for each dimension and loss type
-        switch = {'first_step': True,'train': { d : {loss_type : True if loss_type in self.loss_types else False for loss_type in [loss_type.value for loss_type in LossType ]} for d in self.dims}, 'dims': {d : True for d in self.dims} }
+        switch = {'min_steps': True,'train': { d : {loss_type : True if loss_type in self.loss_types else False for loss_type in [loss_type.value for loss_type in LossType ]} for d in self.dims}, 'dims': {d : True for d in self.dims} }
 
         # terminal output N progress bar
         if self.verbose:
@@ -759,13 +794,12 @@ class Simulator:
 
               self.report.time_spent[d] = time.time() - self.report.time_spent[d]
 
-          ## simulate for at least first_step*iter_per_step iterations before checking for convergence
+          ## simulate for at least min_steps*iter_per_step iterations before checking for convergence
           if (i+1) % iter_per_step == 0:
-            if switch['first_step']:
-
-              ## start checking for convergence after turn off first_step switch
-              if (i+1) == self.first_step*iter_per_step:
-                switch['first_step'] = False
+            if switch['min_steps']:
+              ## check if it's time to turn off min_steps switch, and if so, save the current mean measure and start checking for convergence on the next step
+              if (i+1) == self.min_steps*iter_per_step:
+                switch['min_steps'] = False
                 for d in self.dims:
                   for loss_type in self.loss_types:
                     prev_mean_mesure[d][loss_type] = loss_sum[d][loss_type]/iter_N[d][loss_type]
@@ -805,7 +839,7 @@ class Simulator:
             self.report.loss_N[d][loss_type].append(loss_sum[d][loss_type]/iter_N[d][loss_type])
             self.report.iter_N[d][loss_type].append(iter_N[d][loss_type])
 
-      ## after simulation for each cardinality n in self.dims is finished, some tests are performed to check if simulation should be continued
+      ## after simulation for each cardinality n in N is finished, some tests are performed to check if simulation should be continued
       finish = True
 
       if 'EMPIRICAL_TEST' in self.loss_types:
@@ -854,8 +888,8 @@ class Simulator:
         self.report.loss_bayes[d] = self.loss_bayes_empirical(d)
 
     plt.close()
-    ## set and save the final plot
 
+    ## set the final plot
     self.report.loss_plot = self.report.plot_with_intersection()
 
     ## print the final report
@@ -881,6 +915,3 @@ class Simulator:
         self.report.time_spent[key] = self.report.time_spent[key]/3600
       else:
         self.report.time_spent[key] = [self.report.time_spent[key][i]/3600 for i in range(len(self.report.time_spent[key]))]
-
-
-

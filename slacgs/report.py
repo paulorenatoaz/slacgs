@@ -516,61 +516,61 @@ class Report:
 
   def write_to_spreadsheet(self, gc, dims_to_compare = None, verbose=True):
 
-    """Write results to a Google Spreadsheet
+	  """Write results to a Google Spreadsheet
 
-    :param self: object of class Report
-    :type self: Report
-    :param gc: gspread client object
-    :type gc: GspreadClient
-    :param dims_to_compare: list of dimensionalities to be compared
-    :type dims_to_compare: list of int or tuple of int
-    :param verbose: print output
-    :type verbose: bool
-    :return: None
-    :rtype: None
+		:param self: object of class Report
+		:type self: Report
+		:param gc: gspread client object
+		:type gc: GspreadClient
+		:param dims_to_compare: list of dimensionalities to be compared
+		:type dims_to_compare: list of int or tuple of int
+		:param verbose: print output
+		:type verbose: bool
+		:return: None
+		:rtype: None
 
-    :raises TypeError:
-      if dims_to_compare is not a list of int or tuple of int;
+		:raises TypeError:
+			if dims_to_compare is not a list of int or tuple of int;
 
-    :raises ValueError:
-      if the number of compared dimensionalities is not 2;
-      if the list of dioemnsionalities to be compared is not a subset of the list of simulated dimensionalities
+		:raises ValueError:
+			if the number of compared dimensionalities is not 2;
+			if the list of dioemnsionalities to be compared is not a subset of the list of simulated dimensionalities
 
-    :Example:
-      >>> import os
-      >>> from slacgs import Model
-      >>> from slacgs import Simulator
-      >>> from slacgs import GspreadClient
-      >>> from slacgs import doctest_next_parameter
+		:Example:
+			>>> import os
+			>>> from slacgs import Model
+			>>> from slacgs import Simulator
+			>>> from slacgs import GspreadClient
+			>>> from slacgs import doctest_next_parameter
 
-      >>> ## run simulation for parameter
-      >>> ### choose your own parameter
-      >>> ### param = [1, 1, 2, 0, 0, 0]
+			>>> ## run simulation for parameter
+			>>> ### choose your own parameter
+			>>> ### param = [1, 1, 2, 0, 0, 0]
 
-      >>> ### get parameter from demo.dodoctest_next_parameter()
-      >>> set_report_service_conf(slacgs_password, gdrive_user_email)
-      >>> param, _ = doctest_next_parameter()
+			>>> ### get parameter from demo.dodoctest_next_parameter()
+			>>> set_report_service_conf(slacgs_password, gdrive_user_email)
+			>>> param, _ = doctest_next_parameter()
 
-      >>> ## create model object
-      >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
+			>>> ## create model object
+			>>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
 
-      >>> ## create simulator object
-      >>> slacgs = Simulator(model, iters_per_step=1, max_steps=10, first_step=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+			>>> ## create simulator object
+			>>> slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
 
-      >>> ## run simulation
-      >>> slacgs.run() # doctest: +ELLIPSIS
+			>>> ## run simulation
+			>>> slacgs.run() # doctest: +ELLIPSIS
 
-      >>> ## define spreadsheet title
-      >>> ## spreadsheet_title = 'title of spreadsheet'
-      >>> _, spreadsheet_title = doctest_next_parameter()
+			>>> ## define spreadsheet title
+			>>> ## spreadsheet_title = 'title of spreadsheet'
+			>>> _, spreadsheet_title = doctest_next_parameter()
 
-      >>> ## create GspreadClient object
-      >>> gc = GspreadClient(spreadsheet_title)
+			>>> ## create GspreadClient object
+			>>> gc = GspreadClient(spreadsheet_title)
 
-      >>> ## write simulation results to spreadsheet
-      >>> slacgs.report.write_to_spreadsheet(gc, verbose=False)
+			>>> ## write simulation results to spreadsheet
+			>>> slacgs.report.write_to_spreadsheet(gc, verbose=False)
 
-    """
+		"""
     if dims_to_compare is None:
       dims_to_compare = self.sim.dims[-2:]
 
