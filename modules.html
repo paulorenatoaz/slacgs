@@ -65,7 +65,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.cls"><code class="docutils literal notranslate"><span class="pre">cls()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal"><code class="docutils literal notranslate"><span class="pre">distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag"><code class="docutils literal notranslate"><span class="pre">dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.h_error_rate"><code class="docutils literal notranslate"><span class="pre">h_error_rate()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.linear_svm_train"><code class="docutils literal notranslate"><span class="pre">linear_svm_train()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#slacgs.simulator.loss_bayes_analytical"><code class="docutils literal notranslate"><span class="pre">loss_bayes_analytical()</span></code></a></li>
@@ -618,8 +618,8 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="slacgs.simulator.distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal">
-<span class="sig-prename descclassname"><span class="pre">slacgs.simulator.</span></span><span class="sig-name descname"><span class="pre">distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slacgs.simulator.distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="slacgs.simulator.dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag">
+<span class="sig-prename descclassname"><span class="pre">slacgs.simulator.</span></span><span class="sig-name descname"><span class="pre">dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#slacgs.simulator.dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag" title="Permalink to this definition"></a></dt>
 <dd><dl class="simple">
 <dt>This function calculates the distance from origin <span class="math notranslate nohighlight">\([0,0,...,0]_{1 \times d}\)</span> to the intersection point between the normalized ellipsoid and the main diagonal <span class="math notranslate nohighlight">\([1,1,...,1]_{1 \times d}\)</span>, given:</dt><dd><ul class="simple">
 <li><p>the covariance matrix <span class="math notranslate nohighlight">\(\Sigma_{d \times d}\)</span> of the ellipsoid</p></li>
@@ -664,7 +664,7 @@ The line that joins the two centroids <span class="math notranslate nohighlight"
 <dd class="field-even"><p>list</p>
 </dd>
 <dt class="field-odd">returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>distance from origin <span class="math notranslate nohighlight">\([0,...,0]_{1     imes d}\)</span> to the intersection point between the normalized ellipsoid and the main diagonal <span class="math notranslate nohighlight">\([1,...,1]_{1   imes d}\)</span>.</p>
+<dd class="field-odd"><p>distance from origin <span class="math notranslate nohighlight">\([0,...,0]_{1 \times d}\)</span> to the intersection point between the normalized ellipsoid and the main diagonal <span class="math notranslate nohighlight">\([1,...,1]_{1 \times d}\)</span>.</p>
 </dd>
 <dt class="field-even">rtype<span class="colon">:</span></dt>
 <dd class="field-even"><p>float</p>
@@ -841,7 +841,7 @@ The line that joins the two centroids <span class="math notranslate nohighlight"
 <dd><dl class="simple">
 <dt>Using probability theory, calculates the theoretical loss for given:</dt><dd><ul class="simple">
 <li><p>sklearn SVM trained model containing the best linear classifier <span class="math notranslate nohighlight">\(h\)</span> in the hypothesis space <span class="math notranslate nohighlight">\(H\)</span> for the given training dataset <span class="math notranslate nohighlight">\(D\)</span> with <span class="math notranslate nohighlight">\(d\)</span> features and <span class="math notranslate nohighlight">\(n\)</span> samples</p></li>
-<li><p>covariance matrix of the gaussian samples used to train the SVM model</p></li>
+<li><p>covariance matrix <span class="math notranslate nohighlight">\(\Sigma\)</span> of the dataset <span class="math notranslate nohighlight">\(D\)</span></p></li>
 </ul>
 </dd>
 <dt>Linear Classifier?</dt><dd><ul class="simple">
@@ -858,7 +858,7 @@ The line that joins the two centroids <span class="math notranslate nohighlight"
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>h_clf</strong> (<em>sklearn.svm._classes.SVC</em>) – SVM trained classifier</p></li>
+<li><p><strong>h_clf</strong> (<em>sklearn.svm._classes.SVC</em>) – SVM trained classifier  containing the best empirical classifier <span class="math notranslate nohighlight">\(\hat{h}^{(D)}\)</span> in the dictionary <span class="math notranslate nohighlight">\(H\)</span> for the dataset <span class="math notranslate nohighlight">\(D\)</span> with <span class="math notranslate nohighlight">\(d\)</span> features and <span class="math notranslate nohighlight">\(n\)</span> samples</p></li>
 <li><p><strong>cov</strong> (<em>list</em><em>[</em><em>list</em><em>] or </em><em>np.ndarray</em>) – covariance matrix <span class="math notranslate nohighlight">\(\Sigma_{d \times d}\)</span> of the gaussian samples used to train the SVM model</p></li>
 </ul>
 </dd>
@@ -950,7 +950,7 @@ The line that joins the two centroids <span class="math notranslate nohighlight"
 <dl class="py attribute">
 <dt class="sig sig-object py" id="slacgs.report.Report.d">
 <span class="sig-name descname"><span class="pre">d</span></span><a class="headerlink" href="#slacgs.report.Report.d" title="Permalink to this definition"></a></dt>
-<dd><p>Dictionary size for each dimension</p>
+<dd><p>distance from origin to the intersection point between the normalized ellipsoid and the main diagonal for each dimension</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
