@@ -335,8 +335,8 @@ class GspreadClient:
 
     """
 
-		if not isinstance(report, Report):
-			raise TypeError('report must be a Report object')
+		# if not isinstance(report, Report):
+		# 	raise TypeError('report must be a Report object')
 
 		if dims is None:
 			dims = report.sim.model.N[-2:]
