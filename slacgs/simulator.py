@@ -268,10 +268,11 @@ def loss_bayes_analytical(cov):
     return 0
 
 
-def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal(cov):
+def distance_from_origin_to_intersect_between_norm_ellipsoid_and_main_diagonal(cov):
   """
   This function calculates the distance from origin :math:`[0,0,...,0]_{1 \\times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]_{1 \\times d}`, given:
-    - the covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
+    - the covariance matrix :math:`\Sigma_{d \\times d}` of the ell
+    ipsoid
 
   A Model to Understand the Behavior of Bayes' Risk in Two Dimensions
   --------------------------------------------------------------------
@@ -765,7 +766,7 @@ class Simulator:
 
     # Compute min(L(h)) and d for each dimension
     self.report.loss_bayes = {d : loss_bayes_analytical(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
-    self.report.d = {d : distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_diagonal(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
+    self.report.d = {d : distance_from_origin_to_intersect_between_norm_ellipsoid_and_main_diagonal(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
 
     # Save data points plot as PNG
     fig = self.model.data_points_plot
