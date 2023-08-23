@@ -389,7 +389,7 @@
 </dd>
 <dt>After simulation for each cardinality n in N is finished, some tests are performed to check if simulation should be continued for one more cardinality <span class="math notranslate nohighlight">\(n = max(N)*2\)</span>:</dt><dd><ul class="simple">
 <li><p>test if intersection point between <span class="math notranslate nohighlight">\(L_d(n)\)</span> and <span class="math notranslate nohighlight">\(L_{d-1}(n)\)</span> has been found and continue simulation if not</p></li>
-<li><p>test if Loss Functions are not yet converged and continue simulation if not, <span class="math notranslate nohighlight">\(\forall d \in \mathbf{d},\ L_{d}(n) - L_{d-1}(n) &gt; 10^{-3}\)</span></p></li>
+<li><p>test if Loss Functions are not yet converged and continue simulation if not, <span class="math notranslate nohighlight">\(\forall d \in \mathbf{d},\ L_{d}(n) - L_{d}(n-1) &lt; 10^{-3}\)</span></p></li>
 </ul>
 </dd>
 </dl>
@@ -626,17 +626,51 @@
 </ul>
 </dd>
 </dl>
+<section id="a-model-to-understand-the-behavior-of-bayes-risk-in-two-dimensions">
+<h3>A Model to Understand the Behavior of Bayes’ Risk in Two Dimensions<a class="headerlink" href="#a-model-to-understand-the-behavior-of-bayes-risk-in-two-dimensions" title="Permalink to this heading"></a></h3>
+<p>Suppose that only <span class="math notranslate nohighlight">\(X1\)</span> and <span class="math notranslate nohighlight">\(X2\)</span> are present. Let’s consider an ellipse in <span class="math notranslate nohighlight">\(\mathbb{R}^2\)</span> (say, centered at the origin <span class="math notranslate nohighlight">\((0,0)\)</span>) whose equation is</p>
+<div class="math notranslate nohighlight">
+\[x^T \Sigma^{-1} x = 1.\]</div>
+<p>For each class, we have an ellipse, and for each ellipse, we have a centroid.
+The line that joins the two centroids <span class="math notranslate nohighlight">\((1,1)\)</span> and <span class="math notranslate nohighlight">\((-1,-1)\)</span> is the set of all vectors in <span class="math notranslate nohighlight">\(\mathbb{R}^2\)</span> of the type</p>
+<div class="math notranslate nohighlight">
+\[(c,c),\]</div>
+<p>whose two coordinates are equal. This line cuts the mentioned ellipse at some point that has two equal and positive coordinates,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}(c_2,c_2) \cdot \Sigma^{-1} \left(\begin{array}{c} c_2 \\ c_2 \end{array}\right) = 1.\end{split}\]</div>
+<p>Let <span class="math notranslate nohighlight">\(d_2\)</span> be the distance from this point to the origin,</p>
+<div class="math notranslate nohighlight">
+\[d_2 = \sqrt{2} c_2.\]</div>
+<p>The greater this distance, the lower the discriminative power of the classifier, with <span class="math notranslate nohighlight">\(X_1\)</span> and <span class="math notranslate nohighlight">\(X_2\)</span> present.</p>
+<p>For the general case, we have</p>
+<div class="math notranslate nohighlight">
+\[d_{dim} = \sqrt{dim} c_{dim}.,\ dim = 1,2,3,...\]</div>
+</section>
+<section id="comparing-scenarios-with-two-and-three-attributes">
+<h3>Comparing Scenarios with Two and Three Attributes<a class="headerlink" href="#comparing-scenarios-with-two-and-three-attributes" title="Permalink to this heading"></a></h3>
+<p>How to use <span class="math notranslate nohighlight">\(d_3\)</span> and <span class="math notranslate nohighlight">\(d_2\)</span> to create, from the matrix <span class="math notranslate nohighlight">\(\Sigma\)</span>, an indicator of the additional discrimination potential of <span class="math notranslate nohighlight">\(X_3\)</span> given that <span class="math notranslate nohighlight">\(X_1\)</span> and <span class="math notranslate nohighlight">\(X_2\)</span> are already present? The indicator we are proposing is <span class="math notranslate nohighlight">\(d_2/d_3\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[U_3(\mathbf{\mu}_1, \mathbf{\mu}_2, \mathbf{\Sigma}) = \frac{d_2}{d_3} = \sqrt{\frac{2}{3}} \frac{c_2}{c_3},\]</div>
+<p>where <span class="math notranslate nohighlight">\(U_3\)</span> is a utility metric of attribute 3.</p>
+<p>Let <span class="math notranslate nohighlight">\(R_2\)</span> be the Bayes risk with 2 attributes, and <span class="math notranslate nohighlight">\(R_3\)</span> the corresponding risk with 3 attributes. Empirically, we verify that the ratio between the risks is an increasing and smooth function of the above utility function, that is,</p>
+<div class="math notranslate nohighlight">
+\[\frac{R_2}{R_3} = \varphi(U_3),\]</div>
+<p>where the function <span class="math notranslate nohighlight">\(\varphi(\cdot)\)</span> is an increasing and smooth function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cov</strong> (<em>list</em>) – covariance matrix <span class="math notranslate nohighlight">\(\Sigma_{d \times d}\)</span> of the ellipsoid</p>
+<dt class="field-odd">param cov<span class="colon">:</span></dt>
+<dd class="field-odd"><p>covariance matrix <span class="math notranslate nohighlight">\(\Sigma_{d \times d}\)</span> of the ellipsoid</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>distance from origin <span class="math notranslate nohighlight">\([0,0,...,0]_1 \` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]\)</span>.</p>
+<dt class="field-even">type cov<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>distance from origin <span class="math notranslate nohighlight">\([0,...,0]_{1     imes d}\)</span> to the intersection point between the normalized ellipsoid and the main diagonal <span class="math notranslate nohighlight">\([1,...,1]_{1   imes d}\)</span>.</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 <dl class="py function">
