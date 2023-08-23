@@ -319,13 +319,13 @@ def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_d
   .. math::
      \\frac{R_2}{R_3} = \\varphi(U_3),
 
-  where the function :math:`\\varphi(\\cdot)` is an increasing and smooth function, to be experimentally obtained in the next sections.
+  where the function :math:`\\varphi(\\cdot)` is an increasing and smooth function.
 
   Parameters:
     cov (list): covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
   Returns:
-    float: distance from origin :math:`[0,0,...,0]_1 \` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]`.
+    float: distance from origin :math:`[0,...,0]_{1 \times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,...,1]_{1 \times d}`.
 
   """
 
