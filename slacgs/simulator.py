@@ -304,6 +304,23 @@ def distance_from_origin_to_intersection_between_normalized_ellipsoid_and_main_d
   .. math::
       d_{dim} = \\sqrt{dim} c_{dim}.,\ dim = 1,2,3,...
 
+  Comparing Scenarios with Two and Three Attributes
+  -------------------------------------------------
+
+  How to use :math:`d_3` and :math:`d_2` to create, from the matrix :math:`\\Sigma`, an indicator of the additional discrimination potential of :math:`X_3` given that :math:`X_1` and :math:`X_2` are already present? The indicator we are proposing is :math:`d_2/d_3`,
+
+  .. math::
+     U_3(\mathbf{\\mu}_1, \\mathbf{\\mu}_2, \\mathbf{\\Sigma}) = \\frac{d_2}{d_3} = \\sqrt{\\frac{2}{3}} \\frac{c_2}{c_3},
+
+  where :math:`U_3` is a utility metric of attribute 3.
+
+  Let :math:`R_2` be the Bayes risk with 2 attributes, and :math:`R_3` the corresponding risk with 3 attributes. Empirically, we verify that the ratio between the risks is an increasing and smooth function of the above utility function, that is,
+
+  .. math::
+     \\frac{R_2}{R_3} = \\varphi(U_3),
+
+  where the function :math:`\\varphi(\\cdot)` is an increasing and smooth function, to be experimentally obtained in the next sections.
+
   Parameters:
     cov (list): covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
