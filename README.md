@@ -77,7 +77,7 @@ from slacgs.demo import print_experiment_scenarios
 print_experiment_scenarios()
 ```
 
-## 4. Demo Functions
+## 4 Demo Functions
 
 ```python
 from slacgs.demo import *
@@ -143,7 +143,7 @@ run_experiment()
 
 ```
 
-### 4.2 Demo Test Functions (simulations running at 1% of its default number of iterations)
+### 4.1 Demo Test Functions (simulations running at 1% of its default number of iterations)
 
 ```python
 from slacgs.demo import *
@@ -171,7 +171,6 @@ add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
 ### scenario 4
 scenario_number = 4
 params = [1, 1, 2, -0.1, 0.15, 0.15]
-add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
 add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
   
 ## 3. Run a Custom Scenario ##

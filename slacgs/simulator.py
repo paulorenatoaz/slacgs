@@ -158,7 +158,7 @@ def loss_theoretical(h_clf, cov):
   """
   Using probability theory, calculates the theoretical loss for given:
     - sklearn SVM trained model containing the best linear classifier :math:`h` in the hypothesis space :math:`H` for the given training dataset :math:`D` with :math:`d` features and :math:`n` samples
-    - covariance matrix of the gaussian samples used to train the SVM model
+    - covariance matrix :math:`\Sigma` of the dataset :math:`D`
 
   Linear Classifier?
     - ":math:`h(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b`" is a linear classifier.
@@ -169,7 +169,7 @@ def loss_theoretical(h_clf, cov):
     - :math:`L(\hat{h}^{(D)}) =` the theoretical error rate of the classifier :math:`\hat{h}^{(D)}`
 
   Parameters:
-    h_clf(sklearn.svm._classes.SVC): SVM trained classifier
+    h_clf(sklearn.svm._classes.SVC): SVM trained classifier  containing the best empirical classifier :math:`\hat{h}^{(D)}` in the dictionary :math:`H` for the dataset :math:`D` with :math:`d` features and :math:`n` samples
     cov(list[list] or np.ndarray): covariance matrix :math:`\Sigma_{d \\times d}` of the gaussian samples used to train the SVM model
 
   Returns:
@@ -271,8 +271,7 @@ def loss_bayes_analytical(cov):
 def dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag(cov):
   """
   This function calculates the distance from origin :math:`[0,0,...,0]_{1 \\times d}` to the intersection point between the normalized ellipsoid and the main diagonal :math:`[1,1,...,1]_{1 \\times d}`, given:
-    - the covariance matrix :math:`\Sigma_{d \\times d}` of the ell
-    ipsoid
+    - the covariance matrix :math:`\Sigma_{d \\times d}` of the ellipsoid
 
   A Model to Understand the Behavior of Bayes' Risk in Two Dimensions
   --------------------------------------------------------------------

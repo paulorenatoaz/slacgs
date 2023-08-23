@@ -35,7 +35,7 @@ class Report:
       max_iter_N (list): Maximum number of iterations for each dimension
       loss_N (dict): Loss for each dimension and loss type
       loss_bayes (dict): Bayes loss for each dimension
-      d (dict): Dictionary size for each dimension
+      d (dict): distance from origin to the intersection point between the normalized ellipsoid and the main diagonal for each dimension
       duration (float): Duration of the simulation
       time_spent (dict): Time spent for each dimension and loss type
       sim_tag (dict): Simulator object attributes
@@ -47,9 +47,6 @@ class Report:
 
 
     """
-
-    if not isinstance(sim, Simulator):
-      raise TypeError("sim must be a Simulator object")
 
     self.sim = sim
     self.iter_N = {dim: {loss_type: [] for loss_type in sim.loss_types} for dim in sim.dims}
