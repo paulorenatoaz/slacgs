@@ -81,11 +81,11 @@ report_service_conf: dict
 
 report_service_conf = {
   'images_path': '/content/slacgs/images/' if is_colab_notebook()
-  else get_user_folder_path() +'\\slags\\images\\' if os.name == 'nt'
+  else get_user_folder_path() +'\\slacgs\\images\\' if os.name == 'nt'
   else get_user_folder_path() + '/slags/images/',
   'reports_path': '/content/slacgs/reports/' if is_colab_notebook()
-  else get_user_folder_path() + '\\slags\\reports\\' if os.name == 'nt'
-  else get_user_folder_path() + '/slags/reports/',
+  else get_user_folder_path() + '\\slacgs\\reports\\' if os.name == 'nt'
+  else get_user_folder_path() + '/slacgs/reports/',
   'user_email': None,
   'drive_service': None,
   'spreadsheet_service': None,

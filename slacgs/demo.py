@@ -90,7 +90,7 @@ def start_google_drive_service(password=None, user_email=None):
 		else:
 			folder_id = GDC.get_folder_id_by_name('slacgs.demo.' + GDC.gdrive_account_email)
 
-	GDC.share_folder_with_gdrive_account(folder_id)
+	# GDC.share_folder_with_gdrive_account(folder_id)
 
 
 def run_experiment_simulation(start_scenario=1, verbose=True):
@@ -160,6 +160,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 
 	start_google_drive_service()
 
+
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
 
@@ -174,7 +175,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
 		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-		gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+		gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 		PARAM = SCENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_scenario - 1, len(SCENARIOS)):
@@ -186,13 +187,13 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
-			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
 			for j in range(len(SCENARIOS[i])):
 				params = SCENARIOS[i][j]
-				if gsc.param_not_in_home(params):
+				if gsc.param_not_in_scenario(params):
 					PARAM = params
 					break
 
@@ -214,8 +215,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	# slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -317,10 +317,10 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 			raise ValueError(
 				"for scenario 4, params[4] must be between -0.6 and 0.6 and params[4] must be equal to params[5]")
 
-	## update scenario gif
-	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
+
 
 	start_google_drive_service()
+
 
 	## define folder name for storing reports
 	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
@@ -340,7 +340,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## create model object
 	model = Model(params)
@@ -352,8 +352,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -461,7 +460,6 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 	for model in models:
 		simulators.append(Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose))
 
-	save_scenario_figures_as_gif(scenario_list, scenario_number, verbose=verbose)
 
 	if dims_to_compare and not all(dim in dims_to_simulate for dim in dims_to_compare):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
@@ -487,17 +485,16 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	for slacgs in simulators:
 		if dims_to_compare == (2, 3) or dims_to_compare == [2, 3]:
-			if gsc.param_not_in_home(slacgs.model.params):
+			if gsc.param_not_in_scenario(slacgs.model.params):
 				## run simulation
 				slacgs.run()
 
 				## upload png images to drive
-				slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-				slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+				slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 				## write results to spreadsheet
 				slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -509,8 +506,7 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 			slacgs.run()
 
 			## upload png images to drive
-			slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-			slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+			slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
 			slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -584,8 +580,6 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 	if dims_to_compare and len(dims_to_compare) != 2:
 		raise ValueError("dims_to_compare length must be 2")
 
-	## update scenario gif
-	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
 
 	start_google_drive_service()
 
@@ -613,14 +607,13 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -750,14 +743,13 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
@@ -830,9 +822,6 @@ def run_experiment(start_scenario=1, verbose=True):
 	if start_scenario < 1 or start_scenario > 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
-	for index in range(len(SCENARIOS)):
-		save_scenario_figures_as_gif(SCENARIOS[index], index + 1, verbose=verbose)
-
 	while run_experiment_simulation(start_scenario):
 		continue
 
@@ -882,12 +871,12 @@ def doctest_next_parameter():
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id)
 
-			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
 			for params in SCENARIOS[i]:
-				if gsc.param_not_in_home(params):
+				if gsc.param_not_in_scenario(params):
 					PARAM = params
 					break
 
@@ -979,7 +968,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
 		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-		gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+		gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 		PARAM = SCENARIOS[0][0]
 	else:  # if spreadsheet already exists, then find the first parameter that is not in the spreadsheet report home
 		for i in range(start_scenario - 1, len(SCENARIOS)):
@@ -991,13 +980,13 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 				folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
 				GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
-			gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+			gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 			## retrieve the first parameter that is not in the spreadsheet report home
 			PARAM = None
 			for j in range(len(SCENARIOS[i])):
 				params = SCENARIOS[i][j]
-				if gsc.param_not_in_home(params):
+				if gsc.param_not_in_scenario(params):
 					PARAM = params
 					break
 
@@ -1020,8 +1009,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	# slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1123,9 +1111,6 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 			raise ValueError(
 				"for scenario 4, params[4] must be between -0.6 and 0.6 and params[4] must be equal to params[5]")
 
-	## update scenario gif
-	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
-
 	start_google_drive_service()
 
 	## define folder name for storing reports
@@ -1146,7 +1131,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## create model object
 	model = Model(params)
@@ -1159,8 +1144,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1271,7 +1255,6 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 			          min_steps=5, precision=1e-4,
 			          augmentation_until_n=1024, verbose=verbose))
 
-	save_scenario_figures_as_gif(scenario_list, scenario_number, verbose=verbose)
 
 	if dims_to_compare and not all(dim in dims_to_simulate for dim in dims_to_compare):
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
@@ -1297,17 +1280,16 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	for slacgs in simulators:
 		if dims_to_compare == (2, 3) or dims_to_compare == [2, 3]:
-			if gsc.param_not_in_home(slacgs.model.params):
+			if gsc.param_not_in_scenario(slacgs.model.params):
 				## run simulation
 				slacgs.run()
 
 				## upload png images to drive
-				slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-				slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+				slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 				## write results to spreadsheet
 				slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1319,8 +1301,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 			slacgs.run()
 
 			## upload png images to drive
-			slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-			slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+			slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
 			slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1393,9 +1374,6 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	if dims_to_compare and len(dims_to_compare) != 2:
 		raise ValueError("dims_to_compare length must be 2")
 
-	## update scenario gif
-	save_scenario_figures_as_gif([params], scenario_number, verbose=verbose)
-
 	start_google_drive_service()
 
 	## create Model object to test parameter set before continuing
@@ -1424,14 +1402,13 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1536,7 +1513,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
 	## initialize gdrive client if it hasn't been initialized yet
-	start_google_drive_service()
+	# start_google_drive_service()
 
 	## create model object
 	model = Model(params)
@@ -1546,32 +1523,31 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	                   min_steps=5, precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
-	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
-
-	## create folder if it doesn't exist
-	if not GDC.folder_exists(REPORT_FOLDER_NAME):
-		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
-		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
-
-	## define spreadsheet title
-	SPREADSHEET_TITLE = 'custom_simulations.test'
-
-	## create spreadsheet if it doesn't exist
-	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
-		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
-		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
-		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-
-	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	# ## define folder name for storing reports
+	# REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
+	#
+	# ## create folder if it doesn't exist
+	# if not GDC.folder_exists(REPORT_FOLDER_NAME):
+	# 	folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
+	# 	GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
+	#
+	# ## define spreadsheet title
+	# SPREADSHEET_TITLE = 'custom_simulations.test'
+	#
+	# ## create spreadsheet if it doesn't exist
+	# if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
+	# 	spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
+	# 	folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
+	# 	GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
+	#
+	# ## create gspread client object
+	# gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
 
 	## upload png images to drive
-	slacgs.report.upload_loss_plot_to_drive(GDC, verbose=verbose)
-	slacgs.model.upload_data_points_plot_to_google_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
@@ -1644,76 +1620,12 @@ def run_experiment_test(start_scenario=1, verbose=True):
 	if start_scenario < 1 or start_scenario > 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
-	for index in range(len(SCENARIOS)):
-		save_scenario_figures_as_gif(SCENARIOS[index], index + 1, verbose=verbose)
-
 	while run_experiment_simulation_test(start_scenario):
 		continue
 
 	if verbose:
 		print("All parameters have been simulated. Please check your google drive section: 'Shared with me' for results.")
 	return 0
-
-
-def save_scenario_figures_as_gif(scenario, scenario_number, export_path=None, duration=200, loop=0, verbose=True):
-	"""
-	Save a list of matplotlib Figure objects as an animated GIF.
-
-	- images with data visualization will be exported to a local folder inside user's local folder (<user>/slacgs/images/ or /content/slacgs/images (for G-colab) )
-
-	Images Exported (<user>/slacgs/images/ or /content/slacgs/images [for G-colab] ):
-		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
-
-
-	Parameters:
-		scenario (list[tuple[float|int]]): A list of parameter sets to simulate.
-		scenario_number (int): The scenario number.
-		export_path (str): The file path where the animated GIF will be saved.
-		duration (int, optional): The duration (in milliseconds) between frames. Default is 200ms.
-		loop (int, optional): The number of loops for the animation. Use 0 for infinite looping (default).
-
-	Returns:
-			None
-	"""
-	# Ensure the export path has the ".gif" extension
-	if export_path is None:
-		export_path = get_grandparent_folder_path()
-		export_path += '\\images\\' if os.name == 'nt' else '/images/'
-		export_path += 'scenario' + str(scenario_number) + '.gif'
-	elif not export_path.endswith(".gif"):
-		export_path += ".gif"
-
-	# Get the list of figure objects
-	param_figures_list = [(model.params, model.data_points_plot) for model in [Model(params) for params in scenario]]
-
-	# Create a temporary directory to store the individual frame images
-	scenario_figs_dir = get_grandparent_folder_path()
-	scenario_figs_dir += '\\images\\' if os.name == 'nt' else '/images/'
-	scenario_figs_dir += 'scenario' + str(scenario_number) + '_figures'
-	try:
-		os.makedirs(scenario_figs_dir)
-	except OSError:
-		pass
-
-	try:
-		# Save each figure as an individual frame image
-		for i in range(len(param_figures_list)):
-			params = param_figures_list[i][0]
-			fig = param_figures_list[i][1]
-			frame_path = os.path.join(scenario_figs_dir, str(params) + '.png')
-			if not os.path.exists(frame_path):
-				fig.savefig(frame_path, format="png", dpi=300)
-			plt.close(fig)
-
-		# Create the animated GIF from the frame images
-		frames = [Image.open(os.path.join(scenario_figs_dir, f)) for f in os.listdir(scenario_figs_dir) if
-		          f.endswith(".png")]
-		frames[0].save(export_path, format="GIF", append_images=frames[1:], save_all=True, duration=duration, loop=loop)
-
-		if verbose:
-			print(f"Animated GIF saved as: {export_path}")
-	except Exception as e:
-		print(f"Failed to save the animated GIF: {e}")
 
 
 def print_experiment_scenarios():

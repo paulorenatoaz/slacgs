@@ -3,9 +3,10 @@ import googleapiclient
 import numpy as np
 import pygsheets
 import math
-
 from pygsheets.client import Client
 from typing import TYPE_CHECKING
+
+from .utils import report_service_conf
 
 if TYPE_CHECKING:
 	from .report import Report
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 class GspreadClient:
 	"""GspreadClient performs operations using gspread, a Python API for Google Sheets. It is used to write simulation results to a spreadsheet."""
 
-	def __init__(self, pygsheets_service, spreadsheet_title, verbose=True):
+	def __init__(self, spreadsheet_title, pygsheets_service=None, verbose=True):
 		"""Constructor for GspreadClient class.
 
 		Parameters:
@@ -32,6 +33,8 @@ class GspreadClient:
 		    if spredsheet_title is empty
 
 		"""
+		if pygsheets_service is None:
+			pygsheets_service = report_service_conf['pygsheets_service']
 
 		if not isinstance(pygsheets_service, pygsheets.client.Client):
 			raise TypeError('pygsheets_service must be a pygsheets.client.Client object')
@@ -117,11 +120,11 @@ class GspreadClient:
 		sh = self.sh
 
 		try:
-			ws_home = sh.worksheet_by_title('home')
+			ws_scenario = sh.worksheet_by_title('scenario')
 		except pygsheets.exceptions.WorksheetNotFound:
 			matrix_N.append([None])
 		else:
-			matrix_N.append(['=HYPERLINK( "' + ws_home.url + '"; "🏠Home" )'])
+			matrix_N.append(['=HYPERLINK( "' + ws_scenario.url + '"; "🏠Home" )'])
 
 		matrix_N.append([None])
 		matrix_N.append(['N'])
@@ -387,13 +390,13 @@ class GspreadClient:
 		matrix_N, matrix_N_log2, matrix_loss_N, matrix_iter_N, bayes_loss_matrix, d_matrix, intersection_points_matrix, model_tag_matrix, sim_tag_matrix = [], [], [], [], [], [], [], [], []
 		colum_pointer = 0
 
-		## link to home
+		## link to scenario
 		try:
-			ws_home = sh.worksheet_by_title('home')
+			ws_scenario = sh.worksheet_by_title('scenario')
 		except pygsheets.exceptions.WorksheetNotFound:
 			matrix_N.append([None])
 		else:
-			matrix_N.append(['=HYPERLINK( "' + ws_home.url + '"; "🏠Home" )'])
+			matrix_N.append(['=HYPERLINK( "' + ws_scenario.url + '"; "🏠Home" )'])
 
 		matrix_N.append([None])
 		matrix_N.append(['N'])
@@ -509,8 +512,8 @@ class GspreadClient:
 			print('link to Compare Report: ', ws.url)
 
 	@print_first_call_to_spreadsheet_writing_service
-	def update_home_report_on_spreadsheet(self, report, dims=None, verbose=True):
-		"""update home report of a spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
+	def update_scenario_report_on_spreadsheet(self, report, dims=None, verbose=True):
+		"""update scenario report of a spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
 
     - Reports with results will be stored in a Google Spreadsheet
     - The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
@@ -542,15 +545,15 @@ class GspreadClient:
 		chart_width = 8
 
 		sh = self.sh
-		sheet_title = 'home'
-		new_home = False
+		sheet_title = 'scenario'
+		new_scenario_ws = False
 
 		try:
 			sh.add_worksheet(sheet_title, rows=1000, cols=90)
 		except googleapiclient.errors.HttpError:
 			pass
 		else:
-			new_home = True
+			new_scenario_ws = True
 		finally:
 			ws = sh.worksheet_by_title(sheet_title)
 			ws.index = 0
@@ -644,7 +647,7 @@ class GspreadClient:
 		table, title = [], []
 		param_values_min = param_values_max = -1
 
-		if not new_home:
+		if not new_scenario_ws:
 			title = ws.get_values((1, 1), (3, ws.cols), value_render='FORMULA')
 			table = ws.get_values((4, 1), (ws.rows, ws.cols), value_render='FORMULA')
 
@@ -763,10 +766,19 @@ class GspreadClient:
 		ws.update_values((1, 1), table)
 		ws.adjust_column_width(1, ws.cols, pixel_size=None)
 
+		# if ws.get_charts():
+		# 	charts = ws.get_charts()
+		# 	charts_idx_by_title = {chart.title: i for i, chart in enumerate(charts)}
+
+		# else:
+		# 	charts = []
+
 		if ws.get_charts():
 			for chart in ws.get_charts():
 				chart.delete()
 
+		requests = []
+		charts = None
 		class ChartType(Enum):
 			SCATTER = 'SCATTER'
 			LINE = 'LINE'
@@ -776,267 +788,1559 @@ class GspreadClient:
 		param_values_title = str(param_values_min) + '<=' + str(param) + '<=' + str(param_values_max)
 
 		# log(N*) for each loss_type
-		columns = [((3, len(sigma) + len(rho) + len(indicators) + 1 + i),
-		            (4 + table_len, len(sigma) + len(rho) + len(indicators) + 1 + i)) for i in
+		series_log_N_star = [((3, len(sigma) + len(rho) + len(indicators) + 1 + i),
+		            (3 + table_len, len(sigma) + len(rho) + len(indicators) + 1 + i)) for i in
 		           range(len(loss_types_n_star))]
 
+		domain_d_ratio = ((3, len(sigma) + len(rho) + 4), (3 + table_len, len(sigma) + len(rho) + 4))
+		domain_d_diff = ((3, len(sigma) + len(rho) + 3), (3 + table_len, len(sigma) + len(rho) + 3))
+		domain_BR_ratio = ((3, len(sigma) + len(rho) + 2), (3 + table_len, len(sigma) + len(rho) + 2))
+		domain_BR_diff = ((3, len(sigma) + len(rho) + 1), (3 + table_len, len(sigma) + len(rho) + 1))
+		domain_param = ((3, cenario + 2), (3 + table_len, cenario + 2))
+		domain_d_0 = ((3, len(sigma) + len(rho) + 5), (3 + table_len, len(sigma) + len(rho) + 5))
+		domain_d_1 = ((3, len(sigma) + len(rho) + 7), (3 + table_len, len(sigma) + len(rho) + 7))
+		domain_BR_0 = ((3, len(sigma) + len(rho) + 6), (3 + table_len, len(sigma) + len(rho) + 6))
+		domain_BR_1 = ((3, len(sigma) + len(rho) + 8), (3 + table_len, len(sigma) + len(rho) + 8))
+
+		# log(N*) vs d_i/d_(i+1) Theoretitcal
+		title = 'log2(N*) vs d_' + str(dims[0]) + '/d_' + str(dims[1]) + ' | ' + 'Theoretical'
+		anchor_cell = (1 + len(table) + 1, 1)
+		domain = domain_d_ratio
+		series = [series_log_N_star[0]]
+		axis_y = 'log2(N*)'
+		axis_x = 'd_' + str(dims[0]) + '/d_' + str(dims[1])
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs d_i/d_(i+1) Empirical
+		title = 'log2(N*) vs d_' + str(dims[0]) + '/d_' + str(dims[1]) + ' | ' + 'Empirical'
+		anchor_cell = (1 + len(table) + 1, 13)
+		domain = domain_d_ratio
+		series = [series_log_N_star[1]]
+		axis_y = 'log2(N*)'
+		axis_x = 'd_' + str(dims[0]) + '/d_' + str(dims[1])
+		if not charts:
+			chart = ws.add_chart(domain, series , title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+			
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs BR_i/BR_(i+1)
+		title = 'log2(N*) vs BR_' + str(dims[0]) + '/BR_' + str(dims[1])
+		anchor_cell = (1 + len(table) + chart_height + 1, 1)
+		domain = domain_BR_ratio
+		series = series_log_N_star
+		axis_y = 'log2(N*)'
+		axis_x = 'BR_' + str(dims[0]) + '/BR_' + str(dims[1])
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# add chart position update to requests
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs BR_i - BR_(i+1)
+		title = 'log2(N*) vs BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1])
+		anchor_cell = (1 + len(table) + 1 + 2 * chart_height, 1)
+		domain = domain_BR_diff
+		series = series_log_N_star
+		axis_y = 'log2(N*)'
+		axis_x = 'BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1])
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
 		# log(N*) vs d_i/d_(i+1)
-		ws.add_chart(((3, len(sigma) + len(rho) + 4), (4 + table_len, len(sigma) + len(rho) + 4)), [columns[0]],
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(d_' + str(
-			             dims[0]) + '/' + 'd_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + 1, 1))
-		if len(columns) > 1:
-			ws.add_chart(((3, len(sigma) + len(rho) + 4), (4 + table_len, len(sigma) + len(rho) + 4)), [columns[1]],
-			             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(d_' + str(
-				             dims[0]) + '/' + 'd_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-			             anchor_cell=(1 + len(table) + 1, 13))
+		title = 'log2(N*) vs d_' + str(dims[0]) + '/' + 'd_' + str(dims[1])
+		anchor_cell = (1 + len(table) + chart_height + 1, 13)
+		domain = domain_d_ratio
+		series = series_log_N_star
+		axis_y = 'log2(N*)'
+		axis_x = 'd_' + str(dims[0]) + '/' + 'd_' + str(dims[1])
 
-		ws.add_chart(((3, len(sigma) + len(rho) + 1), (4 + table_len, len(sigma) + len(rho) + 1)), columns,
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(BR_' + str(
-			             dims[0]) + '-' + 'BR_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 1))
-		ws.add_chart(((3, len(sigma) + len(rho) + 2), (4 + table_len, len(sigma) + len(rho) + 2)), columns,
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(BR_' + str(
-			             dims[0]) + '/' + 'BR_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + chart_height + 1, 1))
-		ws.add_chart(((3, len(sigma) + len(rho) + 3), (4 + table_len, len(sigma) + len(rho) + 3)), columns,
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(d_' + str(
-			             dims[0]) + '-' + 'd_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 13))
-		ws.add_chart(((3, len(sigma) + len(rho) + 4), (4 + table_len, len(sigma) + len(rho) + 4)), columns,
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + '(d_' + str(
-			             dims[0]) + '/' + 'd_' + str(dims[1]) + ')', chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + chart_height + 1, 13))
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
 
-		# log(N*) vs param[i]
-		ws.add_chart(((3, cenario + 2), (4 + table_len, cenario + 2)), [columns[0]],
-		             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + param,
-		             chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 3 * chart_height, 1))
-		if len(columns) > 1:
-			ws.add_chart(((3, cenario + 2), (4 + table_len, cenario + 2)), [columns[1]],
-			             'log2(N*)|params=' + params_title + '|' + param_values_title + ' vs ' + param,
-			             chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 3 * chart_height, 13))
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs d_i - d_(i+1)
+		title = 'log2(N*) vs d_' + str(dims[0]) + '-' + 'd_' + str(dims[1])
+		anchor_cell = (1 + len(table) + 1 + 2 * chart_height, 13)
+		domain = domain_d_diff
+		series = series_log_N_star
+		axis_y = 'log2(N*)'
+		axis_x = 'd_' + str(dims[0]) + '-' + 'd_' + str(dims[1])
+
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs param theoretical
+		title = 'log2(N*) vs ' + param + ' | Theoretical'
+		anchor_cell = (1 + len(table) + 1 + 3 * chart_height, 1)
+		domain = domain_param
+		series = series_log_N_star[0:1]
+		axis_y = 'log2(N*)'
+		axis_x = param
+
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# log(N*) vs param empirical
+		title = 'log2(N*) vs ' + param + ' | Empirical'
+		anchor_cell = (1 + len(table) + 1 + 3 * chart_height, 13)
+		domanin = domain_param
+		series = series_log_N_star[1:]
+		axis_y = 'log2(N*)'
+		axis_x = param
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+
+		# d_i - d_i+1 vs BR_i - BR_i+1
+		title = '(d_' + str(dims[0]) + '-' + 'd_' + str(dims[1]) + ')' + ' vs ' + '(BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1]) + ')'
+		anchor_cell = (1 + len(table) + 1 + 4 * chart_height, 1)
+		domain = domain_BR_diff
+		series = [domain_d_diff]
+		axis_y = '(d_' + str(dims[0]) + '-' + 'd_' + str(dims[1]) + ')'
+		axis_x = '(BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1]) + ')'
+
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
 
 		# d_i/d_i+1 vs BR_i/BR_i+1
-		ws.add_chart(((3, len(sigma) + len(rho) + 3), (4 + table_len, len(sigma) + len(rho) + 3)),
-		             [((3, len(sigma) + len(rho) + 1), (4 + table_len, len(sigma) + len(rho) + 1))],
-		             '(BR_' + str(dims[0]) + '-' + 'BR_' + str(dims[1]) + ')' + ' vs ' + '(d_' + str(
-			             dims[0]) + '-' + 'd_' + str(dims[1]) + ')' + ' |params=' + params_title + '|' + param_values_title,
-		             chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + 4 * chart_height, 1))
-		ws.add_chart(((3, len(sigma) + len(rho) + 4), (4 + table_len, len(sigma) + len(rho) + 4)),
-		             [((3, len(sigma) + len(rho) + 2), (4 + table_len, len(sigma) + len(rho) + 2))],
-		             '(BR_' + str(dims[0]) + '/' + 'BR_' + str(dims[1]) + ')' + 'vs ' + '(d_' + str(
-			             dims[0]) + '/' + 'd_' + str(dims[1]) + ')' + ' |params=' + params_title + '|' + param_values_title,
-		             chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 4 * chart_height + 1, 13))
+		title = '(d_' + str(dims[0]) + '/' + 'd_' + str(dims[1]) + ')' + ' vs ' + '(BR_' + str(dims[0]) + '/' + 'BR_' + str(dims[1]) + ')'
+		anchor_cell = (1 + len(table) + 4 * chart_height + 1, 13)
+		domain = domain_BR_ratio
+		series = [domain_d_ratio]
+		axis_y = '(d_' + str(dims[0]) + '/' + 'd_' + str(dims[1]) + ')'
+		axis_x = '(BR_' + str(dims[0]) + '/' + 'BR_' + str(dims[1]) + ')'
+
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
 
 		# BR_i vs d_i
-		ws.add_chart(((3, len(sigma) + len(rho) + 5), (4 + table_len, len(sigma) + len(rho) + 5)),
-		             [((3, len(sigma) + len(rho) + 6), (4 + table_len, len(sigma) + len(rho) + 6))],
-		             'BR_' + str(dims[0]) + ' vs ' + 'd_' + str(
-			             dims[0]) + ' |params=' + params_title + '|' + param_values_title, chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + 1 + 5 * chart_height, 1))
+		title = 'BR_' + str(dims[0]) + ' vs ' + 'd_' + str(dims[0])
+		anchor_cell = (1 + len(table) + 1 + 5 * chart_height, 1)
+		domain = domain_d_0
+		series = [domain_BR_0]
+		axis_y = 'BR_' + str(dims[0])
+		axis_x = 'd_' + str(dims[0])
+
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
 
 		# BR_i+1 vs d_i+1
-		ws.add_chart(((3, len(sigma) + len(rho) + 7), (4 + table_len, len(sigma) + len(rho) + 7)),
-		             [((3, len(sigma) + len(rho) + 8), (4 + table_len, len(sigma) + len(rho) + 8))],
-		             'BR_' + str(dims[1]) + ' vs ' + 'd_' + str(
-			             dims[1]) + ' |params=' + params_title + '|' + param_values_title, chart_type=ChartType.SCATTER,
-		             anchor_cell=(1 + len(table) + 1 + 5 * chart_height, 13))
+		title = 'BR_' + str(dims[1]) + ' vs ' + 'd_' + str(dims[1])
+		anchor_cell = (1 + len(table) + 1 + 5 * chart_height, 13)
+		domain = domain_d_1
+		series = [domain_BR_1]
+		axis_y = 'BR_' + str(dims[1])
+		axis_x = 'd_' + str(dims[1])
 
-		# for i in range(len(loss_types)):
-		#   for j in range(N_count_reported + 1):
-		#     chart_title = 'L|n=' + str(2**(j+1)) + '|Loss=' + loss_types[i] + ' vs ' + param if j<N_count_reported else 'min(L)' + ' vs ' + param
-		#     x_data = ((3, 2 + cenario),(3 + table_len, 2 + cenario))
+		if not charts:
+			chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+			spec = chart.get_json()
 
-		#     y_column = (len(sigma) + len(rho) + len(indicators) + len(loss_types_n_star) + (N_count_reported+1) + (N_count_reported+1)*(i)*2 + j + 1)
-		#     y_data = ((3, y_column),(3 + table_len, y_column))
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
 
-		#     ws.add_chart(x_data , [y_data], chart_title , chart_type=ChartType.SCATTER, anchor_cell=(1 + len(table) + 1 + j*chart_height  , 2*chart_width + chart_width*i))
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
 
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+		# loss vs param for each loss type
+		domain_param_for_loss = ((3 + int((table_len - 1) / 2) + 2, 2 + cenario), (3 + table_len, 2 + cenario))
 		for i in range(len(loss_types)):
-			y_data = []
-			x_data = ((3 + int((table_len - 1) / 2) + 2, 2 + cenario), (3 + table_len, 2 + cenario))
+
+			title = 'Loss | ' + loss_types[i] + ' vs ' + param
+			anchor_cell = (1 + len(table) + 1, 21 + 2 * chart_width * i)
+			series = []
+			domain = domain_param_for_loss
 			for j in range(N_count_reported + 2):
 				y_column = (
-						len(sigma) + len(rho) + len(indicators) + len(loss_types_n_star) + (N_count_reported + 2) * (i) + j + 1)
-				y_data += [((3 + int((table_len - 1) / 2) + 1, y_column), (3 + table_len, y_column))]
-				y_data += [((3, y_column), (3 + int((table_len - 1) / 2), y_column))]
+							len(sigma) + len(rho) + len(indicators) + len(loss_types_n_star) + (N_count_reported + 2) * (i) + j + 1)
+				series += [((3 + int((table_len - 1) / 2) + 1, y_column), (3 + table_len, y_column))]
+				series += [((3, y_column), (3 + int((table_len - 1) / 2), y_column))]
+			axis_y = 'P(Error)'
+			axis_x = param
 
-			chart_title = 'L|type=' + loss_types[i] + '|params=' + params_title + '|' + param_values_title + ' vs ' + param
-			ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.SCATTER,
-			             anchor_cell=(1 + len(table) + 1, 21 + 2 * chart_width * i))
+			if not charts:
 
+				chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+				spec = chart.get_json()
+
+				# update axis
+				spec['basicChart'].update({
+					"axis": [
+						{
+							"position": "BOTTOM_AXIS",
+							"title": axis_x
+						},
+						{
+							"position": "LEFT_AXIS",
+							"title": axis_y
+						}
+					]
+				})
+				# update legend
+				spec['basicChart'].update({'headerCount': 1})
+				spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+				# add spec updates to requests
+				requests.append({"updateChartSpec":
+					{
+						"chartId": chart.id,
+						"spec": spec
+					}
+				})
+
+			else:
+				chart = charts[charts_idx_by_title[title]]
+
+				# update domain
+				chart.domain = domain
+
+				# update series
+				chart.ranges = series
+
+				# update chart position
+				chart.anchor_cell = anchor_cell
+
+
+
+
+		# loss vs n for each loss type
+		domain_n_for_loss = ((2, len(params) + len(indicators) + len(loss_types_n_star) + 1),
+		          (2, len(params) + len(indicators) + len(loss_types_n_star) + 1 + N_count_reported))
 		for i in range(len(loss_types)):
-			y_data = []
-			x_data = ((2, len(params) + len(indicators) + len(loss_types_n_star) + 1),
-			          (2, len(params) + len(indicators) + len(loss_types_n_star) + 1 + N_count_reported))
+
+			title = 'Loss | ' + loss_types[i] + ' vs n'
+			anchor_cell = (1 + len(table) + 1, 21 + chart_width + 2 * chart_width * i)
+			series = []
+			domain = domain_n_for_loss
 			for j in range(table_len):
-				y_data += [((3 + (j + 1),
+				series += [((3 + (j + 1),
 				             len(params) + len(indicators) + len(loss_types_n_star) + 1 + (N_count_reported + 2) * i), (
 					            3 + (j + 1), len(params) + len(indicators) + len(loss_types_n_star) + 1 + N_count_reported + (
 							            N_count_reported + 2) * i))]
-			chart_title = 'L|type=' + loss_types[i] + '|params=' + params_title + '|' + param_values_title + ' vs n'
-			ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.SCATTER,
-			             anchor_cell=(1 + len(table) + 1, 21 + chart_width + 2 * chart_width * i))
+			axis_y = 'P(Error)'
+			axis_x = 'n (samples)'
+
+			if not charts:
+
+				chart = ws.add_chart(domain, series, title, chart_type=ChartType.SCATTER, anchor_cell=anchor_cell)
+				spec = chart.get_json()
+
+				# update axis
+				spec['basicChart'].update({
+					"axis": [
+						{
+							"position": "BOTTOM_AXIS",
+							"title": axis_x
+						},
+						{
+							"position": "LEFT_AXIS",
+							"title": axis_y
+						}
+					]
+				})
+				# update legend
+				spec['basicChart'].update({'headerCount': 1})
+				spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+				# add spec updates to requests
+				requests.append({"updateChartSpec":
+					{
+						"chartId": chart.id,
+						"spec": spec
+					}
+				})
+
+			else:
+				new_series_0 = [((3 + int((table_len-1)/2), len(params) + len(indicators) + len(loss_types_n_star) + 1 + (N_count_reported + 2) * i),
+				                 (3 + (int((table_len-1)/2) + 1), len(params) + len(indicators) + len(loss_types_n_star) + 1 + N_count_reported + (N_count_reported + 2) * i))]
+				new_series_1 = [((3 + table_len,
+					             len(params) + len(indicators) + len(loss_types_n_star) + 1 + (N_count_reported + 2) * i), (
+						            3 + (table_len + 1), len(params) + len(indicators) + len(loss_types_n_star) + 1 + N_count_reported + (
+								            N_count_reported + 2) * i))]
+
+
+
+				chart = charts[charts_idx_by_title[title]]
+
+				# update domain
+				chart.domain = domain
+
+				# update series
+				chart.ranges += new_series_0 + new_series_1
+
+				# update chart position
+				chart.anchor_cell = anchor_cell
+
+
+
+
 
 		# cost charts
-		# time consumption x loss_types (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+
+		# loss estimation time consumption (h) vs param
+		domain = domain_param
 		y_column = len(params) + len(indicators) + len(loss_types_n_star) + (N_count_reported + 2) * len(loss_types) + 1
 		y_data_gen = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(2)]
 		y_column += 2
-		y_data = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
-		chart_title = 'time consumption / loss_type (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1, 21 + chart_width * 6))
+		series = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
+		chart_title = 'loss estimation time consumption'  + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = 'time consumption (h)'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+			
 
 		# time consumption x n (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += len(loss_types) + 1
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
-		chart_title = 'time consumption / n (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
+		chart_title = 'n time consumption ' + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = 'time consumption (h)'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+		
 
 		# time consumption x dim (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += N_count_reported + 1
-		y_data = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
-		chart_title = 'time consumption / dim (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 6))
+		series = y_data_gen + [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
+		chart_title = 'dim time consumption (h)' + ' vs ' + param
+		anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = 'time consumption (h)'
 
-		# % consumption x loss_type (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		
+
+		# % consumption x loss_type  vs param
+		domain = domain_param
 		y_column += len(dims_sim)
-		y_data_gen = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(2)]
 		y_column += 2
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
-		chart_title = '% consumption / loss_type (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 3 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
+		chart_title = 'loss_type % consumption' + ' vs ' + param
+		anchor_cell=(1 + len(table) + 1 + 3 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% consumption'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
 
-		# % consumption x n (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
+
+		# % consumption x n vs param
+		domain = domain_param
 		y_column += len(loss_types) + 1
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
-		chart_title = '% consumption / n (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 4 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
+		chart_title = 'n % consumption' + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1 + 4 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% consumption'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
 
 		# % consumption x dim (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += N_count_reported + 1
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
-		chart_title = '% consumption / dim (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 5 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
+		chart_title = 'dim % consumption' + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1 + 5 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% consumption'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
 
 		# % iterations per loss_type vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += len(dims_sim)
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
-		chart_title = '% iter / loss_type' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 6 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(loss_types))]
+		chart_title = 'loss_type % iter' + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1 + 6 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% iter'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
 
 		# % iterations per n vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += len(loss_types) + 1
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
-		chart_title = '% iter / n (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 7 * chart_height, 21 + chart_width * 6))
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(N_count_reported)]
+		chart_title = 'n % iter' + ' vs ' + param
+		anchor_cell = (1 + len(table) + 1 + 7 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% iter'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
 
 		# % iterations per dim (h) vs param
-		x_data = ((3, 2 + cenario), (3 + table_len, 2 + cenario))
+		domain = domain_param
 		y_column += N_count_reported + 1
-		y_data = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
+		series = [((3, y_column + i), (3 + table_len, y_column + i)) for i in range(len(dims_sim))]
 		chart_title = '% iter / dim (h)' + ' |params=' + params_title + '|' + param_values_title + ' vs ' + param
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 8 * chart_height, 21 + chart_width * 6))
+		anchor_cell = (1 + len(table) + 1 + 8 * chart_height, 21 + chart_width * 6)
+		axis_x = param
+		axis_y = '% iter'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges = series
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
 
 		# time consumption per param vs n
 		y_column = len(params) + len(indicators) + len(loss_types_n_star) + (N_count_reported + 2) * len(
 			loss_types) + 2 + len(loss_types) + 1
-		x_data = ((3, y_column), (3, y_column + N_count_reported))
-		y_data = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
-		chart_title = 'time consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs n'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 0 * chart_height, 21 + chart_width * 7))
+		domain = ((3, y_column), (3, y_column + N_count_reported))
+		series = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
+		chart_title = 'simulation time consumption vs n'
+		anchor_cell=(1 + len(table) + 1 + 0 * chart_height, 21 + chart_width * 7)
+		axis_x = 'n (samples)'
+		axis_y = 'time consumption (h)'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell		
+
+
 
 		# % consumption per param vs n
 		y_column += 1 + N_count_reported + 1 + len(dims_sim) + 2 + len(loss_types)
-		x_data = ((3, y_column), (3, y_column + N_count_reported))
-		y_data = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
-		chart_title = '% consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs n'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 7))
+		domain = ((3, y_column), (3, y_column + N_count_reported))
+		series = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
+		chart_title = 'simulation % consumption vs n'
+		anchor_cell = (1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 7)
+		axis_x = 'n (samples)'
+		axis_y = '% consumption'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
 
 		# % iterations per param vs n
 		y_column += 1 + N_count_reported + 1 + len(dims_sim) + len(loss_types)
-		x_data = ((3, y_column), (3, y_column + N_count_reported))
-		y_data = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
-		chart_title = '% iter / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs n'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 7))
+		domain = ((3, y_column), (3, y_column + N_count_reported))
+		series = [((4 + i, y_column), (4 + i, y_column + N_count_reported)) for i in range(table_len)]
+		chart_title = 'simulation % iter vs n'
+		anchor_cell = (1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 7)
+		axis_x = 'n (samples)'
+		axis_y = '% iter'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
+
 
 		# time consumption per param vs dim
 		y_column = len(params) + len(indicators) + len(loss_types_n_star) + (N_count_reported + 2) * len(
 			loss_types) + 2 + len(loss_types) + 1 + N_count_reported + 1
-		x_data = ((3, y_column), (3, y_column + len(dims_sim)))
-		y_data = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-		chart_title = 'time consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs dim'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 0 * chart_height, 21 + chart_width * 8))
+		domain = ((3, y_column), (3, y_column + len(dims_sim)))
+		series = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
+		chart_title = 'simulation time consumption vs dim'
+		anchor_cell = (1 + len(table) + 1 + 0 * chart_height, 21 + chart_width * 8)
+		axis_x = 'dim (features)'
+		axis_y = 'time consumption (h)'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
 
-		# % consumption per param vs dim
-		y_column += 1 + len(dims_sim) + 2 + len(loss_types) + 1 + N_count_reported
-		x_data = ((3, y_column), (3, y_column + len(dims_sim)))
-		y_data = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-		chart_title = '% consumption / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs dim'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 8))
-
-		# % iterations per param vs dim
-		y_column += 1 + len(dims_sim) + len(loss_types) + 1 + N_count_reported
-		x_data = ((3, y_column), (3, y_column + len(dims_sim)))
-		y_data = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
-		chart_title = '% iter / slacgs' + ' |params=' + params_title + '|' + param_values_title + ' vs dim'
-		ws.add_chart(x_data, y_data, chart_title, chart_type=ChartType.LINE,
-		             anchor_cell=(1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 8))
-
-		charts = ws.get_charts()
-		for i in range(len(charts)):
-			spec = charts[i].get_json()
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
 			spec['basicChart'].update({'headerCount': 1})
 			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
 
-			if (i == 1 or i == 7) and len(loss_types_n_star) == 2:
-				spec['basicChart']['series'][0].update(
-					{'colorStyle': {'rgbColor': {"red": 1, "green": 0, "blue": 0, "alpha": 1}}})
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
 
-			request = {
-				'updateChartSpec': {
-					'chartId': charts[i].id, "spec": spec}}
-			ws.client.sheet.batch_update(sh.id, request)
+			#update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
+
+		# % consumption per param vs dim
+		y_column += 1 + len(dims_sim) + 2 + len(loss_types) + 1 + N_count_reported
+		domain = ((3, y_column), (3, y_column + len(dims_sim)))
+		series = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
+		chart_title = 'simulation % consumption vs dim'
+		anchor_cell = (1 + len(table) + 1 + 1 * chart_height, 21 + chart_width * 8)
+		axis_x = 'dim (features)'
+		axis_y = '% consumption'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			# update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+
+
+
+		# % iterations per param vs dim
+		y_column += 1 + len(dims_sim) + len(loss_types) + 1 + N_count_reported
+		domain = ((3, y_column), (3, y_column + len(dims_sim)))
+		series = [((4 + i, y_column), (4 + i, y_column + len(dims_sim))) for i in range(table_len)]
+		chart_title = 'simulation % iter vs dim'
+		anchor_cell = (1 + len(table) + 1 + 2 * chart_height, 21 + chart_width * 8)
+		axis_x = 'dim (features)'
+		axis_y = '% iter'
+		if not charts:
+			chart = ws.add_chart(domain, series, chart_title, chart_type=ChartType.LINE, anchor_cell=anchor_cell)
+			spec = chart.get_json()
+
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": axis_x
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": axis_y
+					}
+				]
+			})
+			# update legend
+			spec['basicChart'].update({'headerCount': 1})
+			spec['basicChart'].update({'legendPosition': 'TOP_LEGEND'})
+
+			# add spec updates to requests
+			requests.append({"updateChartSpec":
+				{
+					"chartId": chart.id,
+					"spec": spec
+				}
+			})
+		else:
+			chart = charts[charts_idx_by_title[title]]
+
+			#update domain
+			chart.domain = domain
+
+			# update series
+			chart.ranges += series[-1:]
+
+			# update chart position
+			chart.anchor_cell = anchor_cell
+
+		if requests:
+			ws.client.sheet.batch_update(sh.id, requests)
 
 		if verbose:
 			print('sheet is over! id: ', ws.index, ' title:', ws.title)
-			print('link to home: ', ws.url)
+			print('link to scenario: ', ws.url)
 
-	def param_not_in_home(self, params):
-		""" check if params is already in home sheet
+	def param_not_in_scenario(self, params):
+		""" check if params is already in scenario sheet
 
     Parameters:
       params (list[float] or tuple[float]): list of parameters containing Sigmas and Rhos
 
     Returns:
-      bool: True if params is not in home sheet, False otherwise
+      bool: True if params is not in scenario sheet, False otherwise
 
     """
 		sh = self.sh
-		ws_home = sh.worksheet(value=0)
-		already_done = ws_home.get_values((4, 1), (ws_home.rows, 6), value_render='FORMULA')
+		ws_scenario = sh.worksheet(value=0)
+		already_done = ws_scenario.get_values((4, 1), (ws_scenario.rows, 6), value_render='FORMULA')
 
 		return not (params in already_done)
+
+	def export_csv_from_scenario_tables(self, path):
+		""" export csv files from scenario sheet tables
+
+		Parameters:
+			path (str): path to export csv files
+
+		"""
+		sh = self.sh
+		ws_scenario = sh.worksheet(value=0)
+
+
+

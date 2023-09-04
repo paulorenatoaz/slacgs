@@ -1,16 +1,18 @@
+import io
 import os
 import itertools
 import googleapiclient
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+import plotly.io as pio
 
+from plotly.subplots import make_subplots
+from IPython.core.display_functions import display
 from IPython.display import clear_output
+from PIL import Image
 from shapely.geometry import LineString
 from tabulate import tabulate
-
-from matplotlib.backends.backend_pdf import PdfPages
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
 from .enumtypes import LossType
 from .utils import cls, report_service_conf
@@ -48,6 +50,7 @@ class Report:
 
     """
 
+
     self.sim = sim
     self.iter_N = {dim: {loss_type: [] for loss_type in sim.loss_types} for dim in sim.dims}
     self.max_iter_N = []
@@ -61,7 +64,26 @@ class Report:
     self.time_spent.update({'total':0.0})
     self.sim_tag = dict(itertools.islice(self.sim.__dict__.items(), 7))
     self.model_tag = dict(itertools.islice(self.sim.model.__dict__.items(), 6))
-    self.loss_plot = None
+    self.report_images = []
+    self.loss_plots_figures = []
+    self.export_path_animated_gif = None
+
+
+    #set images export path
+    export_path = report_service_conf['images_path']
+    if os.name == 'nt':
+      export_path += 'report' + str(self.sim.model.params)
+      export_path += '[test]\\' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else '\\'
+    elif os.name == 'posix':
+      export_path += 'report' + str(self.sim.model.params)
+      export_path += '[test]/' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else '/'
+
+    self.export_path_images = export_path
+
+    # create directory if not exists
+    if not os.path.exists(export_path):
+      os.makedirs(export_path)
+
 
   def compile_delta_L_(self):
     """return :math:`∆L` estimations
@@ -223,12 +245,12 @@ class Report:
 
     time_spent_gen = [self.duration, self.time_spent['total']]
     time_spent_loss_type = [self.time_spent[loss_type] for loss_type in loss_types]
-    time_spent_n = self.time_spent['n']
+    time_spent_n = self.time_spent['n'][:10] # limit to 10 cardinalities
     time_spent_dim = [self.time_spent[dim] for dim in dims]
 
     time_ratio_gen = [ 1 ,self.time_spent['total']/self.duration]
     time_ratio_loss_type = [self.time_spent[loss_type]/self.duration for loss_type in loss_types]
-    time_ratio_n = [self.time_spent['n'][i]/self.duration for i in range(len(self.time_spent['n']))]
+    time_ratio_n = [self.time_spent['n'][:10][i]/self.duration for i in range(len(self.time_spent['n'][:10]))] # limit to 10 cardinalities
     time_ratio_dim = [self.time_spent[dim]/self.duration for dim in dims]
 
     iter_ratio_per_loss_type_aux = [self.iter_N[d][loss_type][i]/self.max_iter_N[i] for loss_type in loss_types for d in dims for i in range(10)]
@@ -259,7 +281,7 @@ class Report:
     Returns:
         None
     """
-    if self.loss_plot is not None:
+    if self.report_images is not None:
       if export_path is None:
         export_path = report_service_conf['images_path']
         export_path += 'loss' + str(self.sim.model.params)
@@ -273,7 +295,8 @@ class Report:
 
       if not os.path.exists(export_path):
         try:
-          self.loss_plot.savefig(export_path, format="png", dpi=300)
+          Image().save()
+          self.report_images[-1].save(export_path)
           if verbose:
             print(f"Figure saved as: {export_path}")
         except Exception as e:
@@ -286,8 +309,9 @@ class Report:
         print("No figure to save.")
 
 
-  def upload_loss_plot_to_drive(self, gdc, verbose=True):
+  def upload_report_images_to_drive(self, gdc, verbose=True):
     """
+
     Upload a matplotlib Figure object as a PNG image to Google Drive.
 
     Parameters:
@@ -296,29 +320,26 @@ class Report:
     Returns:
         None
     """
-    if self.loss_plot is not None:
-      export_path = report_service_conf['images_path']
-      export_path += 'loss' + str(self.sim.model.params)
-      export_path += '[test]' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else ''
-      export_path += '.png'
+    if self.report_images is not None:
 
-      if not os.path.exists(export_path):
-        self.save_loss_plot_as_png(export_path=export_path, verbose=verbose)
+      #creates image folder if it does not exist
+      drive_images_folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('slacgs.demo.' + gdc.gdrive_account_email), verbose=verbose)
 
-      gdrive_images_folder_path = 'slacgs.demo.' + gdc.gdrive_account_email + '/images'
+      #creates report images folder if it does not exist
+      folder_id = gdc.create_folder(os.path.dirname(self.export_path_images), drive_images_folder_id, verbose=verbose)
 
-      if not gdc.folder_exists_by_path(gdrive_images_folder_path):
-        folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('slacgs.demo.' + gdc.gdrive_account_email), verbose=verbose)
-      else:
-        folder_id = gdc.get_folder_id_by_path(gdrive_images_folder_path)
+      for filename in os.listdir(self.export_path_images):
+        file_path = os.path.join(self.export_path_images, filename)
+        gdc.upload_file_to_drive(file_path, folder_id, verbose=verbose)
 
-      gdc.upload_file_to_drive(export_path, folder_id, verbose=verbose)
+      gdc.upload_file_to_drive(self.export_path_animated_gif, folder_id, verbose=verbose)
+
     else:
       if verbose:
         print("No figure to upload.")
 
 
-  def plot_with_intersection(self):
+  def export_loss_plots_to_image(self):
     """plot Loss curves of a pair of compared dimensionalyties with intersection points between them
 
     Returns:
@@ -341,7 +362,7 @@ class Report:
 
     columns = len(self.sim.loss_types)
     # Create the figure and three subplots
-    fig, axs = plt.subplots(1, columns, figsize=(14, 4))
+    fig, axs = plt.subplots(1, columns, figsize=(12, 3))
 
     for i, loss_type in enumerate(self.sim.loss_types):
       for d in sim_dims:
@@ -364,33 +385,146 @@ class Report:
       axs[i].set_ylim([0, 1])
       axs[i].legend()
 
-    # Show the plot
-    plt.tight_layout()
+    border = 0.15
+    plt.subplots_adjust(left=0.1, right=0.9, bottom=border, top=1-border, wspace=0.3)
+    self.loss_plots_figures.append(fig)
 
-    return fig
+    plt.close()
+    # Save the figures to BytesIO objects
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    buf.seek(0)
 
-  def print_loss(self):
 
-    for loss_type in self.sim.loss_types:
-      data = np.array([ np.round(self.loss_N[dim][loss_type],4) for dim in self.sim.dims]).T.tolist()
+    # Read images into PIL Image
+    im = Image.open(buf)
+    return im
 
-      ## add index column
-      indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+  def export_loss_plots_to_html(self):
+    """Plot Loss curves of a pair of compared dimensionalyties with intersection points between them
 
-      ## make table and print
-      table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
-      print('\n',loss_type, ' Loss: ')
-      print(table)
+    Returns:
+      str: HTML representation of the Plotly figure.
+    """
 
-      data = np.array([self.iter_N[dim][loss_type] for dim in self.sim.dims]).T.tolist()
+    sim_dims = self.sim.dims
 
-      ## add index column
-      indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+    unique_pairs = []
+    n = len(sim_dims)
 
-      ## make table and print
-      table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
-      print('\n', loss_type, ' # iterations: ')
-      print(table)
+    for i in range(n):
+      for j in range(i + 1, n):
+        pair = (sim_dims[i], sim_dims[j])
+        unique_pairs.append(pair)
+
+    Xdata = np.log2(self.sim.model.N)[:len(self.loss_N[sim_dims[0]][LossType.THEORETICAL.value])]
+    Y_data = self.loss_N
+
+    columns = len(self.sim.loss_types)
+    # Create a 1xN subplot layout
+    fig = make_subplots(rows=1, cols=columns, subplot_titles=[str(t) for t in self.sim.loss_types])
+
+    for i, loss_type in enumerate(self.sim.loss_types):
+      for d in sim_dims:
+        features = [f'x{i+1}' for i in range(d)]
+        trace = go.Scatter(x=Xdata, y=Y_data[d][loss_type], mode='lines', name=f'{loss_type}({features})')
+        fig.add_trace(trace, row=1, col=i + 1)
+
+      if len(self.loss_N[sim_dims[0]][loss_type]) > 1:
+        for dims in unique_pairs:
+          intersection_points, n_star = self.intersection_point_(dims, loss_type)
+          if len(intersection_points) > 0:
+            for j in range(0, len(intersection_points)):
+              trace = go.Scatter(x=[intersection_points[j][0]], y=[intersection_points[j][1]],
+                                 mode='markers', marker=dict(color='red'),
+                                 name=f'({intersection_points[j][0]:.2f},{intersection_points[j][1]:.2f})')
+              fig.add_trace(trace, row=1, col=i + 1)
+
+      # Configure the subplot's axes
+      fig.update_xaxes(title_text='$\log_2(n)$', row=1, col=i + 1)
+      fig.update_yaxes(title_text='$P(error)$', row=1, col=i + 1, range=[0, 1])
+
+    fig.update_layout(height=200, width=900, margin=dict(l=50, r=50, t=50, b=00), showlegend=True)
+
+    # Convert the figure to an HTML string
+    # html_str = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
+    #
+    # return html_str
+
+  ## report plot is composed by data plots and loss plots combined
+  def export_report_plot_to_image(self):
+
+    n_samples_per_class = int(2**len(self.loss_N[self.sim.dims[0]][LossType.THEORETICAL.value])/2)
+    im_data_plots = self.sim.model.export_data_plots_to_image(n_samples_per_class)
+    im_loss_plots = self.export_loss_plots_to_image()
+
+
+
+    # Create a new image with appropriate size
+    total_width = max(im_data_plots.width, im_loss_plots.width)
+    total_height = im_data_plots.height + im_loss_plots.height
+
+    new_im = Image.new("RGB", (total_width, total_height))
+
+    # Paste each image into the new image
+    y_offset = 0
+    for im in [im_data_plots, im_loss_plots]:
+      new_im.paste(im, (0, y_offset))
+      y_offset += im.height
+
+    self.report_images.append(new_im)
+    self.export_loss_plots_to_html()
+    return new_im
+
+
+  def save_report_plots_image_as_png(self, export_path=None, verbose=False):
+    """Save the report plots as a PNG image.
+
+    Parameters:
+        export_path (str): The export path.
+        verbose (bool): If True, print the export path.
+    Returns:
+        None
+    """
+    export_path = self.export_path_images
+
+    curr_n = int(2**len(self.loss_N[self.sim.dims[0]][LossType.THEORETICAL.value]))
+    curr_n = curr_n if curr_n > 1 else 0
+    export_path += 'n_' + str(curr_n) + '.png'
+
+    im = self.export_report_plot_to_image()
+    im.save(export_path, 'PNG')
+    self.update_report_animated_gif()
+
+    return im
+
+
+  def update_report_animated_gif(self):
+    """Update the report animated GIF.
+
+    Returns:
+        None
+    """
+
+    export_path = report_service_conf['images_path']
+    export_path += 'report' + str(self.sim.model.params)
+    export_path += '[test]' if (self.sim.iters_per_step * self.sim.max_steps < 1000) else ''
+
+    curr_n = int((2**len(self.loss_N[self.sim.dims[0]][LossType.THEORETICAL.value])))
+    curr_n = curr_n if curr_n > 1 else 0
+
+    export_path += 'n_0_' + str(curr_n) + '.gif'
+
+
+    self.report_images[-1].save(export_path, save_all=True, append_images=self.report_images[0:-1],
+                                duration=1000, loop=0)
+
+    # remove previous saved image gif
+    if len(self.report_images) > 1:
+        if os.path.exists(self.export_path_animated_gif):
+            os.remove(self.export_path_animated_gif)
+
+    self.export_path_animated_gif = export_path
 
   def print_N_star(self, dims_to_compare=None):
     """Print N_star for theoretical and empirical loss
@@ -419,8 +553,9 @@ class Report:
     data = data_theo + data_emp
 
     ## make table and print
+    title = '\n','N* between ' + str(dims_to_compare[0]) + 'D and ' + str(dims_to_compare[1]) + 'D classifiers: '
     table = tabulate(data, tablefmt='grid', headers=['Loss', 'intersection point', 'N_star'])
-    print('\n','N* between ' + str(dims_to_compare[0]) + 'D and ' + str(dims_to_compare[1]) + 'D classifiers: ')
+    print(title)
     print(table)
 
   def print_tags_and_tables(self, dims_to_compare=None):
@@ -444,18 +579,39 @@ class Report:
     self.print_N_star(dims_to_compare)
     self.print_loss()
 
+  def print_loss(self):
+
+      for loss_type in self.sim.loss_types:
+        data = np.array([ np.round(self.loss_N[dim][loss_type],4) for dim in self.sim.dims]).T.tolist()
+
+        ## add index column
+        indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+
+        ## make table and print
+        table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
+        print('\n',loss_type, ' Loss: ')
+        print(table)
+
+        data = np.array([self.iter_N[dim][loss_type] for dim in self.sim.dims]).T.tolist()
+
+        ## add index column
+        indexed_data = [[int(2 ** (i + 1))] + sublist for i, sublist in enumerate(data)]
+
+        ## make table and print
+        table = tabulate(indexed_data, tablefmt='grid', headers=['N'] + [str(dim) + ' feat' for dim in self.sim.dims])
+        print('\n', loss_type, ' # iterations: ')
+        print(table)
+
   def show_plots(self):
-    datapoints_fig = self.sim.model.data_points_plot
-    loss_fig = self.plot_with_intersection()
+    datapoints_figs_1by1 = self.sim.model.plot_1by1_fig
+    datapoints_figs_2by2 = self.sim.model.plot_2by2_fig
+    datapoints_figs_3by3 = self.sim.model.plot_3by3_fig
+    last_loss_plot_fig = self.loss_plots_figures[-1]
 
-    if datapoints_fig:
-      plt.figure(figsize=(14, 4))
-      fm = plt.get_current_fig_manager()
-      fm.canvas.figure = datapoints_fig
-      datapoints_fig.canvas = fm.canvas
-      plt.figure(datapoints_fig.number)
-
-    plt.figure(loss_fig.number)
+    plt.figure(datapoints_figs_1by1.number)
+    plt.figure(datapoints_figs_2by2.number)
+    plt.figure(datapoints_figs_3by3.number)
+    plt.figure(last_loss_plot_fig.number)
     plt.show()
     plt.close()
 
@@ -489,27 +645,26 @@ class Report:
 
     dims_to_compare = dims_to_compare if dims_to_compare else self.sim.dims[-2:]
 
-    ## if in notebook, show figures before printing tables
+    im_report = self.save_report_plots_image_as_png()
+    ## if in notebook, show images before printing tables
     if self.sim.is_notebook:
       clear_output()
-      plt.close()
 
-      # show plots
-      self.show_plots()
+      # show final report image
+      display(im_report)
 
       # print sim tags and tables
       self.print_tags_and_tables(dims_to_compare)
 
-    ## if in terminal, print tables before showing figures
+    ## if in terminal, print tables before showing figures and images
     else:
       cls()
-      plt.close()
 
       # print sim tags and tables
       self.print_tags_and_tables(dims_to_compare)
 
-      # show plots
-      self.show_plots()
+
+
 
   def write_to_spreadsheet(self, gc, dims_to_compare = None, verbose=True):
 
@@ -587,7 +742,7 @@ class Report:
       tryal = 1
       while True:
         try:
-          gc.update_home_report_on_spreadsheet(self, dims_to_compare, verbose=verbose)
+          gc.update_scenario_report_on_spreadsheet(self, dims_to_compare, verbose=verbose)
         except googleapiclient.errors.HttpError:
           if tryal <= 3:
             if verbose:

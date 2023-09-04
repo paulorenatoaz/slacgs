@@ -154,7 +154,7 @@ class GdriveClient:
 		return spreadsheet['properties']['title']
 
 	def create_folder(self, folder_name, parent_folder_id=None, verbose=True):
-		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID.
+		"""Create a new folder with the given name. If parent_folder_id is not None, the folder will be created inside the folder with the given ID. If folder path already exists, return the ID of the existing folder.
 
 		:param folder_name: name of the folder.
 		:type folder_name: str
@@ -177,6 +177,14 @@ class GdriveClient:
 
 		if parent_folder_id is not None and not isinstance(parent_folder_id, str):
 			raise ValueError('parent_folder_id must be a string or None.')
+
+		if parent_folder_id is not None:
+			parent_path = self.get_folder_path(parent_folder_id)
+			if self.folder_exists_by_path(f"{parent_path}/{folder_name}"):
+				return self.get_folder_id_by_path(f"{parent_path}/{folder_name}")
+		else:
+			if self.folder_exists_by_path(folder_name):
+				return self.get_folder_id_by_path(folder_name)
 
 		folder_metadata = {
 			'name': folder_name,
@@ -645,3 +653,4 @@ class GdriveClient:
 		except Exception as e:
 			print(
 				'failed to upload file with path: ' + file_path + ' to folder: https://drive.google.com/drive/folders/' + folder_id)
+

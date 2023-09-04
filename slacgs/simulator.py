@@ -3,6 +3,7 @@ import math
 import time
 
 import numpy as np
+from IPython.core.display_functions import display
 
 from matplotlib import pyplot as plt
 from sklearn import svm
@@ -249,7 +250,7 @@ def loss_bayes_analytical(cov):
       except ZeroDivisionError:
         return 0
 
-    elif sigma[0] == sigma[1] and rho[0][1] != 0 and rho[0][2] == rho[1][2] and aw_0s(rho[0][2]) <= math.sqrt((1+rho[0][1])/2):
+    elif sigma[0] == sigma[1] and rho[0][1] != 0 and rho[0][2] == rho[1][2] and (rho[0][2]) <= math.sqrt((1+rho[0][1])/2):
       w_0 = w_1 = (1-rho[0][2])/(2*rho[0][2] - (1+rho[0][1]))
 
     else:
@@ -558,7 +559,8 @@ class Simulator:
     self.is_notebook = is_notebook()
     self.dims_to_compare = dims_to_compare if dims_to_compare else self.dims[-2:]
 
-  def print_N_progress(self, n: int, max_iter: int, iter_per_step: int, datapoints_fig: plt.Figure, datapoints_plot_png_path):
+
+  def print_N_progress(self, n: int, max_iter: int, iter_per_step: int):
 
     """Prints the progress of the simulation for a given n ∈ N and a given number of iterations per step (step_size). The progress is printed in the terminal and a plot of the ellipsoids for this model's covariance matrix and a dataset sample with n=1024 sample points is shown.
 
@@ -582,18 +584,11 @@ class Simulator:
     else:
       cls()
 
+    # print plot images
+
+    im = self.report.save_report_plots_image_as_png()
     if self.is_notebook:
-      plt.close()
-      if datapoints_fig :
-        plt.figure(figsize=(10, 4))
-        fm = plt.get_current_fig_manager()
-        fm.canvas.figure = datapoints_fig
-        datapoints_fig.canvas = fm.canvas
-
-        plt.figure(datapoints_fig.number)
-      plt.figure(self.report.plot_with_intersection().number)
-      plt.show()
-
+      display(im)
 
 
     print(' progress: ', end='')
@@ -607,7 +602,7 @@ class Simulator:
     print('Simulator: ',self.report.sim_tag)
     print('d: ', self.report.d)
     print('bayes error rate: ', self.report.loss_bayes)
-    print('Data Points Plot: ', datapoints_plot_png_path,'\n')
+    print('Report Plots: ', self.report.export_path_animated_gif,'\n')
     for dim in self.dims:
       if self.report.loss_bayes[dim] == 0:
         print('when BR = 0, it will be infered after simulation')
@@ -759,7 +754,6 @@ class Simulator:
     # get the start time
     st = time.time()
 
-
     # Inicialize auxiliary variable for convergence check containing the last means mesures for each dimension and loss type
     prev_mean_mesure = {dim : {loss_type: 0 for loss_type in self.loss_types} for dim in self.dims}
 
@@ -767,9 +761,8 @@ class Simulator:
     self.report.loss_bayes = {d : loss_bayes_analytical(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = {d : dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
 
-    # Save data points plot as PNG
-    fig = self.model.data_points_plot
-    datapoints_plot_png_path = self.model.save_data_points_plot_as_png(verbose=self.verbose)
+    # save data points plot
+    self.model.save_data_plots_image_as_png(os.path.join(self.report.export_path_images, 'data_points_n_2048.png'))
 
     # Initialize N from the model
     N = self.model.N
@@ -788,12 +781,12 @@ class Simulator:
         loss_sum = {d : {loss_type : 0 for loss_type in self.loss_types} for d in self.dims}
         iter_N = {d : {loss_type : 0 for loss_type in self.loss_types} for d in self.dims}
 
-        #iniciate control switches for each dimension and loss type
+        # iniciate control switches for each dimension and loss type
         switch = {'min_steps': True,'train': { d : {loss_type : True if loss_type in self.loss_types else False for loss_type in [loss_type.value for loss_type in LossType ]} for d in self.dims}, 'dims': {d : True for d in self.dims} }
 
         # terminal output N progress bar
         if self.verbose:
-          self.print_N_progress(n, max_iter,iter_per_step,fig,datapoints_plot_png_path)
+          self.print_N_progress(n, max_iter,iter_per_step)
 
         # for each iteration i in max_iter do the simulation for each dimension d in dims and estimate L(h) for each loss type
         for i in range(max_iter):
@@ -889,6 +882,7 @@ class Simulator:
 
       ## after simulation for each cardinality n in N is finished, some tests are performed to check if simulation should be continued
       finish = True
+      precision = math.sqrt(self.precision)
 
       if 'EMPIRICAL_TEST' in self.loss_types:
 
@@ -897,10 +891,10 @@ class Simulator:
           finish = False
 
         ## test if Loss Functions are not yet converged and continue simulation for one more cardinality n if not in order to estimate the Bayes risk
-        if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-2]) > 0.001:
+        if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-2]) > precision:
           finish = False
         if 'EMPIRICAL_TRAIN' in self.loss_types:
-          if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > 0.001:
+          if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['EMPIRICAL_TEST'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > precision:
             finish = False
 
 
@@ -911,10 +905,10 @@ class Simulator:
           finish = False
 
         ## test if Loss Functions are not yet converged and continue simulation for one more cardinality n if not in order to estimate the Bayes risk
-        if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2]) > 0.001:
+        if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['THEORETICAL'][-2]) > precision:
           finish = False
         if 'EMPIRICAL_TRAIN' in self.loss_types:
-          if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > 0.001:
+          if self.report.loss_bayes[self.model.dim] == 0 and abs(self.report.loss_N[self.model.dim]['THEORETICAL'][-1] - self.report.loss_N[self.model.dim]['EMPIRICAL_TRAIN'][-1]) > precision:
             finish = False
 
       ## stop simulation if all Loss Functions are converged and intersection points are found, or if max cardinality model.max_n is reached
@@ -935,17 +929,9 @@ class Simulator:
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.loss_bayes_empirical(d)
 
-    plt.close()
-
-    ## set the final plot
-    self.report.loss_plot = self.report.plot_with_intersection()
 
     ## print the final report
     self.report.print_report()
-
-    ## save the final plot
-    self.report.save_loss_plot_as_png(verbose=self.verbose)
-    plt.close()
 
     # get the end time
     et = time.time()
