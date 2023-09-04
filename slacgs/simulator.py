@@ -3,7 +3,7 @@ import math
 import time
 
 import numpy as np
-from IPython.core.display_functions import display
+from IPython.core.display import display
 
 from matplotlib import pyplot as plt
 from sklearn import svm

@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
 
 setup(
     name='slacgs',
-    version='0.1.3',
+    version='0.1.4',
     packages=find_packages(),
     install_requires=[
         # List any dependencies your package requires
