@@ -3,12 +3,10 @@ import math
 import time
 
 import numpy as np
-from IPython.core.display import display
 
-from matplotlib import pyplot as plt
 from sklearn import svm
 from scipy.stats import multivariate_normal, norm
-from IPython.display import clear_output
+from IPython.display import clear_output, display
 
 from .enumtypes import LossType
 from .model import Model
