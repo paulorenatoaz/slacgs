@@ -8,8 +8,7 @@ import plotly.graph_objs as go
 import plotly.io as pio
 
 from plotly.subplots import make_subplots
-from IPython.core.display_functions import display
-from IPython.display import clear_output
+from IPython.display import clear_output, display
 from PIL import Image
 from shapely.geometry import LineString
 from tabulate import tabulate
