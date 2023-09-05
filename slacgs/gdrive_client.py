@@ -179,12 +179,9 @@ class GdriveClient:
 			raise ValueError('parent_folder_id must be a string or None.')
 
 		if parent_folder_id is not None:
-			parent_path = self.get_folder_path(parent_folder_id)
-			if self.folder_exists_by_path(f"{parent_path}/{folder_name}"):
-				return self.get_folder_id_by_path(f"{parent_path}/{folder_name}")
-		else:
-			if self.folder_exists_by_path(folder_name):
-				return self.get_folder_id_by_path(folder_name)
+			if self.folder_exists_in_parent(folder_name, parent_folder_id):
+				return self.folder_exists_in_parent(folder_name, parent_folder_id)
+
 
 		folder_metadata = {
 			'name': folder_name,
@@ -553,6 +550,14 @@ class GdriveClient:
 				return None
 		return folder_id
 
+	def folder_exists_in_parent(self, folder_name, parent_folder_id):
+		query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{parent_folder_id}' in parents"
+		results = self.drive_service.files().list(q=query).execute()
+		folders = results.get('files', [])
+		if len(folders) > 0:
+			return folders[0].get('id')
+		else:
+			return False
 	##make a function to check if file with given path exists and return True if it does and False if it doesn't
 	def file_exists_by_path(self, file_path):
 		"""Check if a file with the given path exists.

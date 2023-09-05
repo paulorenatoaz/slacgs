@@ -298,10 +298,6 @@ class GspreadClient:
 		for chart in ws.get_charts():
 			spec = chart.get_json()
 			spec['basicChart'].update({'headerCount': 1})
-			request = {
-				'updateChartSpec': {
-					'chartId': chart.id, "spec": spec}
-			}
 			# update axis
 			spec['basicChart'].update({
 				"axis": [
@@ -315,6 +311,11 @@ class GspreadClient:
 					}
 				]
 			})
+			request = {
+				'updateChartSpec': {
+					'chartId': chart.id, "spec": spec}
+			}
+
 
 			ws.client.sheet.batch_update(sh.id, request)
 		if verbose:
@@ -514,10 +515,6 @@ class GspreadClient:
 		for chart in ws.get_charts():
 			spec = chart.get_json()
 			spec['basicChart'].update({'headerCount': 1})
-			request = {
-				'updateChartSpec': {
-					'chartId': chart.id, "spec": spec}
-			}
 			# update axis
 			spec['basicChart'].update({
 				"axis": [
@@ -531,6 +528,11 @@ class GspreadClient:
 					}
 				]
 			})
+			request = {
+				'updateChartSpec': {
+					'chartId': chart.id, "spec": spec}
+			}
+
 
 			ws.client.sheet.batch_update(sh.id, request)
 		if verbose:

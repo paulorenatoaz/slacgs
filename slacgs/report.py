@@ -2,6 +2,7 @@ import io
 import os
 import itertools
 import googleapiclient
+import posixpath
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
@@ -325,7 +326,9 @@ class Report:
       drive_images_folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('slacgs.demo.' + gdc.gdrive_account_email), verbose=verbose)
 
       #creates report images folder if it does not exist
-      folder_id = gdc.create_folder(os.path.dirname(self.export_path_images), drive_images_folder_id, verbose=verbose)
+      folder_id = gdc.create_folder(self.export_path_images.split('\\')[-2], drive_images_folder_id, verbose=verbose)
+      print(self.export_path_images)
+      print(self.export_path_images.split('\\')[-2])
 
       for filename in os.listdir(self.export_path_images):
         file_path = os.path.join(self.export_path_images, filename)

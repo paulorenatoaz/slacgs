@@ -215,7 +215,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	slacgs.run()
 
 	## upload png images to drive
-	# slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1002,13 +1002,13 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=5, precision=1e-4, augmentation_until_n=1024, verbose=verbose)
+	slacgs = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024, verbose=verbose)
 
 	## run simulation
 	slacgs.run()
 
 	## upload png images to drive
-	# slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	slacgs.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
@@ -1016,7 +1016,7 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	return True
 
 
-def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number, verbose=True):
+def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number, power=0.1, verbose=True):
 	""" add simulation results to one of the experiment scenario spreadsheets
 
 	Parameters:
@@ -1050,19 +1050,19 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 
 		>>> scenario_number = 1
 		>>> params = [1, 1, 2.1, 0, 0, 0]
-		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
+		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params,scenario_number)
 
 		>>> scenario_number = 2
 		>>> params = [1, 1, 2, -0.15, 0, 0]
-		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
+		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params,scenario_number)
 
 		>>> scenario_number = 3
 		>>> params = [1, 1, 2, 0, 0.15, 0.15]
-		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
+		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params,scenario_number)
 
 		>>> scenario_number = 4
 		>>> params = [1, 1, 2, -0.1, 0.15, 0.15]
-		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
+		>>> add_simulation_to_experiment_scenario_spreadsheet_test(params,scenario_number)
 
 
 	"""
@@ -1136,7 +1136,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n=1024,
+	slacgs = Simulator(model, step_size=1, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024,
 	                   verbose=verbose)
 
 	## run simulation
@@ -1149,7 +1149,8 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	slacgs.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 
-def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, verbose=True):
+def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, power=0.1,
+                             verbose=True):
 	""" run a custom test scenario and write the results to a Google Spreadsheet shared with the user. A Scenario is a list with params to simulate.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
@@ -1209,7 +1210,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 
 		>>> scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-1,2)]
 		>>> scenario_number = 5
-		>>> run_custom_scenario_test(scenario_list, scenario_number)
+		>>> run_custom_scenario_test(scenario_list,scenario_number)
 	"""
 
 	if not isinstance(scenario_list, (list, tuple)):
@@ -1250,8 +1251,8 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	simulators = []
 	for model in models:
 		simulators.append(
-			Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
-			          min_steps=5, precision=1e-4,
+			Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
+			          min_steps=int(100*power), precision=1e-4,
 			          augmentation_until_n=1024, verbose=verbose))
 
 
@@ -1309,7 +1310,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 
 
 def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, dims_to_simulate=None,
-                                                       dims_to_compare=None, verbose=True):
+                                                       dims_to_compare=None, power=0.1, verbose=True):
 	""" add a simulation to a custom test scenario
 
 	Parameters:
@@ -1348,7 +1349,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 
 		>>> params = (1, 1, 3, -0.2, 0, 0)
 		>>> scenario_number = 5
-		>>> add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number)
+		>>> add_simulation_to_custom_scenario_spreadsheet_test(params,scenario_number)
 
 	"""
 
@@ -1379,8 +1380,8 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	model = Model(params)
 
 	## create Simulator object to test parameters before continuing
-	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
-	                   min_steps=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
+	                   min_steps=int(100*power), precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	## define folder name for storing reports
@@ -1415,7 +1416,7 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	return True
 
 
-def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=None, verbose=True):
+def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=None, power=0.1, verbose=True):
 	""" run a custom simulation for any dimensionality and cardinality
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
@@ -1471,21 +1472,21 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 
 		>>> ## 2 features
 		>>> params = [1, 2, 0.4]
-		>>> run_custom_simulation_test(params, dims_to_compare)
+		>>> run_custom_simulation_test(params,dims_to_compare)
 
 		>>> ## 3 features
 		>>> params = [1, 1, 4, -0.2, 0.1, 0.1]
-		>>> run_custom_simulation_test(params, dims_to_compare)
+		>>> run_custom_simulation_test(params,dims_to_compare)
 
 		>>> ## 4 features
 		>>> params = [1, 1, 1, 2, 0, 0, 0, 0, 0, 0]
 		>>> dims_to_compare = (3, 4)
-		>>> run_custom_simulation_test(params, dims_to_compare)
+		>>> run_custom_simulation_test(params,dims_to_compare)
 
 		>>> ## 5 features
 		>>> params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
 		>>> dims_to_compare = (2, 5)
-		>>> run_custom_simulation_test(params, dims_to_compare)
+		>>> run_custom_simulation_test(params,dims_to_compare)
 
 		>>> params = [1, 2, 3, 4, 5, 6, -0.3, -0.3, -0.2, -0.2, -0.1, -0.1, 0, 0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]
 		>>> run_custom_simulation_test(params)
@@ -1518,8 +1519,8 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	model = Model(params)
 
 	## create simulator object
-	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=10,
-	                   min_steps=5, precision=1e-4,
+	slacgs = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
+	                   min_steps=int(100*power), precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	# ## define folder name for storing reports

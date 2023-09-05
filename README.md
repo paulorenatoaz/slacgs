@@ -148,10 +148,9 @@ run_experiment()
 ```python
 from slacgs.demo import *
 
-
 ## 1. Run an Experiment Simulation ##
 run_experiment_simulation_test()
-  
+
 ## 2. Add a Simulation to an Experiment Scenario Spreadsheet ##
 ### scenario 1
 scenario_number = 1
@@ -172,12 +171,12 @@ add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
 scenario_number = 4
 params = [1, 1, 2, -0.1, 0.15, 0.15]
 add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_number)
-  
+
 ## 3. Run a Custom Scenario ##
-scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-5,6)]
+scenario_list = [[1, 1, 3, round(0.1 * rho, 1), 0, 0] for rho in range(-5, 6)]
 scenario_number = 5
 run_custom_scenario_test(scenario_list, scenario_number)
-  
+
 ## 4. Add a Simulation to a Custom Scenario Spreadsheet ##
 params = (1, 1, 3, -0.7, 0, 0)
 scenario_number = 5
@@ -204,7 +203,6 @@ run_custom_simulation_test(params, dims_to_compare)
 ### 6 features
 params = [1, 2, 3, 4, 5, 6, -0.3, -0.3, -0.2, -0.2, -0.1, -0.1, 0, 0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]
 run_custom_simulation_test(params)
-
 
 ## 6. Run All Experiment Simulations ##
 run_experiment_test()
