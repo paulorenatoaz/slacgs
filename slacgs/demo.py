@@ -822,6 +822,15 @@ def run_experiment(start_scenario=1, verbose=True):
 	if start_scenario < 1 or start_scenario > 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
+	try:
+		file_path = save_scenario_data_plots_animation_as_gif(start_scenario)
+	except Exception as e:
+		print("An error occurred while saving scenario data plots animation as gif: ", e)
+	else:
+		start_google_drive_service()
+		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('slacgs.demo.' + GDC.gdrive_account_email), verbose=verbose)
+		GDC.upload_file_to_drive(file_path, drive_images_folder_id, verbose=verbose)
+
 	while run_experiment_simulation(start_scenario):
 		continue
 
@@ -1620,6 +1629,16 @@ def run_experiment_test(start_scenario=1, power=0.1, verbose=True):
 	if start_scenario < 1 or start_scenario > 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
+	try:
+		file_path = save_scenario_data_plots_animation_as_gif(start_scenario)
+	except Exception as e:
+		print("An error occurred while saving scenario data plots animation as gif: ", e)
+	else:
+		start_google_drive_service()
+		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('slacgs.demo.' + GDC.gdrive_account_email), verbose=verbose)
+		GDC.upload_file_to_drive(file_path, drive_images_folder_id, verbose=verbose)
+
+
 	while run_experiment_simulation_test(start_scenario, power=power, verbose=verbose):
 		continue
 
@@ -1650,3 +1669,23 @@ def print_experiment_scenarios():
 	## make table and print
 	table = tabulate(indexed_data, tablefmt='grid', headers=['Scenario 1', 'Scenario 2', 'Scenario 3', 'Scenario 4'])
 	print(table)
+
+
+def save_scenario_data_plots_animation_as_gif(scenario_number,scenario=None):
+	print(f'Wait while Scenario {scenario_number} data plots animation is exported as a gif...')
+
+	if scenario is None:
+		scenario = SCENARIOS[scenario_number - 1]
+
+	model_plots_png = []
+	for param in scenario:
+		model_plots_png.append(Model(param).data_plots_image)
+
+	export_path = report_service_conf['images_path']
+	export_path += 'scenario' + str(scenario_number) + '_data_plots.gif'
+
+
+	model_plots_png[-1].save(export_path, save_all=True, append_images=model_plots_png[0:-1],
+	                            duration=1000, loop=0)
+
+	return export_path
