@@ -1513,7 +1513,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 		raise ValueError("dims_to_compare must be a subset of dims_to_simulate")
 
 	## initialize gdrive client if it hasn't been initialized yet
-	# start_google_drive_service()
+	start_google_drive_service()
 
 	## create model object
 	model = Model(params)
@@ -1523,25 +1523,25 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	                   min_steps=int(100*power), precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
-	# ## define folder name for storing reports
-	# REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
-	#
-	# ## create folder if it doesn't exist
-	# if not GDC.folder_exists(REPORT_FOLDER_NAME):
-	# 	folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
-	# 	GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
-	#
-	# ## define spreadsheet title
-	# SPREADSHEET_TITLE = 'custom_simulations.test'
-	#
-	# ## create spreadsheet if it doesn't exist
-	# if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
-	# 	spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
-	# 	folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
-	# 	GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
-	#
-	# ## create gspread client object
-	# gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	## define folder name for storing reports
+	REPORT_FOLDER_NAME = 'slacgs.demo.' + GDC.gdrive_account_email
+
+	## create folder if it doesn't exist
+	if not GDC.folder_exists(REPORT_FOLDER_NAME):
+		folder_id = GDC.create_folder(REPORT_FOLDER_NAME, verbose=verbose)  # create folder
+		GDC.share_folder_with_gdrive_account(folder_id, verbose=verbose)  # share folder with user's google drive account
+
+	## define spreadsheet title
+	SPREADSHEET_TITLE = 'custom_simulations.test'
+
+	## create spreadsheet if it doesn't exist
+	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
+		spreadsheet_id = GDC.create_spreadsheet(SPREADSHEET_TITLE, verbose=verbose)
+		folder_id = GDC.get_folder_id_by_name(REPORT_FOLDER_NAME)
+		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
+
+	## create gspread client object
+	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
