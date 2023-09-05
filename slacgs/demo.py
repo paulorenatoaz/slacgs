@@ -1550,7 +1550,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 		GDC.move_file_to_folder(spreadsheet_id, folder_id, verbose=verbose)
 
 	## create gspread client object
-	gsc = GspreadClient(report_service_conf['pygsheets_service'], SPREADSHEET_TITLE)
+	gsc = GspreadClient( SPREADSHEET_TITLE)
 
 	## run simulation
 	slacgs.run()
