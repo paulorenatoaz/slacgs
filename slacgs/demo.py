@@ -1002,8 +1002,7 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=5, precision=1e-4, augmentation_until_n=1024,
-	                   verbose=verbose)
+	slacgs = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=5, precision=1e-4, augmentation_until_n=1024, verbose=verbose)
 
 	## run simulation
 	slacgs.run()
