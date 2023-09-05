@@ -887,7 +887,7 @@ def doctest_next_parameter():
 	return PARAM, SPREADSHEET_TITLE
 
 
-def run_experiment_simulation_test(start_scenario=1, verbose=True):
+def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	""" run a simulation test for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
@@ -1002,7 +1002,7 @@ def run_experiment_simulation_test(start_scenario=1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	slacgs = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n=1024,
+	slacgs = Simulator(model, step_size=5, max_steps=200*power, min_steps=5, precision=1e-4, augmentation_until_n=1024,
 	                   verbose=verbose)
 
 	## run simulation
@@ -1555,7 +1555,7 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	return True
 
 
-def run_experiment_test(start_scenario=1, verbose=True):
+def run_experiment_test(start_scenario=1, power=0.1, verbose=True):
 	""" run all simulations in all experiment scenarios
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
@@ -1620,7 +1620,7 @@ def run_experiment_test(start_scenario=1, verbose=True):
 	if start_scenario < 1 or start_scenario > 4:
 		raise ValueError("start_scenario must be between 1 and 4")
 
-	while run_experiment_simulation_test(start_scenario):
+	while run_experiment_simulation_test(start_scenario, power=power, verbose=verbose):
 		continue
 
 	if verbose:
