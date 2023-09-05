@@ -302,6 +302,19 @@ class GspreadClient:
 				'updateChartSpec': {
 					'chartId': chart.id, "spec": spec}
 			}
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": "log2(n) samples"
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": "P(Error)"
+					}
+				]
+			})
 
 			ws.client.sheet.batch_update(sh.id, request)
 		if verbose:
@@ -505,6 +518,19 @@ class GspreadClient:
 				'updateChartSpec': {
 					'chartId': chart.id, "spec": spec}
 			}
+			# update axis
+			spec['basicChart'].update({
+				"axis": [
+					{
+						"position": "BOTTOM_AXIS",
+						"title": "log2(n) samples"
+					},
+					{
+						"position": "LEFT_AXIS",
+						"title": "P(Error)"
+					}
+				]
+			})
 
 			ws.client.sheet.batch_update(sh.id, request)
 		if verbose:
