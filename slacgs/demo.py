@@ -52,7 +52,7 @@ RHO_12 = -0.1
 SCENARIO4 = []
 for r in range(-8, 8):
 	if abs(round(0.1 * r, 1)) < math.sqrt((1 + RHO_12) / 2):
-		SCENARIO4 += [[1, 1, 2, RHO_12, round(0.1 * r, 1), round(0.1 * r, 1)]]
+		SCENARIO4 += [[1, 1, 1, RHO_12, round(0.1 * r, 1), round(0.1 * r, 1)]]
 
 ## create list of scenarios
 SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4]
