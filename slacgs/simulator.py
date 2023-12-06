@@ -242,13 +242,13 @@ def loss_bayes_analytical(cov):
     elif sigma[0] == sigma[1] and rho[0][2] == 0 and rho[1][2] == 0 and rho[0][1] != 0:
       w_0 = w_1 = -(sigma[2]**2)/((sigma[0]**2)*(1+rho[0][1]))
 
-    elif rho[0][1]==0 and rho[0][2] == rho[1][2] and sigma[0] == sigma[1]:
+    elif rho[0][1] == 0 and rho[0][2] == rho[1][2] and sigma[0] == sigma[1]:
       try:
         w_0 = w_1 = sigma[2]*(sigma[2]-rho[1][2]*sigma[0])/(sigma[0]*(2*rho[0][2]*sigma[2]-sigma[0]))
       except ZeroDivisionError:
         return 0
 
-    elif sigma[0] == sigma[1] and rho[0][1] != 0 and rho[0][2] == rho[1][2] and (rho[0][2]) <= math.sqrt((1+rho[0][1])/2):
+    elif sigma[0] == sigma[1] == sigma[2] and rho[0][1] != 0 and rho[0][2] == rho[1][2] and (rho[0][2]) <= math.sqrt((1+rho[0][1])/2):
       w_0 = w_1 = (1-rho[0][2])/(2*rho[0][2] - (1+rho[0][1]))
 
     else:
