@@ -32,10 +32,12 @@ Functions:
 	
 """
 
+
+
 ## define list of parameters for scenario 1
 SCENARIO1 = [[1, 1, round(1 + 0.1 * sigma3, 2), 0, 0, 0] for sigma3 in range(3, 10)]
 SCENARIO1 += [[1, 1, sigma3 / 2, 0, 0, 0] for sigma3 in range(4, 11, 1)]
-SCENARIO1 += [[1, 1, sigma3, 0, 0, 0] for sigma3 in range(6, 14, 1)]
+SCENARIO1 += [[1, 1, sigma3, 0, 0, 0] for sigma3 in range(6, 13, 1)]
 
 ## define list of parameters for scenario 2
 SCENARIO2 = [[1, 1, 2, round(rho12 * 0.1, 1), 0, 0] for rho12 in range(-8, 9)]
@@ -54,8 +56,20 @@ for r in range(-8, 8):
 	if abs(round(0.1 * r, 1)) < math.sqrt((1 + RHO_12) / 2):
 		SCENARIO4 += [[1, 1, 1, RHO_12, round(0.1 * r, 1), round(0.1 * r, 1)]]
 
+## define list of parameters for scenario 0
+SCENARIO5 = [[1, sigma2, 0] for sigma2 in range(1, 8)]
+
+## define list of parameters for scenario 0
+SCENARIO6 = [[1, 1, round(r*0.1, 1)] for r in range(-8, 8)] + [[1, 1, round(r*0.1, 1)] for r in range(1, 9)]
+
+## define list of parameters for scenario 0
+SCENARIO7 = [[1, 4, round(r*0.2, 1)] for r in range(-4, 4)] + [[1, 1, round(r*0.1, 1)] for r in range(1, 9)]
+
+
+
 ## create list of scenarios
-SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4]
+SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4, SCENARIO5, SCENARIO6, SCENARIO7]
+SCENARIOS = [SCENARIO7]
 
 ## free global variables
 r = RHO_12 = None
@@ -1672,6 +1686,17 @@ def print_experiment_scenarios():
 
 
 def save_scenario_data_plots_animation_as_gif(scenario_number,scenario=None):
+	''' save scenario data plots animation as gif
+
+	Parameters:
+		scenario_number (int): scenario number
+		scenario (list[list[float|int]] or tuple[list[float|int]]): scenario list (default: None)
+
+	Returns:
+		str: export path
+
+	'''
+
 	print(f'Wait while Scenario {scenario_number} data plots animation is exported as a gif...')
 
 	if scenario is None:

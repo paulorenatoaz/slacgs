@@ -10,7 +10,6 @@ from scipy.stats import norm
 from sklearn.svm import SVC
 from PIL import Image
 
-
 from .enumtypes import DictionaryType
 from .utils import report_service_conf
 
@@ -18,8 +17,8 @@ from .utils import report_service_conf
 class Model:
 	"""Represents a Model for this Simulator for Loss Analysis of a Classifier."""
 
-
-	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]), dictionary=('LINEAR',)):
+	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]),
+	             dictionary=('LINEAR',)):
 		"""This Model for SLACGS contains:
 			- :math:`d`: dimensionality of the Model
 			- :math:`\mathbf{\sigma} = \\bigcup_{i=1}^{d} \sigma_i` : list of standard deviations for each feature
@@ -28,7 +27,7 @@ class Model:
 			- :math:`H`: dictionary of classifiers
 
 		Parameters:
-			params (list of numbers): list containing the standard deviation vector :math:`\mathbf{\sigma}` and the correlation vector :math:`\mathbf{\\rho}`, formally :math:`\mathbf{\sigma} \cup \mathbf{\\rho}`
+			params (list of int|float): list containing the standard deviation vector :math:`\mathbf{\sigma}` and the correlation vector :math:`\mathbf{\\rho}`, formally :math:`\mathbf{\sigma} \cup \mathbf{\\rho}`
 			max_n (int): upper bound cardinality for the set :math:`\mathbf{N}`
 
 		Raises:
@@ -94,7 +93,8 @@ class Model:
 			raise TypeError('dictionary must be a list or tuple of strings')
 
 		if len(params) < 3:
-			raise ValueError('Check parameters list lenght, this experiment requires at least 3 parameters (case dim = 2)')
+			raise ValueError(
+				'Check parameters list lenght, this experiment requires at least 3 parameters (case dim = 2)')
 
 		dim = 2
 		param_len = 3
@@ -118,11 +118,14 @@ class Model:
 
 		for n in N:
 			if n & (n - 1) != 0:
-				raise ValueError('N must be a list of powers of 2 to make this experiment')
+				print('Warnig: for better performance and results N must be a list of powers of 2')
+				break
 
 		params = list(params)
 
+		self.params = params
 		self.dim = dim
+		self.N = list(N)
 		self.sigma = params[0:dim]
 		self.rho = params[dim:len(params)]
 
@@ -147,13 +150,12 @@ class Model:
 			aux2.append(summ)
 
 		self.rho_matrix = [[None] * (i + 1) + self.rho[aux1[i]:aux2[i]] for i in range(len(self.sigma) - 1)]
-		self.params = params
-		self.N = list(N)
 		self.max_n = max_n
 
-		self.cov = [[self.sigma[p] ** 2 if p == q else self.sigma[p] * self.sigma[q] * self.rho_matrix[p][q] if q > p else
-		self.sigma[p] * self.sigma[q] * self.rho_matrix[q][p] for q in range(len(self.sigma))] for p in
-		            range(len(self.sigma))]
+		self.cov = [
+			[self.sigma[p] ** 2 if p == q else self.sigma[p] * self.sigma[q] * self.rho_matrix[p][q] if q > p else
+			self.sigma[p] * self.sigma[q] * self.rho_matrix[q][p] for q in range(len(self.sigma))] for p in
+			range(len(self.sigma))]
 
 		if not np.all(np.linalg.eigvals(self.cov) > 0):
 			raise ValueError('cov must be a positive definite matrix to make this experiment, check your parameters')
@@ -162,15 +164,19 @@ class Model:
 			raise ValueError('cov must be a symmetric matrix to make this experiment, check your parameters')
 
 		if not all(dictionary in DictionaryType.__members__ for dictionary in dictionary):
-			raise ValueError('invalid dictionary, implemented dictionaries are: ' + ', '.join(DictionaryType.__members__))
+			raise ValueError(
+				'invalid dictionary, implemented dictionaries are: ' + ', '.join(DictionaryType.__members__))
 
 		self.plot_1by1_fig = None
 		self.plot_2by2_fig = None
 		self.plot_3by3_fig = None
+
+		# set the default plotly renderer font size
+		# plt.rcParams.update({'font.size': 14})
+
 		self.data_plots_image = self.export_data_plots_to_image()
 
-
-	def plot_data_3d_3by3(self, num_samples=1024):
+	def plot_data_3d_3by3(self, num_samples_per_class=512):
 
 		cov_matrix = np.array(self.cov)
 
@@ -184,8 +190,9 @@ class Model:
 		mean_vector_orange = [-1 for i in range(len(cov_matrix))]
 
 		# Generate 1024 samples for each class using NumPy with the specified means and 3D covariance matrix
-		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples)
-		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix, size=num_samples)
+		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples_per_class)
+		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix,
+		                                               size=num_samples_per_class)
 
 		blue_color = '#1f77b4'
 		orange_color = '#ff7f0e'
@@ -196,11 +203,11 @@ class Model:
 		if num_features < 5:
 			num_rows = int(sqrt(num_combinations))
 			num_columns = ceil(num_combinations / num_rows)
-			fig = plt.figure(figsize=(12, 4 * num_rows))
+			fig = plt.figure(figsize=(16, 5 * num_rows))
 		else:
 			num_columns = 3
 			num_rows = ceil(num_combinations / num_columns)
-			fig = plt.figure(figsize=(12, 3 * num_rows))
+			fig = plt.figure(figsize=(16, 4 * num_rows))
 
 		# Iterate through combinations of 3 features for 3D scatter plot
 		for idx, combo in enumerate(combinations(range(num_features), 3)):
@@ -215,12 +222,14 @@ class Model:
 			X_orange = samples_orange[:, combo]
 
 			# Plot the samples for both classes
-			ax.scatter(X_blue[:, 0], X_blue[:, 1], X_blue[:, 2], edgecolors=blue_color, c='lightblue', linewidths=0.5, s=30,
+			ax.scatter(X_blue[:, 0], X_blue[:, 1], X_blue[:, 2], edgecolors=blue_color, c='lightblue', linewidths=0.5,
+			           s=30,
 			           alpha=0.7, marker='o')
-			ax.scatter(X_orange[:, 0], X_orange[:, 1], X_orange[:, 2], edgecolors=orange_color, c='moccasin', linewidths=0.5,
+			ax.scatter(X_orange[:, 0], X_orange[:, 1], X_orange[:, 2], edgecolors=orange_color, c='moccasin',
+			           linewidths=0.5,
 			           s=30, alpha=0.7, marker='o')
 
-			if num_samples > 0:
+			if num_samples_per_class > 0:
 				# Train a linear SVM classifier on the samples
 				X = np.vstack((X_blue, X_orange))
 				y = np.array([1] * len(X_blue) + [0] * len(X_orange))
@@ -243,7 +252,8 @@ class Model:
 					np.linspace(-hyperplane_bound, hyperplane_bound, 50))
 
 				# Compute the corresponding values for the axis with the smallest standard deviation
-				axes[sorted_indices[2]] = (-clf.intercept_[0] - clf.coef_[0][sorted_indices[0]] * axes[sorted_indices[0]] -
+				axes[sorted_indices[2]] = (-clf.intercept_[0] - clf.coef_[0][sorted_indices[0]] * axes[
+					sorted_indices[0]] -
 				                           clf.coef_[0][sorted_indices[1]] * axes[sorted_indices[1]]) / clf.coef_[0][
 					                          sorted_indices[2]]
 
@@ -284,6 +294,7 @@ class Model:
 					# Reshape the transformed ellipsoid mesh to (100, 100, 3)
 					transformed_ellipsoid = transformed_ellipsoid.reshape((100, 100, 3))
 
+					# plot ellipsoid as a surface
 					ax.plot_surface(transformed_ellipsoid[:, :, 0], transformed_ellipsoid[:, :, 1],
 					                transformed_ellipsoid[:, :, 2],
 					                rstride=4, cstride=4, color=color, alpha=ellipsoid_alpha, edgecolor='none')
@@ -304,12 +315,15 @@ class Model:
 			ax.set_zlim3d([-10, 10])
 			ax.view_init(elev=30, azim=-45)
 
-		plt.subplots_adjust(left=0.05, bottom=0.05, right=0.9, top=0.92, wspace=0.2, hspace=0.4)
+		plt.subplots_adjust(left=0.05, bottom=0.05, right=0.9, top=0.80, wspace=0.2, hspace=0.4)
+		datapoints_title = r'$\sigma =$ ' + str(self.sigma) + r'; $\rho =$ ' + str(self.rho) + r'; $n =$ ' + str(
+			num_samples_per_class * 2) + '\n'
+		fig.suptitle(datapoints_title, fontsize=20)
 		self.plot_3by3_fig = fig
 		# plt.show()
 		return fig
 
-	def plot_data_2d_2by2(self, num_samples=1024):
+	def plot_data_2d_2by2(self, num_samples_per_class=512):
 		cov_matrix = np.array(self.cov)
 		num_features = len(cov_matrix)
 
@@ -321,17 +335,18 @@ class Model:
 		mean_vector_orange = [-1 for i in range(num_features)]
 
 		# Generate 1024 samples for each class using NumPy with the specified means and 3D covariance matrix
-		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples)
-		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix, size=num_samples)
+		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples_per_class)
+		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix,
+		                                               size=num_samples_per_class)
 
 		if num_features == 2:
 			feature_combinations = [(0, 1)]
-			fig, axes = plt.subplots(1, 1, figsize=(4, 3))
+			fig, axes = plt.subplots(1, 1, figsize=(16, 4))
 			axes = np.array([[axes]])  # Making it a 2D array
 		else:
 			feature_combinations = list(combinations(range(num_features), 2))
 			num_rows = len(feature_combinations) // 3 + (len(feature_combinations) % 3 > 0)
-			fig, axes = plt.subplots(num_rows, 3, figsize=(12, 3 * num_rows))
+			fig, axes = plt.subplots(num_rows, 3, figsize=(16, 4 * num_rows))
 			if axes.ndim == 1:
 				axes = axes.reshape(-1, 3)
 
@@ -342,12 +357,13 @@ class Model:
 			ax = axes[idx // (3 if num_features > 2 else 1), idx % (3 if num_features > 2 else 1)]
 			X_blue = samples_blue[:, [feature1, feature2]]
 			X_orange = samples_orange[:, [feature1, feature2]]
-			ax.scatter(X_blue[:, 0], X_blue[:, 1], edgecolors=blue_color, c='lightblue', label='Blue Class', linewidths=0.5,
+			ax.scatter(X_blue[:, 0], X_blue[:, 1], edgecolors=blue_color, c='lightblue', label='Blue Class',
+			           linewidths=0.5,
 			           s=30, alpha=0.7, marker='o')
 			ax.scatter(X_orange[:, 0], X_orange[:, 1], edgecolors=orange_color, c='moccasin', label='Orange Class',
 			           linewidths=0.5, s=30, alpha=0.7, marker='o')
 
-			if num_samples > 0:
+			if num_samples_per_class > 0:
 				# Plot the SVM hyperplane
 				X = np.vstack((X_blue, X_orange))
 				y = np.array([1] * len(X_blue) + [0] * len(X_orange))
@@ -358,7 +374,6 @@ class Model:
 				xx = np.linspace(-10, 10)
 				yy = a * xx - (svm.intercept_[0]) / w[1]
 				ax.plot(xx, yy, 'k-', label='SVM Hyperplane')
-
 
 			mean_blue = np.mean(X_blue, axis=0)
 			mean_orange = np.mean(X_orange, axis=0)
@@ -387,11 +402,17 @@ class Model:
 
 		border = 0.15
 		plt.subplots_adjust(left=border, right=1 - border, bottom=border, top=1 - border, wspace=0.5, hspace=0.5)
+		if self.dim < 3:
+			datapoints_title = r'$\sigma =$ ' + str(self.sigma) + r'; $\rho =$ ' + str(self.rho) + r'; $n =$ ' + str(
+				num_samples_per_class * 2) + '\n'
+			fig.suptitle(datapoints_title, fontsize=20)
+			plt.subplots_adjust(left=0.41, right=1 - 0.41, bottom=border, top=1 - border - 0.1, wspace=0.5, hspace=0.5)
+
 		self.plot_2by2_fig = fig
 		plt.close()
 		return fig
 
-	def plot_data_1d_1by1(self, num_samples=1024):
+	def plot_data_1d_1by1(self, num_samples_per_class=512):
 
 		cov_matrix = np.array(self.cov)
 
@@ -400,19 +421,21 @@ class Model:
 		mean_vector_orange = [-1 for i in range(len(cov_matrix))]
 
 		# Generate 1024 samples for each class using NumPy with the specified means and 3D covariance matrix
-		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples)
-		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix, size=num_samples)
+		samples_blue = np.random.multivariate_normal(mean=mean_vector_blue, cov=cov_matrix, size=num_samples_per_class)
+		samples_orange = np.random.multivariate_normal(mean=mean_vector_orange, cov=cov_matrix,
+		                                               size=num_samples_per_class)
 
 		blue_color = '#1f77b4'
 		orange_color = '#ff7f0e'
 
 		num_features = len(cov_matrix)
+
 		if num_features < 4:
-			fig, axes = plt.subplots(1, num_features, figsize=(4 * num_features, 3))
+			fig, axes = plt.subplots(1, num_features, figsize=(16, 4))
 		else:
 			num_cols = 3
 			num_rows = ceil(num_features / num_cols)
-			fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 3 * num_rows))
+			fig, axes = plt.subplots(num_rows, num_cols, figsize=(16, 4 * num_rows))
 			if axes.ndim == 1:
 				axes = axes.reshape(-1, 3)
 
@@ -432,7 +455,8 @@ class Model:
 			ax.scatter(X_orange, [0] * len(X_orange), c=orange_color, alpha=0.3)
 
 			# Plot density curves for both classes
-			ax.plot(x_range, norm.pdf(x_range, loc=1, scale=np.sqrt(cov_matrix[idx, idx])), color=blue_color, linestyle='-')
+			ax.plot(x_range, norm.pdf(x_range, loc=1, scale=np.sqrt(cov_matrix[idx, idx])), color=blue_color,
+			        linestyle='-')
 			ax.plot(x_range, norm.pdf(x_range, loc=-1, scale=np.sqrt(cov_matrix[idx, idx])), color=orange_color,
 			        linestyle='-')
 
@@ -442,7 +466,7 @@ class Model:
 				ax.axvline(x=mean - std_dev, color=color, linestyle='--')
 				ax.axvline(x=mean + std_dev, color=color, linestyle='--')
 
-			if num_samples > 0:
+			if num_samples_per_class > 0:
 				# Train SVM and plot hyperplane (vertical line)
 				X = np.hstack((X_blue, X_orange)).reshape(-1, 1)
 				y = np.array([1] * len(X_blue) + [0] * len(X_orange))
@@ -460,20 +484,27 @@ class Model:
 
 		border = 0.15
 		plt.subplots_adjust(left=border, right=1 - border, bottom=border, top=1 - border, wspace=0.5, hspace=0.5)
+		if self.dim < 3:
+			plt.subplots_adjust(left=0.3, right=1 - 0.3, bottom=border, top=1 - border - 0.1, wspace=0.5, hspace=0.5)
+
+
 		self.plot_1by1_fig = fig
 		plt.close()
 		return fig
 
-	def export_data_plots_to_image(self, num_samples_per_class=1024):
+	def export_data_plots_to_image(self, num_samples_per_class=512):
 
-		fig1 = self.plot_data_3d_3by3(num_samples=num_samples_per_class)
-		fig2 = self.plot_data_2d_2by2(num_samples=num_samples_per_class)
-		fig3 = self.plot_data_1d_1by1(num_samples=num_samples_per_class)
+		plt.rcParams.update({'font.size': 14})
+		fig1 = self.plot_data_3d_3by3(num_samples_per_class=num_samples_per_class) if self.dim > 2 else None
+		fig2 = self.plot_data_2d_2by2(num_samples_per_class=num_samples_per_class)
+		fig3 = self.plot_data_1d_1by1(num_samples_per_class=num_samples_per_class)
 
 		# Save the figures to BytesIO objects
-		buf1 = io.BytesIO()
-		fig1.savefig(buf1, format='png')
-		buf1.seek(0)
+		buf1 = io.BytesIO() if self.dim > 2 else None
+
+		if self.dim > 2:
+			fig1.savefig(buf1, format='png')
+			buf1.seek(0)
 
 		buf2 = io.BytesIO()
 		fig2.savefig(buf2, format='png')
@@ -484,19 +515,21 @@ class Model:
 		buf3.seek(0)
 
 		# Read images into PIL Image
-		im1 = Image.open(buf1)
+		im1 = Image.open(buf1) if self.dim > 2 else None
 		im2 = Image.open(buf2)
 		im3 = Image.open(buf3)
 
+		images = [im1, im2, im3] if self.dim > 2 else [im2, im3]
+
 		# Create a new image with appropriate size
-		total_width = max(im1.width, im2.width, im3.width)
-		total_height = im1.height + im2.height + im3.height
+		total_width = max(im1.width if self.dim > 2 else 0, im2.width, im3.width)
+		total_height = im2.height + im3.height + im1.height if self.dim > 2 else im2.height + im3.height
 
 		new_im = Image.new("RGB", (total_width, total_height))
 
 		# Paste each image into the new image
 		y_offset = 0
-		for im in [im1, im2, im3]:
+		for im in images:
 			new_im.paste(im, (0, y_offset))
 			y_offset += im.height
 
@@ -521,5 +554,3 @@ class Model:
 		else:
 			print(f"Successfully saved data plots image to {export_path}")
 			return export_path
-
-

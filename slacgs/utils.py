@@ -1,3 +1,4 @@
+import json
 import os
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -80,17 +81,50 @@ report_service_conf: dict
 """
 
 report_service_conf = {
+  'output_path' : '/content/slacgs/output' if is_colab_notebook()
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output'),
   'images_path': '/content/slacgs/images/' if is_colab_notebook()
-  else get_user_folder_path() +'\\slacgs\\images\\' if os.name == 'nt'
-  else get_user_folder_path() + '/slags/images/',
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'images'),
+  # else os.path.join(os.path.dirname(__file__), '..', 'output','reports', 'images'),
+  'visualizations_path': '/content/slacgs/output/report/images/visualizations' if is_colab_notebook()
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports', 'images', 'visualizations'),
+  # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports', 'images', 'visualizations'),
+  'graphs_path': '/content/slacgs/output/reports/images/graphs' if is_colab_notebook()
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports', 'images', 'graphs'),
+  # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports', 'images', 'graphs'),
+  'tables_path': '/content/slacgs/output/reports/tables' if is_colab_notebook()
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports', 'tables'),
+  # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports', 'tables'),
   'reports_path': '/content/slacgs/reports/' if is_colab_notebook()
-  else get_user_folder_path() + '\\slacgs\\reports\\' if os.name == 'nt'
-  else get_user_folder_path() + '/slacgs/reports/',
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports'),
+  # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports'),
   'user_email': None,
   'drive_service': None,
   'spreadsheet_service': None,
   'pygsheets_service': None
 }
+
+
+def is_param_in_simulation_reports(params):
+  """Check if a parameter is already in the simulation_reports.json file.
+
+  Parameters:
+      params (list): The parameter to be checked.
+
+  Returns:
+      bool: True if the parameter is already in the simulation_reports.json file, False otherwise.
+  """
+  if not os.path.exists(os.path.join(report_service_conf['output_path'], 'simulation_reports.json')):
+    return False
+
+  with open(os.path.join(report_service_conf['output_path'], 'simulation_reports.json'), 'r') as f:
+    simulation_reports = json.load(f)
+
+  for report in simulation_reports:
+    if report['model_tag']['params'] == params:
+      return True
+
+  return False
 
 
 def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, user_google_account_email=None,
