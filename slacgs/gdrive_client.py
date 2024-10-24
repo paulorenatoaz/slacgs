@@ -191,6 +191,7 @@ class GdriveClient:
 			folder_metadata['parents'] = [parent_folder_id]
 
 		folder = self.drive_service.files().create(body=folder_metadata, fields='id').execute()
+
 		if verbose:
 			print(f"Folder with path '{self.get_folder_path(folder['id'])}' has been created.")
 

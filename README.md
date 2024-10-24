@@ -2,6 +2,25 @@
 
 A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order to evaluate Trade Off Between Samples and Features sizes in Classification Problems on gaussian Samples.
 
+Updated version of the SLACGS package with new features:
+
+* Simulation Reports and Scenario Reports are now: 
+  - stored in json files
+  - exported to HTML files
+  - Reports stored in user's local folder (<user_home>/slacgs/output/reports/ or /content/slacgs/output/reports/ for G-colab)
+
+* execute scripts from demo_scripts folder to:
+  - Run a single Simulation and create a Simulation Report: run_simulation.py
+  - Run a set of simulations grouped by Experiment Scenarios: run_experiment.py
+  - Make Scenario Reports from Simulation Report data saved in json: run_make_scenario_report.py
+  - Make Simulation Reports from Simulation Report data saved in json: run_make_simulation_report.py
+
+
+
+
+
+Outdated README for the SLACGS package starting here:
+
 Documentation: https://slacgs.netlify.app/
 
 

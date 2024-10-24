@@ -203,7 +203,7 @@ def loss_theoretical(h_clf, cov):
 
   coef_ = h_clf.coef_[0]
 
-  bias = (h_clf.intercept_[0]) / coef_[len(coef_) - 1]
+  bias = -(h_clf.intercept_[0]) / coef_[len(coef_) - 1]
 
   weights = [-coef_[i]/coef_[len(coef_)-1] for i in range(len(coef_)-1)]
 
@@ -364,7 +364,7 @@ def dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag(cov):
 class Simulator:
   """Represents a Simulator for a Classifier Loss Analysis on Gaussian samples in order to evaluate Trade Off Between Samples and Features in Classification Problems on multivariate Gaussian Generated Samples."""
 
-  def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, step_size=5, max_steps=200, min_steps=100, precision=1e-6, augmentation_until_n = 1024, verbose=True):
+  def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, step_size=5, max_steps=200, min_steps=100, precision=1e-6, augmentation_until_n = 1024, test_mode=False, verbose=True):
 
     """
     This Simulator for a SLACGS' Model Contains:
@@ -542,20 +542,21 @@ class Simulator:
     else:
       self.dims = [dim for dim in range(1, model.dim + 1)]
 
-
+    self.loss_types = list(loss_types)
+    self.test_mode = test_mode
     self.test_samples_amt = test_samples_amt
     self.iters_per_step = step_size
-    self.max_steps = max_steps
-    self.min_steps = min_steps
-    self.precision = precision
-    self.augmentation_until_n = augmentation_until_n
-    self.loss_types = list(loss_types)
+    self.max_steps = max_steps if not test_mode else int(max_steps/10)
+    self.min_steps = min_steps if not test_mode else int(max_steps/10)
+    self.precision = precision if not test_mode else precision*10**2
+    self.augmentation_until_n = augmentation_until_n if not test_mode else int(augmentation_until_n/2**5)
     self.model = model
     self.report = Report(self)
     self.time_spent_test = 0
     self.verbose = verbose
     self.is_notebook = is_notebook()
-    self.dims_to_compare = dims_to_compare if dims_to_compare else self.dims[-2:]
+
+
 
 
   def print_N_progress(self, n: int, max_iter: int, iter_per_step: int):
@@ -584,7 +585,7 @@ class Simulator:
 
     # print plot images
 
-    im = self.report.save_report_plots_image_as_png()
+    im = self.report.save_visualization_png_image_file()
     if self.is_notebook:
       display(im)
 
@@ -760,9 +761,12 @@ class Simulator:
     self.report.d = {d : dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
 
     # save data points plot
-    self.model.save_data_plots_image_as_png(os.path.join(self.report.export_path_images, 'data_points_n_2048.png'))
+    self.model.save_data_plots_image_as_png(os.path.join(self.report.export_path_visualizations_dir, 'datapoints' + str(self.model.params) + '.png'))
 
     # Initialize N from the model
+    if self.test_mode:
+      self.model.N = self.model.N[0:5]
+
     N = self.model.N
 
     ## for each cardinality n in N  do the simulation for each dimension d in dims
