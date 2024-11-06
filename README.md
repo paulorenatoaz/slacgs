@@ -2,6 +2,12 @@
 
 A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order to evaluate Trade Off Between Samples and Features sizes in Classification Problems on gaussian Samples.
 
+This is a Python package developed for research purposses. This Simulator supported contributions to: 
+
+the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by: Paulo Azevedo, supervised by: Daniel Menasché, and co-supervised by: Joao Pinheiro
+the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf), by: Joao Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley, Life Fellow, IEEE
+
+
 Updated version of the SLACGS package with new features:
 
 * Simulation Reports and Scenario Reports are now: 
@@ -16,13 +22,9 @@ Updated version of the SLACGS package with new features:
   - Make Simulation Reports from Simulation Report data saved in json: run_make_simulation_report.py
 
 
-
-
-
 Outdated README for the SLACGS package starting here:
 
 Documentation: https://slacgs.netlify.app/
-
 
 * Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
 * The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
@@ -44,9 +46,9 @@ Documentation: https://slacgs.netlify.app/
   - Empirical Loss with Test Data: estimated using empirical approach with test data
 
 
-# Experiment
+# Experiment Description Available in the PDF
 
-[Download Experiment PDF](./experiment.pdf)
+[Download Experiment PDF](./slacgs.pdf)
 
 # Demo
 
@@ -74,7 +76,7 @@ Documentation: https://slacgs.netlify.app/
 pip install slacgs
 ```
 
-## 2. Set Report Service
+## 2. Set Report Service 
 
 ```python
 from slacgs.demo import *
