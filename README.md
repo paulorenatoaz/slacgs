@@ -4,8 +4,8 @@ A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order
 
 This is a Python package developed for research purposses. This Simulator supported contributions to: 
 
-the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by: Paulo Azevedo, supervised by: Daniel Menasché, and co-supervised by: Joao Pinheiro
-the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf), by: Joao Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley, Life Fellow, IEEE
+ - the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by: Paulo Azevedo, supervised by: Daniel Menasché, and co-supervised by: Joao Pinheiro
+ - the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf), by: Joao Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley, Life Fellow, IEEE
 
 
 Updated version of the SLACGS package with new features:
