@@ -551,6 +551,7 @@ class Simulator:
     self.precision = precision if not test_mode else precision*10**2
     self.augmentation_until_n = augmentation_until_n if not test_mode else int(augmentation_until_n/2**5)
     self.model = model
+    # TODO(TASK-030): Build a ReportData object and pass it to Report instead of passing self
     self.report = Report(self)
     self.time_spent_test = 0
     self.verbose = verbose

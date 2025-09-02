@@ -2,23 +2,17 @@ from .model import Model
 from .simulator import Simulator
 from .report import Report
 from .enumtypes import DictionaryType, LossType
-from .gspread_client import GspreadClient
-from .gdrive_client import GdriveClient
-from .utils import *
-from .demo import *
 
-## Report Service Folder Structure
-images_path = report_service_conf['images_path']
-reports_path = report_service_conf['reports_path']
+# TODO(TASK-020): Remove import-time side effects and only expose an explicit API via __all__
+# TODO(TASK-021): Avoid star re-exports; consumers should import from submodules explicitly
 
-try:
-	os.makedirs(images_path)
-	print(f"Folder created at '{images_path}'.")
-except OSError as e:
-	print(f"Images Folder at '{images_path}'.")
+# TODO(TASK-020): Move any directory creation to a dedicated helper called from CLI/report paths
+# Note: Current import performed output directory creation and prints; this should be removed in refactor
 
-try:
-	os.makedirs(reports_path)
-	print(f"Folder created at '{reports_path}'.")
-except OSError as e:
-	print(f"Reports Folder at '{reports_path}'.\n")
+__all__ = [
+    "Model",
+    "Simulator",
+    "Report",
+    "DictionaryType",
+    "LossType",
+]

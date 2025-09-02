@@ -53,6 +53,7 @@ class Report:
 
     """
     if sim:
+      # TODO(TASK-031): Accept a ReportData payload instead of a Simulator; copy required fields and avoid storing sim
       self.sim = sim
       self.iter_N = {dim: {loss_type: [] for loss_type in sim.loss_types} for dim in sim.dims}
       self.max_iter_N = []
@@ -111,6 +112,7 @@ class Report:
         raise ValueError(f'No simulation data found for params {params}')
 
       self.sim = None
+      # TODO(TASK-031): Ensure this path also uses ReportData for consistency with live simulations
       self.params = params
       self.model = Model(params)
       self.N = simulation_data["model_tag"]["N"]
@@ -1733,5 +1735,4 @@ class Report:
   #   # return html_str
 
   ## report plot is composed by data plots and loss plots combined
-
 

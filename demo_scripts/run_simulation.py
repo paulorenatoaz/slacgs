@@ -4,7 +4,8 @@
 # src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # sys.path.append(src_path)
 # print("Source directory added to sys.path:", src_path)
-from slacgs import *
+# TODO(TASK-021): Replace wildcard import with explicit imports
+from slacgs import Model, Simulator
 
 if __name__ == "__main__":
 
@@ -30,4 +31,3 @@ if __name__ == "__main__":
 
 	# create simulation html report
 	slacgs.report.create_html_report()
-

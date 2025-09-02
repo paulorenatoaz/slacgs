@@ -5,6 +5,7 @@
 # src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # sys.path.append(src_path)
 # print("Source directory added to sys.path:", src_path)
+# TODO(TASK-011): Move report_utils into reporting subpackage; update import after src/ move
 from slacgs.report_utils import create_scenario_report
 
 if __name__ == "__main__":

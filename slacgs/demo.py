@@ -14,6 +14,9 @@ from .gspread_client import GspreadClient
 from .gdrive_client import GdriveClient
 from .utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
 
+# TODO(TASK-090): Deprecate Google Drive/Sheets usage in demos; make demos local-only and document legacy
+# TODO(TASK-040): Route demo workflows through the CLI instead of direct module-level functions
+
 """
 This module provides functions and classes that demonstrate the functionality of the slacgs package. 
 
@@ -69,7 +72,8 @@ SCENARIO7 = [[1, 4, round(r*0.2, 1)] for r in range(-4, 4)] + [[1, 1, round(r*0.
 
 ## create list of scenarios
 SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4, SCENARIO5, SCENARIO6, SCENARIO7]
-SCENARIOS = [SCENARIO7]
+# FIXME(TASK-022): Avoid overriding SCENARIOS to a single scenario; restore full list unless explicitly filtered
+# SCENARIOS = [SCENARIO7]
 
 ## free global variables
 r = RHO_12 = None

@@ -80,6 +80,7 @@ report_service_conf: dict
     This dictionary is used throughout the module to configure and use Google services.
 """
 
+# TODO(TASK-050): Centralize configuration in slacgs/config.py and load here instead of hardcoding
 report_service_conf = {
   'output_path' : '/content/slacgs/output' if is_colab_notebook()
   else os.path.join(os.path.expanduser("~"), 'slacgs', 'output'),
@@ -167,6 +168,7 @@ def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, u
   if path_to_google_cloud_service_account_api_key is not None:
     credentials = service_account.Credentials.from_service_account_file(path_to_google_cloud_service_account_api_key, scopes=SCOPES)
   else:
+    # TODO(TASK-090): Remove dependency on interactive password flow; deprecate Google services
     key_obj = eval(get_key(slacgs_password))
     credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
 
@@ -309,5 +311,4 @@ def cls():
     _ = os.system('cls')
   else:  # For Linux and Mac
     _ = os.system('clear')
-
 
