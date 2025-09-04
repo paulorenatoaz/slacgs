@@ -162,3 +162,6 @@ cython_debug/
 .bisync_bootstrapped
 .rclone_access_check
 RCLONE_TEST
+
+# Project outputs (kept only on gh-pages)
+/output/

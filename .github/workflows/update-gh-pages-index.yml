@@ -1,0 +1,45 @@
+name: Update gh-pages index
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch gh-pages and add worktree
+        run: |
+          git fetch origin gh-pages:gh-pages || true
+          git worktree add gh-pages gh-pages
+
+      - name: Generate index for gh-pages
+        run: |
+          python -m pip install --upgrade pip
+          python -m slacgs.publish.publisher --reports-dir reports --data-dir data --site-dir gh-pages --title "slacgs Reports"
+          cd gh-pages
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore(publish): update index [skip ci]"
+            git push origin HEAD:gh-pages
+          fi
+
+      - name: Cleanup worktree
+        if: always()
+        run: git worktree remove gh-pages --force || true
+
