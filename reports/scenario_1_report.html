@@ -1,0 +1,359 @@
+
+    <html>
+    <head>
+        <title>Scenario Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .section { margin-bottom: 40px; }
+            .section-title { font-size: 24px; margin-bottom: 10px; }
+            .sub-section-title { font-size: 20px; margin-bottom: 10px; }
+            .gif-container, .graphs-container, .tables-container { margin: 20px 0; }
+            .gif-container img, .graphs-container img { width: 100%; max-width: 600px; }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <div class="section-title">1. Scenario 1 Visualization and simulation reports links</div>
+            <div class="gif-container">
+                <img src="scenario_1\scenario_1_visualization.gif" alt="Scenario Visualization GIF"><br>
+                <h3>Links to simulation reports</h3><div class='table-container'><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>reports links</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="sim_report_5[1, 1, 1.7, 0, 0, 0].html">[1, 1, 1.7, 0, 0, 0]</a></td>
+    </tr>
+    <tr>
+      <td><a href="sim_report_8[1, 1, 2.0, 0, 0, 0].html">[1, 1, 2.0, 0, 0, 0]</a></td>
+    </tr>
+    <tr>
+      <td><a href="sim_report_9[1, 1, 2.5, 0, 0, 0].html">[1, 1, 2.5, 0, 0, 0]</a></td>
+    </tr>
+    <tr>
+      <td><a href="sim_report_11[1, 1, 3.5, 0, 0, 0].html">[1, 1, 3.5, 0, 0, 0]</a></td>
+    </tr>
+    <tr>
+      <td><a href="sim_report_16[1, 1, 7, 0, 0, 0].html">[1, 1, 7, 0, 0, 0]</a></td>
+    </tr>
+    <tr>
+      <td><a href="sim_report_19[1, 1, 10, 0, 0, 0].html">[1, 1, 10, 0, 0, 0]</a></td>
+    </tr>
+  </tbody>
+</table></div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">2. Graphs</div>
+            <div class="graphs-container">
+                <div class="sub-section-title">2.1 Loss vs. N</div>
+                <img src="scenario_1\EMPIRICAL_TRAIN_loss_vs_n.png" alt="Graph"><br><img src="scenario_1\THEORETICAL_loss_vs_n.png" alt="Graph"><br><img src="scenario_1\EMPIRICAL_TEST_loss_vs_n.png" alt="Graph"><br>
+                <div class="sub-section-title">2.2 Loss vs. sigma_3</div>
+                <img src="scenario_1\EMPIRICAL_TRAIN_loss_vs_sigma_3.png" alt="Graph"><br><img src="scenario_1\THEORETICAL_loss_vs_sigma_3.png" alt="Graph"><br><img src="scenario_1\EMPIRICAL_TEST_loss_vs_sigma_3.png" alt="Graph"><br>
+                <div class="sub-section-title">2.3 log_2(n*) vs. sigma_3</div>
+                <img src="scenario_1\THEORETICAL_n_star_vs_sigma_3.png" alt="Graph"><br><img src="scenario_1\EMPIRICAL_TEST_n_star_vs_sigma_3.png" alt="Graph"><br>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">3. Tables</div>
+            <div class="tables-container">
+                <h3>THEORETICAL; loss(n) vs. sigma_3</h3><div class='table-container'><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>2 feat</th>
+      <th>sigma_3 = 1.7</th>
+      <th>sigma_3 = 2.0</th>
+      <th>sigma_3 = 2.5</th>
+      <th>sigma_3 = 3.5</th>
+      <th>sigma_3 = 7</th>
+      <th>sigma_3 = 10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>0.149616</td>
+      <td>0.175071</td>
+      <td>0.195544</td>
+      <td>0.222672</td>
+      <td>0.255296</td>
+      <td>0.290186</td>
+      <td>0.296983</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.139319</td>
+      <td>0.151961</td>
+      <td>0.166790</td>
+      <td>0.184824</td>
+      <td>0.205193</td>
+      <td>0.229189</td>
+      <td>0.234659</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.119610</td>
+      <td>0.126663</td>
+      <td>0.136294</td>
+      <td>0.146693</td>
+      <td>0.155866</td>
+      <td>0.165972</td>
+      <td>0.167607</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>0.101823</td>
+      <td>0.100160</td>
+      <td>0.106131</td>
+      <td>0.112221</td>
+      <td>0.117642</td>
+      <td>0.122044</td>
+      <td>0.122748</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>0.091529</td>
+      <td>0.082812</td>
+      <td>0.087477</td>
+      <td>0.092074</td>
+      <td>0.096562</td>
+      <td>0.099863</td>
+      <td>0.100177</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>0.085341</td>
+      <td>0.073376</td>
+      <td>0.077532</td>
+      <td>0.081853</td>
+      <td>0.085615</td>
+      <td>0.088979</td>
+      <td>0.089367</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>0.082306</td>
+      <td>0.068356</td>
+      <td>0.072392</td>
+      <td>0.076610</td>
+      <td>0.080337</td>
+      <td>0.083379</td>
+      <td>0.083987</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>0.080505</td>
+      <td>0.065665</td>
+      <td>0.069763</td>
+      <td>0.073721</td>
+      <td>0.077400</td>
+      <td>0.080501</td>
+      <td>0.081055</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>0.079623</td>
+      <td>0.064189</td>
+      <td>0.068239</td>
+      <td>0.072269</td>
+      <td>0.075985</td>
+      <td>0.079082</td>
+      <td>0.079622</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>0.079144</td>
+      <td>0.063494</td>
+      <td>0.067516</td>
+      <td>0.071542</td>
+      <td>0.075291</td>
+      <td>0.078338</td>
+      <td>0.078889</td>
+    </tr>
+  </tbody>
+</table></div>
+                <h3>THEORETICAL; n_star vs. sigma_3</h3><div class='table-container'><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sigma_3</th>
+      <th>1.7</th>
+      <th>2.0</th>
+      <th>2.5</th>
+      <th>3.5</th>
+      <th>7</th>
+      <th>10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>n_star</td>
+      <td>15</td>
+      <td>23</td>
+      <td>36</td>
+      <td>70</td>
+      <td>256</td>
+      <td>512</td>
+    </tr>
+  </tbody>
+</table></div>
+                <h3>EMPIRICAL_TEST; loss(n) vs. sigma_3</h3><div class='table-container'><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>2 feat</th>
+      <th>sigma_3 = 1.7</th>
+      <th>sigma_3 = 2.0</th>
+      <th>sigma_3 = 2.5</th>
+      <th>sigma_3 = 3.5</th>
+      <th>sigma_3 = 7</th>
+      <th>sigma_3 = 10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>0.172077</td>
+      <td>0.205585</td>
+      <td>0.237106</td>
+      <td>0.283434</td>
+      <td>0.347468</td>
+      <td>0.439274</td>
+      <td>0.464058</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.145481</td>
+      <td>0.160227</td>
+      <td>0.177930</td>
+      <td>0.200631</td>
+      <td>0.230298</td>
+      <td>0.271046</td>
+      <td>0.284769</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.120396</td>
+      <td>0.127551</td>
+      <td>0.137149</td>
+      <td>0.148358</td>
+      <td>0.158780</td>
+      <td>0.170357</td>
+      <td>0.173105</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>0.102151</td>
+      <td>0.100220</td>
+      <td>0.106398</td>
+      <td>0.112610</td>
+      <td>0.117958</td>
+      <td>0.122295</td>
+      <td>0.123092</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>0.091385</td>
+      <td>0.082938</td>
+      <td>0.087632</td>
+      <td>0.092204</td>
+      <td>0.096777</td>
+      <td>0.100075</td>
+      <td>0.100460</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>0.085388</td>
+      <td>0.073242</td>
+      <td>0.077463</td>
+      <td>0.081746</td>
+      <td>0.085752</td>
+      <td>0.088982</td>
+      <td>0.089444</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>0.082241</td>
+      <td>0.068144</td>
+      <td>0.072415</td>
+      <td>0.076405</td>
+      <td>0.080333</td>
+      <td>0.083439</td>
+      <td>0.084043</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>0.080571</td>
+      <td>0.065631</td>
+      <td>0.069699</td>
+      <td>0.073573</td>
+      <td>0.077249</td>
+      <td>0.080367</td>
+      <td>0.080958</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>0.079627</td>
+      <td>0.064186</td>
+      <td>0.068163</td>
+      <td>0.072206</td>
+      <td>0.075997</td>
+      <td>0.079051</td>
+      <td>0.079541</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>0.079015</td>
+      <td>0.063448</td>
+      <td>0.067392</td>
+      <td>0.071330</td>
+      <td>0.075273</td>
+      <td>0.078352</td>
+      <td>0.078838</td>
+    </tr>
+  </tbody>
+</table></div>
+                <h3>EMPIRICAL_TEST; n_star vs. sigma_3</h3><div class='table-container'><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sigma_3</th>
+      <th>1.7</th>
+      <th>2.0</th>
+      <th>2.5</th>
+      <th>3.5</th>
+      <th>7</th>
+      <th>10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>n_star</td>
+      <td>14</td>
+      <td>24</td>
+      <td>37</td>
+      <td>72</td>
+      <td>232</td>
+      <td>452</td>
+    </tr>
+  </tbody>
+</table></div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

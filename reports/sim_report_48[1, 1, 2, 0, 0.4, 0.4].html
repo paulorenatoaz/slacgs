@@ -1,0 +1,645 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Simulation Report [1, 1, 2, 0, 0.4, 0.4]</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+            .section {
+                margin-bottom: 20px;
+            }
+            .table-container {
+                margin-bottom: 20px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="section">
+            <h2>Simulation Visualizations</h2>
+            <img src="images/visualizations/sim_vis_48[1, 1, 2, 0, 0.4, 0.4]/animation[1, 1, 2, 0, 0.4, 0.4]n_0_1024.gif" alt="GIF">
+        </div>
+        <div class="section">
+            <h2>Loss vs log_2(n)</h2>
+            <div class='image-container'><h3>Loss vs log(n) EMPIRICAL_TRAIN</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/EMPIRICAL_TRAIN[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 1'></div><div class='image-container'><h3>Loss vs log(n) THEORETICAL</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/THEORETICAL[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 2'></div><div class='image-container'><h3>Loss vs log(n) EMPIRICAL_TEST</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/EMPIRICAL_TEST[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 3'></div><div class='image-container'><h3>Loss vs log(n) 1 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/1_features[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 4'></div><div class='image-container'><h3>Loss vs log(n) 2 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/2_features[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 5'></div><div class='image-container'><h3>Loss vs log(n) 3 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/3_features[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 6'></div>
+            
+            <h2>Time consumption(n)</h2>
+            <div class='image-container'><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/loss_type_time[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 1'></div><div class='image-container'><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/dim_time[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 2'></div><div class='image-container'><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/n_time[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 3'></div>
+            
+            <h2>Iterations vs log_2(n)</h2>
+            <div class='image-container'><h3>Iterations vs log(n) EMPIRICAL_TRAIN</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/EMPIRICAL_TRAIN_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 1'></div><div class='image-container'><h3>Iterations vs log(n) THEORETICAL</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/THEORETICAL_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 2'></div><div class='image-container'><h3>Iterations vs log(n) EMPIRICAL_TEST</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/EMPIRICAL_TEST_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 3'></div><div class='image-container'><h3>Iterations vs log(n) 1 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/1_features_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 4'></div><div class='image-container'><h3>Iterations vs log(n) 2 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/2_features_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 5'></div><div class='image-container'><h3>Iterations vs log(n) 3 features</h3><img src='images/graphs/sim_graphs_48[1, 1, 2, 0, 0.4, 0.4]/3_features_iterations[1, 1, 2, 0, 0.4, 0.4]n_1024.png' alt='Image 6'></div>
+            
+        </div>
+        <div class="section">
+        
+            <h2>N* Relationship Matrixes</h2>
+            <div class="table-container"><h3>N* theoretical</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>dim</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 feature(s)</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>4.0229</td>
+    </tr>
+    <tr>
+      <td>2 feature(s)</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>48.0505</td>
+    </tr>
+    <tr>
+      <td>3 feature(s)</td>
+      <td>4.0229</td>
+      <td>48.0505</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table></div>
+            <div class="table-container"><h3>N* empirical test</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>dim</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 feature(s)</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3.2862</td>
+    </tr>
+    <tr>
+      <td>2 feature(s)</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>47.9160</td>
+    </tr>
+    <tr>
+      <td>3 feature(s)</td>
+      <td>3.2862</td>
+      <td>47.916</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table></div>
+        
+            <h2>Loss Tables</h2>
+            <div class='table-container'><h3>Table EMPIRICAL_TRAIN</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>0.000022</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.117453</td>
+      <td>0.029437</td>
+      <td>0.012266</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.139364</td>
+      <td>0.046250</td>
+      <td>0.028359</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>0.148492</td>
+      <td>0.057977</td>
+      <td>0.043945</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>0.152757</td>
+      <td>0.065670</td>
+      <td>0.054509</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>0.155641</td>
+      <td>0.072188</td>
+      <td>0.062750</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>0.157252</td>
+      <td>0.074919</td>
+      <td>0.066755</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>0.157625</td>
+      <td>0.076525</td>
+      <td>0.069213</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>0.158326</td>
+      <td>0.077701</td>
+      <td>0.070785</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>0.158438</td>
+      <td>0.078319</td>
+      <td>0.071604</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table THEORETICAL</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>0.188928</td>
+      <td>0.150010</td>
+      <td>0.211203</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.185208</td>
+      <td>0.139226</td>
+      <td>0.185456</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.177841</td>
+      <td>0.119472</td>
+      <td>0.148049</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>0.169509</td>
+      <td>0.102161</td>
+      <td>0.113966</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>0.164232</td>
+      <td>0.091581</td>
+      <td>0.094657</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>0.161614</td>
+      <td>0.085420</td>
+      <td>0.083252</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>0.160193</td>
+      <td>0.082275</td>
+      <td>0.078025</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>0.159402</td>
+      <td>0.080433</td>
+      <td>0.074967</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>0.159014</td>
+      <td>0.079555</td>
+      <td>0.073505</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>0.158824</td>
+      <td>0.079134</td>
+      <td>0.072858</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table EMPIRICAL_TEST</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>0.251376</td>
+      <td>0.171558</td>
+      <td>0.265308</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.205844</td>
+      <td>0.145674</td>
+      <td>0.200329</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.180299</td>
+      <td>0.120247</td>
+      <td>0.149618</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>0.169705</td>
+      <td>0.101973</td>
+      <td>0.114224</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>0.164437</td>
+      <td>0.091500</td>
+      <td>0.094506</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>0.161547</td>
+      <td>0.085302</td>
+      <td>0.083147</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>0.160168</td>
+      <td>0.082038</td>
+      <td>0.077869</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>0.159336</td>
+      <td>0.080363</td>
+      <td>0.075122</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>0.158884</td>
+      <td>0.079306</td>
+      <td>0.073501</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>0.158754</td>
+      <td>0.078903</td>
+      <td>0.072887</td>
+    </tr>
+  </tbody>
+</table></div>
+            
+            <h2>Time Consumption Tables</h2>
+            <div class='table-container'><h3>Table EMPIRICAL_TRAIN</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>loss type</th>
+      <th>time (min)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EMPIRICAL_TRAIN</td>
+      <td>0.127974</td>
+    </tr>
+    <tr>
+      <td>THEORETICAL</td>
+      <td>0.073324</td>
+    </tr>
+    <tr>
+      <td>EMPIRICAL_TEST</td>
+      <td>0.148174</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table THEORETICAL</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th># features</th>
+      <th>time (min)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>0.067381</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.057138</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.058843</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table EMPIRICAL_TEST</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>time (min)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0.046423</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0.038543</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.024220</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0.017090</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0.012863</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0.010206</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>0.008975</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>0.010835</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0.016443</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>0.036175</td>
+    </tr>
+  </tbody>
+</table></div>
+            
+            <h2>Iterations Tables</h2>
+            <div class='table-container'><h3>Table EMPIRICAL_TRAIN</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>22600</td>
+      <td>11413</td>
+      <td>11413</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>16000</td>
+      <td>16000</td>
+      <td>16000</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>11200</td>
+      <td>11200</td>
+      <td>11200</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>8000</td>
+      <td>8000</td>
+      <td>8000</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>5600</td>
+      <td>5600</td>
+      <td>5600</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>4000</td>
+      <td>4000</td>
+      <td>4000</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>2800</td>
+      <td>2800</td>
+      <td>2800</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>2000</td>
+      <td>2000</td>
+      <td>2000</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>1400</td>
+      <td>1400</td>
+      <td>1400</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>1000</td>
+      <td>1000</td>
+      <td>1000</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table THEORETICAL</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>11413</td>
+      <td>22600</td>
+      <td>12543</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>8400</td>
+      <td>11680</td>
+      <td>8480</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>6608</td>
+      <td>5656</td>
+      <td>7560</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>4880</td>
+      <td>4560</td>
+      <td>8000</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>2968</td>
+      <td>2968</td>
+      <td>2912</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>2080</td>
+      <td>3140</td>
+      <td>2200</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>1442</td>
+      <td>1512</td>
+      <td>1540</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>1020</td>
+      <td>1070</td>
+      <td>1090</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>742</td>
+      <td>728</td>
+      <td>749</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>510</td>
+      <td>515</td>
+      <td>520</td>
+    </tr>
+  </tbody>
+</table></div><div class='table-container'><h3>Table EMPIRICAL_TEST</h3><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>n</th>
+      <th>1 feature(s)</th>
+      <th>2 feature(s)</th>
+      <th>3 feature(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2</td>
+      <td>15142</td>
+      <td>22600</td>
+      <td>17967</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>16000</td>
+      <td>16000</td>
+      <td>16000</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>8624</td>
+      <td>7896</td>
+      <td>7448</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>4800</td>
+      <td>4320</td>
+      <td>4520</td>
+    </tr>
+    <tr>
+      <td>32</td>
+      <td>3696</td>
+      <td>3668</td>
+      <td>3892</td>
+    </tr>
+    <tr>
+      <td>64</td>
+      <td>2960</td>
+      <td>2200</td>
+      <td>2160</td>
+    </tr>
+    <tr>
+      <td>128</td>
+      <td>1974</td>
+      <td>1778</td>
+      <td>1512</td>
+    </tr>
+    <tr>
+      <td>256</td>
+      <td>1830</td>
+      <td>1330</td>
+      <td>1040</td>
+    </tr>
+    <tr>
+      <td>512</td>
+      <td>721</td>
+      <td>756</td>
+      <td>1029</td>
+    </tr>
+    <tr>
+      <td>1024</td>
+      <td>520</td>
+      <td>530</td>
+      <td>670</td>
+    </tr>
+  </tbody>
+</table></div>           
+            
+        </div>
+        
+    </body>
+    </html>
+    
