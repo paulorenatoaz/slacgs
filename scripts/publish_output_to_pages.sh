@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 REMOTE="${REMOTE:-origin}"
-PAGES="${PAGES:-gh-pages}"
+PAGES="${PAGES:-reports-pages}"
 REPORTS_DIR="reports"
 DATA_DIR="data"
 
@@ -11,12 +11,12 @@ if ! git ls-remote --exit-code --heads "$REMOTE" "$PAGES" >/dev/null 2>&1; then
   exit 1
 fi
 
-git worktree add gh-pages "$PAGES"
+git worktree add reports-pages "$PAGES"
 
-mkdir -p gh-pages/"$REPORTS_DIR" gh-pages/"$DATA_DIR"
+mkdir -p reports-pages/"$REPORTS_DIR" reports-pages/"$DATA_DIR"
 
 if [ -d output/reports ]; then
-  cp -R output/reports/. gh-pages/"$REPORTS_DIR"/
+  cp -R output/reports/. reports-pages/"$REPORTS_DIR"/
 else
   echo "Note: output/reports not found; skipping HTML sync."
 fi
@@ -24,14 +24,14 @@ fi
 shopt -s nullglob
 jsons=( output/*.json )
 if [ ${#jsons[@]} -gt 0 ]; then
-  cp output/*.json gh-pages/"$DATA_DIR"/
+  cp output/*.json reports-pages/"$DATA_DIR"/
 else
   echo "Note: no JSON files under output/; skipping JSON sync."
 fi
 
-touch gh-pages/.nojekyll
+touch reports-pages/.nojekyll
 
-pushd gh-pages >/dev/null
+pushd reports-pages >/dev/null
 if [ -n "$(git status --porcelain)" ]; then
   git add -A
   git commit -m "chore(publish): sync output to gh-pages"
@@ -41,6 +41,5 @@ else
 fi
 popd >/dev/null
 
-git worktree remove gh-pages --force || true
-echo "Published. Ensure GitHub Pages is set to branch: gh-pages, folder: /"
-
+git worktree remove reports-pages --force || true
+echo "Published. Ensure GitHub Pages is set to branch: reports-pages, folder: /"

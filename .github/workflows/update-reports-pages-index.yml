@@ -1,4 +1,4 @@
-name: Update gh-pages index
+name: Update reports-pages index
 on:
   push:
     branches: [ main ]
@@ -23,23 +23,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch gh-pages and add worktree
+      - name: Fetch reports-pages and add worktree
         run: |
-          git fetch origin gh-pages:gh-pages || true
-          git worktree add gh-pages gh-pages
+          git fetch origin reports-pages:reports-pages || true
+          git worktree add reports-pages reports-pages
 
-      - name: Generate index for gh-pages
+      - name: Generate index for reports-pages
         run: |
           python -m pip install --upgrade pip
-          python -m slacgs.publish.publisher --reports-dir reports --data-dir data --site-dir gh-pages --title "slacgs Reports"
-          cd gh-pages
+          python -m slacgs.publish.publisher --reports-dir reports --data-dir data --site-dir reports-pages --title "slacgs Reports"
+          cd reports-pages
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "chore(publish): update index [skip ci]"
-            git push origin HEAD:gh-pages
+            git push origin HEAD:reports-pages
           fi
 
       - name: Cleanup worktree
         if: always()
-        run: git worktree remove gh-pages --force || true
-
+        run: git worktree remove reports-pages --force || true

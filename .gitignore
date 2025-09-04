@@ -163,5 +163,8 @@ cython_debug/
 .rclone_access_check
 RCLONE_TEST
 
+# Project outputs (kept only on reports-pages branch)
+/output/
+
 # Project outputs (kept only on gh-pages)
 /output/
