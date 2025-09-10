@@ -93,8 +93,9 @@ report_service_conf = {
   'graphs_path': '/content/slacgs/output/reports/images/graphs' if is_colab_notebook()
   else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports', 'images', 'graphs'),
   # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports', 'images', 'graphs'),
-  'tables_path': '/content/slacgs/output/reports/tables' if is_colab_notebook()
-  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports', 'tables'),
+  # CSV tables now live under output/data/tables to match Pages structure
+  'tables_path': '/content/slacgs/output/data/tables' if is_colab_notebook()
+  else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'data', 'tables'),
   # else os.path.join(os.path.dirname(__file__), '..', 'output', 'reports', 'tables'),
   'reports_path': '/content/slacgs/reports/' if is_colab_notebook()
   else os.path.join(os.path.expanduser("~"), 'slacgs', 'output', 'reports'),
@@ -311,4 +312,3 @@ def cls():
     _ = os.system('cls')
   else:  # For Linux and Mac
     _ = os.system('clear')
-

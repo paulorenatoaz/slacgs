@@ -1,6 +1,8 @@
 import argparse
 import datetime as dt
 import html
+import os
+import subprocess
 from pathlib import Path
 
 
@@ -81,8 +83,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Write index.html linking scenario reports and JSON data.")
     ap.add_argument("--reports-dir", default="reports", help="Path to reports root (on gh-pages)")
     ap.add_argument("--data-dir", default="data", help="Path to JSON root (on gh-pages)")
-    ap.add_argument("--site-dir", default=".", help="Where to write index.html (gh-pages root)")
+    ap.add_argument("--site-dir", default="output", help="Where to write index.html (recommend: output)")
     ap.add_argument("--title", default="slacgs Reports", help="Index title")
+    ap.add_argument("--publish", action="store_true", help="After generating index, publish output/ to reports-pages via scripts/publish_output_to_pages.sh")
     args = ap.parse_args(argv)
 
     site_dir = Path(args.site_dir).resolve()
@@ -94,7 +97,19 @@ def main(argv=None):
     write_index(site_dir, Path(args.reports_dir), Path(args.data_dir), scenarios, json_files, title=args.title)
     print(f"Wrote {site_dir / 'index.html'}")
 
+    if args.publish:
+        # Locate repo root (publisher.py is at slacgs/publish/publisher.py)
+        repo_root = Path(__file__).resolve().parents[2]
+        script = repo_root / "scripts" / "publish_output_to_pages.sh"
+        if not script.exists():
+            raise SystemExit(f"Publish script not found: {script}")
+        print(f"Publishing via {script} …")
+        # Ensure we run from repo root so the script sees ./output/
+        proc = subprocess.run(["bash", str(script)], cwd=str(repo_root))
+        if proc.returncode != 0:
+            raise SystemExit(proc.returncode)
+        print("Publish completed.")
+
 
 if __name__ == "__main__":
     main()
-

@@ -22,11 +22,19 @@ else
 fi
 
 shopt -s nullglob
+# Copy JSON files at output root
 jsons=( output/*.json )
 if [ ${#jsons[@]} -gt 0 ]; then
   cp output/*.json reports-pages/"$DATA_DIR"/
 else
-  echo "Note: no JSON files under output/; skipping JSON sync."
+  echo "Note: no JSON files under output/; skipping JSON root sync."
+fi
+
+# Copy data directory (JSON/CSV and subfolders like tables)
+if [ -d output/data ]; then
+  cp -R output/data/. reports-pages/"$DATA_DIR"/
+else
+  echo "Note: output/data not found; skipping data dir sync."
 fi
 
 touch reports-pages/.nojekyll
