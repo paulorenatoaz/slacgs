@@ -1,0 +1,95 @@
+# SLACGS Project Configuration Example
+# Copy this file to 'slacgs.toml' and customize for your project.
+# This file is version-controlled for reproducible scientific experiments.
+
+[paths]
+# Base output directory for all results
+output_dir = "./output"
+
+# Optional: Override specific directories
+# If not set, defaults to <output_dir>/reports and <output_dir>/data
+# reports_dir = "./custom_reports"
+# data_dir = "./custom_data"
+
+[experiment]
+# Random seed for reproducible results
+# Set to a fixed integer for reproducibility, or null for random
+seed = 42
+
+# Number of parallel jobs
+# -1 = use all available CPU cores
+# 1 = sequential execution (easier debugging)
+# N = use N cores
+n_jobs = -1
+
+# Verbose output during experiments
+verbose = true
+
+[logging]
+# Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+level = "INFO"
+
+# Log file location
+# null = <output_dir>/slacgs.log (default)
+# false = disable file logging
+# "path/to/file.log" = custom location
+file = null
+
+# Suppress console output (only log to file)
+quiet = false
+
+[publishing]
+# Enable automatic publishing to GitHub Pages
+enabled = false
+
+# Target directory for published reports
+# Should point to your *-pages repository
+target_dir = "../slacgs-reports-pages"
+
+# Automatically git push after publishing
+auto_push = false
+
+# ============================================================================
+# USAGE EXAMPLES
+# ============================================================================
+
+# Minimal configuration (just set seed):
+# [experiment]
+# seed = 42
+
+# HPC/Cluster configuration (use environment variables instead):
+# export SLACGS_OUTPUT_DIR=/scratch/username/slacgs-results
+# export SLACGS_SEED=42
+# export SLACGS_N_JOBS=16
+# export SLACGS_LOG_LEVEL=WARNING
+
+# Reproducible research paper:
+# [paths]
+# output_dir = "./results"
+# [experiment]
+# seed = 12345  # Document this seed in your paper
+# n_jobs = 1    # Sequential for exact reproducibility
+# verbose = true
+
+# High-throughput experiments:
+# [experiment]
+# seed = null   # Random seed for each run
+# n_jobs = -1   # Use all cores
+# [logging]
+# level = "WARNING"  # Less verbose output
+# quiet = false
+
+# ============================================================================
+# PRIORITY ORDER
+# ============================================================================
+# Configuration is merged in this order (highest to lowest priority):
+# 1. Command-line arguments (--output-dir, --seed, etc.)
+# 2. Environment variables (SLACGS_OUTPUT_DIR, SLACGS_SEED, etc.)
+# 3. This project config file (./slacgs.toml)
+# 4. User config file (~/.config/slacgs/config.toml)
+# 5. Built-in defaults
+
+# This means you can:
+# - Set project defaults here (version-controlled)
+# - Override with environment variables for HPC/cluster runs
+# - Override with CLI args for one-off experiments

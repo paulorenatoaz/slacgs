@@ -1,0 +1,39 @@
+# MANIFEST.in - Control what files are included in PyPI distribution
+
+# Include essential documentation
+include LICENSE
+include README.md
+include requirements.txt
+include slacgs.toml.example
+
+# Include docs source (users can build locally)
+recursive-include docs/source *.rst *.py
+include docs/Makefile
+include docs/make.bat
+
+# Include scripts
+recursive-include scripts *.sh
+
+# Exclude unnecessary files
+exclude TASKS.md
+exclude REFACTOR_PLAN.md
+exclude TASK_*.md
+exclude TASKS_*.md
+exclude slacgs.toml
+exclude *.pdf
+
+# Exclude build/cache directories
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *$py.class
+global-exclude *.so
+recursive-exclude * .pytest_cache
+recursive-exclude * .venv
+recursive-exclude * venv
+recursive-exclude * .git
+recursive-exclude * .vscode
+
+# Exclude output and TCC directories
+recursive-exclude output *
+recursive-exclude TCC *
+recursive-exclude docs/_build *

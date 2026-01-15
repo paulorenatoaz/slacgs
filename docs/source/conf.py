@@ -19,7 +19,8 @@ import sys
 import sphinx_rtd_theme
 
 
-sys.path.insert(0, os.path.abspath('..\\slacgs'))
+# Add src directory to path for autodoc to find slacgs package
+sys.path.insert(0, os.path.abspath('../../src'))
 extensions = ['sphinx.ext.autodoc',
               "sphinx_rtd_theme",
               #'readthedocs-sphinx-ext',

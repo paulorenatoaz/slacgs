@@ -1,73 +1,45 @@
 # SLACGS [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://slacgs.netlify.app/)
 
-A Simulator for Loss Analysis of Linear Classifiers on Gaussian Samples in order to evaluate Trade Off Between Samples and Features sizes in Classification Problems on gaussian Samples.
+SLACGS is a scientific Python package for simulating loss/error behavior of linear classifiers on Gaussian samples, with a focus on the trade-off between sample size ($n$) and feature dimensionality ($d$).
 
-This is a Python package developed for research purposses. This Simulator supported contributions to: 
+SLACGS supports arbitrary dimensionality ($d \ge 2$). The model is defined by a single parameter vector containing:
 
- - the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by: Paulo Azevedo, supervised by: Daniel Menasché, and co-supervised by: Joao Pinheiro
- - the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf), by: Joao Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley, Life Fellow, IEEE
+- $d$ standard deviations: $[\sigma_1,\ldots,\sigma_d]$
+- $d(d-1)/2$ correlations in upper-triangular order: $[\rho_{12},\rho_{13},\ldots,\rho_{(d-1)d}]$
 
+This package supported contributions to:
 
-Updated version of the SLACGS package with new features:
+- the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by Paulo Azevedo (advisor: Daniel Menasché; co-advisor: João Pinheiro)
+- the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf) by João Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley
 
-* Simulation Reports and Scenario Reports are now: 
-  - stored in json files
-  - exported to HTML files
-  - Reports stored in user's local folder (<user_home>/slacgs/output/reports/ or /content/slacgs/output/reports/ for G-colab)
+## Updated SLACGS (current system)
 
-* execute scripts from demo_scripts folder to:
-  - Run a single Simulation and create a Simulation Report: run_simulation.py
-  - Run a set of simulations grouped by Experiment Scenarios: run_experiment.py
-  - Make Scenario Reports from Simulation Report data saved in json: run_make_scenario_report.py
-  - Make Simulation Reports from Simulation Report data saved in json: run_make_simulation_report.py
+The current SLACGS system is centered around a CLI + a clean data/reporting pipeline:
 
+- CLI entrypoint: `slacgs` (or `python -m slacgs`) with commands to run simulations/experiments and generate reports.
+- Configuration: optional TOML config with precedence **CLI args > env vars > ./slacgs.toml > ~/.config/slacgs/config.toml > defaults**.
+- Outputs: simulation results are persisted as JSON and exported as HTML reports plus images/tables.
+- Logging: structured logs with rotation; `cleanup-logs` command for retention.
+- Reporting: `ReportData` data object decouples `Simulator` from `Report` (no circular dependency).
 
-Outdated README for the SLACGS package starting here:
+By default, output is written under `~/slacgs/output/` (configurable).
 
-Documentation: https://slacgs.netlify.app/
+## Legacy note
 
-* Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-* The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
-* Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/slacgs/images/ or /content/slacgs/images (for G-colab) )
-
-* Reports Exported:
-  - Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
-  - Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
-  - Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
-
-* Images Exported (<user_home>/slacgs/images/ or /content/slacgs/images [for G-colab] ):
-  - Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
-  - Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
-  - Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
-
-* Loss Functions:
-  - Theoretical Loss: estimated using probability theory
-  - Empirical Loss with Train Data: estimated using empirical approach with train data
-  - Empirical Loss with Test Data: estimated using empirical approach with test data
+Older Google Drive / Google Sheets integration is considered legacy and is not part of the recommended workflow. Legacy dependencies are optional via `slacgs[legacy]`.
 
 
 # Experiment Description Available in the PDF
 
 [Download Experiment PDF](./slacgs.pdf)
 
+
 # Demo
 
 1. Download and Install
-2. Set/Start Report Service
+2. Configure output/logging (optional)
 3. Experiment Scenarios
-4. Demo Functions:
-    * Run an Experiment Simulation
-      * run a simulation for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise
-    * Add a Simulation to an Experiment Scenario
-      * add simulation results to one of the experiment scenario spreadsheets
-    * Run a Custom Scenario
-      * run a custom scenario and write the results to a Google Spreadsheet shared with the user
-    * Add a Simulation to a Custom Scenario
-      * add a simulation to a custom scenario spreadsheet
-    * Run a Custom Simulation
-      * run a custom simulation for any dimensionality and cardinality
-    * Run All Experiment Simulations
-      * run all simulations in all experiment scenarios
+4. Demo workflows (CLI + Python API)
 
 
 ## 1. Download And Install
@@ -76,92 +48,135 @@ Documentation: https://slacgs.netlify.app/
 pip install slacgs
 ```
 
-## 2. Set Report Service 
 
-```python
-from slacgs.demo import *
+Quick sanity check:
 
-## opt-1: set report service configuration with your own google cloud service account key file
-path_to_google_cloud_service_account_api_key = 'path/to/key.json'
-set_report_service_conf(path_to_google_cloud_service_account_api_key)
-
-# opt-2 set report service configuration to use slacgs' server if you have the access password
-set_report_service_conf()
-
+```bash
+slacgs --help
+# or
+python -m slacgs --help
 ```
 
-## 3. Experiment Scenarios
 
-```python
-from slacgs.demo import print_experiment_scenarios
+## 2. Configure Output & Logging (optional)
 
-print_experiment_scenarios()
+Configuration is optional; defaults work out of the box.
+
+Create a project config template:
+
+```bash
+slacgs config init --project
+slacgs config show
+slacgs config validate
 ```
 
-## 4 Demo Functions
+Common environment variables:
+
+```bash
+export SLACGS_OUTPUT_DIR="/path/to/output"
+export SLACGS_LOG_LEVEL="INFO"
+```
+
+
+## 3. Predefined Experiment Scenarios
+
+SLACGS ships with predefined scenarios (see `slacgs.demo.SCENARIOS`). You can run all scenarios or select a subset.
+
+```bash
+# Run all predefined scenarios
+slacgs run-experiment
+
+# Run scenarios 1, 2, 3
+slacgs run-experiment --scenarios 1,2,3
+
+# Fast exploratory run
+slacgs run-experiment --scenarios 1 --test-mode
+```
+
+
+## 4. Workflows 
+
+### 4.1 Run a single simulation
+
+```bash
+# 2D: [sigma1, sigma2, rho12]
+slacgs run-simulation --params "[1,4,0.6]"
+
+# 3D: [sigma1, sigma2, sigma3, rho12, rho13, rho23]
+slacgs run-simulation --params "[1,1,2,0,0,0]" --test-mode
+
+# 4D: [sigma1, sigma2, sigma3, sigma4, rho12, rho13, rho14, rho23, rho24, rho34]
+slacgs run-simulation --params "[1,1,1,2,0,0,0,0,0,-0.1]" --test-mode
+```
+
+### 4.2 Run custom experiments
+
+```bash
+# Inline parameter sets
+slacgs run-experiment --custom-params "[[1,1,-0.4], [1,1,0.4]]" --test-mode
+
+# Load parameter sets from JSON
+slacgs run-experiment --params-file my_scenario.json
+
+# Organize an experiment under ~/slacgs/experiments/{tag}/
+slacgs run-experiment --params-file my_scenario.json --tag custom_experiment_1
+```
+
+### 4.3 Generate reports from existing JSON
+
+```bash
+slacgs make-report --scenario 1
+slacgs make-report --params "[1,4,0.6]"
+```
+
+### 4.4 Publishing (GitHub Pages)
+
+```bash
+slacgs publish
+slacgs publish --auto-push
+```
+
+### 4.5 Log cleanup
+
+```bash
+slacgs cleanup-logs --older-than 30 --dry-run
+slacgs cleanup-logs --older-than 30
+```
+
+### 4.6 Python API
 
 ```python
-from slacgs.demo import *
+from slacgs import Model, Simulator
 
-## 1. Run an Experiment Simulation ##
-run_experiment_simulation()
-  
-## 2. Add a Simulation to an Experiment Scenario Spreadsheet ##
-### Scenario 1
-scenario_number = 1
-params = [1, 1, 2.1, 0, 0, 0]
-add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
+model = Model([1, 4, 0.6])
+sim = Simulator(model, test_mode=True)
+sim.run()
 
-### Scenario 2
-scenario_number = 2
-params = [1, 1, 2, -0.15, 0, 0]
-add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
+sim.report.save_graphs_png_images_files()
+sim.report.create_report_tables()
+sim.report.write_to_json()
+sim.report.create_html_report()
+```
 
-### Scenario 3
-scenario_number = 3
-params = [1, 1, 2, 0, 0.15, 0.15]
-add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
+### Output structure
 
-### Scenario 4
-scenario_number = 4
-params = [1, 1, 2, -0.1, 0.15, 0.15]
-add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number)
+By default, outputs go to `~/slacgs/output/`:
 
-## 3. Run a Custom Scenario ##
-scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-5,6)]
-scenario_number = 5
-run_custom_scenario(scenario_list, scenario_number)
-  
-## 4. Add a Simulation to a Custom Scenario Spreadsheet ##
-params = (1, 1, 3, -0.7, 0, 0)
-scenario_number = 5
-add_simulation_to_custom_scenario_spreadsheet(params, scenario_number)
-
-## 5. Run a Custom Simulation ##
-### 2 features
-params = [1, 2, 0.4]
-run_custom_simulation(params)
-
-### 3 features
-params = [1, 1, 4, -0.2, 0.1, 0.1]
-run_custom_simulation(params)
-
-### 4 features
-params = [1, 1, 1, 2, 0, 0, 0, 0, 0, 0]
-run_custom_simulation(params)
-
-### 5 features
-params = [1, 1, 2, 2, 2, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.2, 0, 0, 0]
-dims_to_compare = (2, 5)
-run_custom_simulation(params, dims_to_compare)
-
-### 6 features
-params = [1, 2, 3, 4, 5, 6, -0.3, -0.3, -0.2, -0.2, -0.1, -0.1, 0, 0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]
-run_custom_simulation(params)
-
-## 6. Run All Experiment Simulations ##
-run_experiment()
-
+```text
+~/slacgs/output/
+  data/
+    simulation_reports.json
+    simulation_reports_test.json
+    tables/
+      sim_tables_id[...]/
+  reports/
+    sim_report_id[...].html
+    scenario_1_report.html
+    images/
+      graphs/
+      visualizations/
+  logs/
+    slacgs.log
 ```
 
 
