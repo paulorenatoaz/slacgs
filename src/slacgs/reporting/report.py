@@ -199,6 +199,21 @@ class Report:
     self.intersection_points_matrix_theoretical = None
     self.intersection_points_matrix_empirical_test = None
 
+    # Empirical global covariance: mean over Monte Carlo iterations of
+    # Cov(X) computed on the combined two-class training feature matrix
+    # (labels ignored). Populated by Simulator.run().
+    self.empirical_global_cov = None
+    # Empirical global correlation: same derivation but using np.corrcoef.
+    self.empirical_global_corr = None
+    # Theoretical conditional covariance: alias of the within-class model
+    # covariance (model.cov). Stored explicitly for clarity in the report.
+    self.theoretical_conditional_cov = (
+        data.cov if data.cov else None
+    )
+    # Expected global correlation: derived analytically via the law of total
+    # covariance from the conditional covariance and class means.
+    self.expected_global_corr = None
+
 
   def _init_from_json(self, params):
     """
@@ -266,6 +281,15 @@ class Report:
     self.N_star_rel_matrix_empirical_test = None
     self.intersection_points_matrix_theoretical = None
     self.intersection_points_matrix_empirical_test = None
+
+    # Empirical global covariance loaded from JSON if present.
+    self.empirical_global_cov = simulation_data.get("empirical_global_cov")
+    self.empirical_global_corr = simulation_data.get("empirical_global_corr")
+    self.theoretical_conditional_cov = (
+        simulation_data.get("theoretical_conditional_cov")
+        or simulation_data["model_tag"].get("cov")
+    )
+    self.expected_global_corr = simulation_data.get("expected_global_corr")
 
 
   def _ensure_directories(self):
@@ -1133,6 +1157,17 @@ class Report:
             <img src="{gif_path}" alt="GIF">
         </div>
         <div class="section">
+            <h2>Correlation and Covariance Diagnostics</h2>
+            <p>
+                The theoretical covariance is the within-class covariance used by the Gaussian model.
+                The empirical global covariance is measured after combining samples from both classes.
+                Since rho is a correlation coefficient, the expected and empirical global correlation
+                matrices provide the most direct comparison with correlation-based experiments on real
+                sensor data.
+            </p>
+            {covariance_tables_html}
+        </div>
+        <div class="section">
             <h2>Loss vs log_2(n)</h2>
             {loss_graph_images_html}
             
@@ -1208,6 +1243,38 @@ class Report:
     else:
         csv_table_N_star_rel_empirical_test_html = '<div class="table-container"><h3>N* empirical test</h3><p><em>N* matrix not computed (insufficient data or test mode)</em></p></div>'
 
+    # Build the four correlation/covariance diagnostic tables in canonical order:
+    #   a) Theoretical Conditional Covariance  (within-class covariance Sigma)
+    #   b) Empirical Global Covariance         (Cov of combined two-class data)
+    #   c) Expected Global Correlation         (analytic, from law of total covariance)
+    #   d) Empirical Global Correlation        (Corrcoef of combined two-class data)
+    theoretical_cov = (
+        getattr(self, 'theoretical_conditional_cov', None)
+        or (self.model_tag.get('cov') if hasattr(self, 'model_tag') else None)
+    )
+    empirical_cov = getattr(self, 'empirical_global_cov', None)
+    expected_corr = getattr(self, 'expected_global_corr', None)
+    empirical_corr = getattr(self, 'empirical_global_corr', None)
+
+    def _matrix_html(title, matrix):
+        if matrix is None:
+            return (
+                f"<div class='table-container'><h3>{title}</h3>"
+                "<p><em>Not available.</em></p></div>"
+            )
+        df = pd.DataFrame(matrix)
+        return (
+            f"<div class='table-container'><h3>{title}</h3>"
+            f"{df.to_html(index=False, header=False, float_format=lambda x: f'{x:.6f}')}</div>"
+        )
+
+    covariance_tables_html = (
+        _matrix_html("Theoretical Conditional Covariance", theoretical_cov)
+        + _matrix_html("Empirical Global Covariance", empirical_cov)
+        + _matrix_html("Expected Global Correlation", expected_corr)
+        + _matrix_html("Empirical Global Correlation", empirical_corr)
+    )
+
 
 
 
@@ -1220,7 +1287,8 @@ class Report:
                                        time_consumption_graph_images_html=time_graph_images_html,
                                        iteration_graph_images_html=iteration_graph_images_html,
                                        csv_table_N_star_rel_theoretical_html=csv_table_N_star_rel_theoretical_html,
-                                       csv_table_N_star_rel_empirical_test_html=csv_table_N_star_rel_empirical_test_html)
+                                       csv_table_N_star_rel_empirical_test_html=csv_table_N_star_rel_empirical_test_html,
+                                       covariance_tables_html=covariance_tables_html)
 
     # Write the HTML content to the output file
     with open(self.export_path_html_report, 'w') as file:
@@ -1824,6 +1892,10 @@ class Report:
       "N_star_matrix_empirical_test": self.N_star_rel_matrix_empirical_test.tolist() if self.N_star_rel_matrix_empirical_test is not None else None,
       "intersection_points_theoretical": self.intersection_points_matrix_theoretical.tolist() if self.intersection_points_matrix_theoretical is not None else None,
       "intersection_points_empirical_test": self.intersection_points_matrix_empirical_test.tolist() if self.intersection_points_matrix_empirical_test is not None else None,
+      "empirical_global_cov": self.empirical_global_cov,
+      "empirical_global_corr": getattr(self, 'empirical_global_corr', None),
+      "theoretical_conditional_cov": getattr(self, 'theoretical_conditional_cov', None),
+      "expected_global_corr": getattr(self, 'expected_global_corr', None),
     }
 
     # insert new entry to the existing data

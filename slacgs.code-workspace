@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../TCC"
+		}
+	],
+	"settings": {
+		"latex-workshop.view.pdf.viewer": "tab"
+	}
+}

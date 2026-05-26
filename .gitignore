@@ -70,19 +70,14 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/build/
 
-# Virtual environments
+# Project-generated artifacts
+output/
+
+# Local virtual environments
 .venv/
 venv/
-ENV/
-env/
-
-# IDE and editor-specific files
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
 
 # TCC undergraduate thesis folder 
 /TCC/

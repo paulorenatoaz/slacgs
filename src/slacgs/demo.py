@@ -90,7 +90,85 @@ SCENARIO7 = [[1, 4, round(r*0.2, 1)] for r in range(-4, 4)] + [[1, 1, round(r*0.
 
 
 ## create list of scenarios
-SCENARIOS = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4, SCENARIO5, SCENARIO6, SCENARIO7]
+# NOTE: The full SCENARIO1..SCENARIO7 lists above are kept for reference only.
+# The active SCENARIOS used by the experiment runners is the minimal,
+# report-aligned set defined below.
+_SCENARIOS_FULL = [SCENARIO1, SCENARIO2, SCENARIO3, SCENARIO4, SCENARIO5, SCENARIO6, SCENARIO7]
+
+# ============================================
+# MINIMAL SCENARIOS (REPORT-ALIGNED)
+# ============================================
+# These minimal parameter sets correspond exactly to the simulations referenced
+# by the existing scenario_<n>_report.html files in output/reports/. They are
+# used to keep experiment runs short and reproducible.
+scenario_1_min = [
+	[1, 1, 1.7, 0, 0, 0],
+	[1, 1, 2.0, 0, 0, 0],
+	[1, 1, 2.5, 0, 0, 0],
+	[1, 1, 3.5, 0, 0, 0],
+	[1, 1, 7,   0, 0, 0],
+	[1, 1, 10,  0, 0, 0],
+]
+
+scenario_2_min = [
+	[1, 1, 2, -0.8, 0, 0],
+	[1, 1, 2, -0.4, 0, 0],
+	[1, 1, 2,  0.0, 0, 0],
+	[1, 1, 2,  0.4, 0, 0],
+	[1, 1, 2,  0.8, 0, 0],
+]
+
+scenario_3_min = [
+	[1, 1, 2, 0, -0.7, -0.7],
+	[1, 1, 2, 0, -0.4, -0.4],
+	[1, 1, 2, 0, -0.2, -0.2],
+	[1, 1, 2, 0,  0.0,  0.0],
+	[1, 1, 2, 0,  0.2,  0.2],
+	[1, 1, 2, 0,  0.4,  0.4],
+	[1, 1, 2, 0,  0.7,  0.7],
+]
+
+scenario_4_min = [
+	[1, 1, 1, -0.1, 0.0, 0.0],
+	[1, 1, 1, -0.1, 0.3, 0.3],
+	[1, 1, 1, -0.1, 0.4, 0.4],
+]
+
+scenario_5_min = [
+	[1, 1, 0],
+	[1, 2, 0],
+	[1, 3, 0],
+	[1, 4, 0],
+	[1, 5, 0],
+	[1, 6, 0],
+	[1, 7, 0],
+]
+
+scenario_6_min = [
+	[1, 1, -0.8],
+	[1, 1, -0.4],
+	[1, 1,  0.0],
+	[1, 1,  0.4],
+	[1, 1,  0.8],
+]
+
+scenario_7_min = [
+	[1, 4, -0.8],
+	[1, 4, -0.4],
+	[1, 4,  0.0],
+	[1, 4,  0.4],
+	[1, 4,  0.6],
+]
+
+SCENARIOS = [
+	scenario_1_min,
+	scenario_2_min,
+	scenario_3_min,
+	scenario_4_min,
+	scenario_5_min,
+	scenario_6_min,
+	scenario_7_min,
+]
 
 ## free global variables
 r = RHO_12 = None

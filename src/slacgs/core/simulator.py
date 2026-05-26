@@ -819,6 +819,15 @@ class Simulator:
     # Inicialize auxiliary variable for convergence check containing the last means mesures for each dimension and loss type
     prev_mean_mesure = {dim : {loss_type: 0 for loss_type in self.loss_types} for dim in self.dims}
 
+    # Initialize empirical global covariance accumulator (mean over all Monte Carlo iterations).
+    # For each iteration we compute Cov(X) and Corr(X) on the combined two-class training
+    # feature matrix (labels are ignored). The model.cov (theoretical conditional covariance)
+    # is NOT modified.
+    _emp_cov_dim = self.model.dim
+    empirical_global_cov_sum = np.zeros((_emp_cov_dim, _emp_cov_dim))
+    empirical_global_corr_sum = np.zeros((_emp_cov_dim, _emp_cov_dim))
+    empirical_global_cov_count = 0
+
     # Compute min(L(h)) and d for each dimension
     self.report.loss_bayes = {d : loss_bayes_analytical(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
     self.report.d = {d : dist_from_origin_to_intersect_btwn_norm_ellip_and_main_diag(np.array(self.model.cov[0:d]).T[0:d].T) for d in self.dims}
@@ -864,6 +873,18 @@ class Simulator:
           dataset = self.generate_dataset(n,i)
           stopwatch_dataset = time.time() - stopwatch_dataset
           self.report.time_spent['total'] += stopwatch_dataset
+
+          # Empirical global covariance / correlation: combine both classes
+          # (labels ignored) and accumulate per-iteration sample matrices.
+          _X_full = np.asarray(dataset['train']['data'], dtype=float)
+          if _X_full.ndim == 1:
+            _X_full = _X_full.reshape(-1, _emp_cov_dim)
+          if _X_full.shape[0] >= 2:
+            empirical_global_cov_sum += np.cov(_X_full, rowvar=False)
+            _corr = np.corrcoef(_X_full, rowvar=False)
+            # np.corrcoef may return scalar for 1D — guard for shape consistency.
+            empirical_global_corr_sum += np.atleast_2d(_corr)
+            empirical_global_cov_count += 1
 
           dims_on_by_loss_types = {loss_type : sum([switch['train'][dim][loss_type] for dim in self.dims]) for loss_type in self.loss_types}
 
@@ -1010,6 +1031,42 @@ class Simulator:
       if not self.report.loss_bayes[d]:
         self.report.loss_bayes[d] = self.loss_bayes_empirical(d)
 
+    ## store empirical global covariance (mean across all Monte Carlo iterations)
+    if empirical_global_cov_count > 0:
+      self.report.empirical_global_cov = (
+        empirical_global_cov_sum / empirical_global_cov_count
+      ).tolist()
+      self.report.empirical_global_corr = (
+        empirical_global_corr_sum / empirical_global_cov_count
+      ).tolist()
+    else:
+      self.report.empirical_global_cov = None
+      self.report.empirical_global_corr = None
+
+    ## theoretical conditional covariance (alias for the within-class model covariance,
+    ## kept side-by-side with the original `cov` field for backward compatibility).
+    self.report.theoretical_conditional_cov = (
+      self.model.cov.tolist() if hasattr(self.model.cov, 'tolist') else self.model.cov
+    )
+
+    ## expected global correlation: derived analytically from the law of total covariance.
+    ## With balanced classes p_pos = p_neg = 0.5 and a shared conditional covariance Sigma:
+    ##   Sigma_global = Sigma + p_pos * p_neg * (mu_pos - mu_neg)(mu_pos - mu_neg)^T
+    ## then standardize Sigma_global into a correlation matrix.
+    _Sigma = np.asarray(self.model.cov, dtype=float)
+    _mu_pos = np.asarray(self.model.mean_pos, dtype=float).reshape(-1, 1)
+    _mu_neg = np.asarray(self.model.mean_neg, dtype=float).reshape(-1, 1)
+    # Class probabilities: simulator generates n/2 samples per class -> balanced.
+    _p_pos = 0.5
+    _p_neg = 0.5
+    _delta = _mu_pos - _mu_neg
+    _Sigma_global = _Sigma + (_p_pos * _p_neg) * (_delta @ _delta.T)
+    _std = np.sqrt(np.diag(_Sigma_global))
+    # Outer product of std deviations; guard against zero variance.
+    _denom = np.outer(_std, _std)
+    with np.errstate(invalid='ignore', divide='ignore'):
+      _R_global = np.where(_denom > 0, _Sigma_global / _denom, 0.0)
+    self.report.expected_global_corr = _R_global.tolist()
 
     ## print the final report (deprecated - using progress tracker completion panel)
     # self.report.print_report()
