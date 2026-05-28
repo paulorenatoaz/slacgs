@@ -1055,246 +1055,281 @@ class Report:
 
 
   def create_html_report(self):
-    """Create an HTML report with the simulation results.
+    """Create the per-simulation HTML report (plain + embedded variants).
+
+    Builds the HTML using shared primitives from
+    :mod:`slacgs.reporting.html_render`. The output is written to
+    ``self.export_path_html_report`` as well as a sibling file with the
+    ``_embedded`` suffix that inlines every PNG as a base64 data URI for
+    fully self-contained sharing.
     """
+    from slacgs.reporting.html_render import (
+      render_page,
+      render_section,
+      render_image_card,
+      render_matrix_table,
+      render_dataframe_table,
+    )
 
     if self.report_data:
       params = self.report_data.params
-      n_tag = 'n_' + str(self.report_data.N[-1])
+      N_grid = list(self.report_data.N)
+      n_tag = 'n_' + str(N_grid[-1])
       loss_types = self.report_data.loss_types
       dims = self.report_data.dims
-      gif_path = os.path.relpath(self.export_path_animated_gif, report_service_conf['reports_path']).replace(
-        os.path.sep, '/') if self.export_path_animated_gif else None
-
+      gif_path_abs = self.export_path_animated_gif
     else:
       params = self.params
-      n_tag = 'n_' + str(self.N[-1])
+      N_grid = list(self.N)
+      n_tag = 'n_' + str(N_grid[-1])
       loss_types = self.loss_types
       dims = self.dims
-      gif_path = os.path.join(self.export_path_animated_gif).replace(os.path.sep, '/') if self.export_path_animated_gif else None
-
-    loss_graphs_by_losstype_paths = [os.path.join(self.export_path_graphs_dir, f'{loss_type}{str(params)}{n_tag}.png') for loss_type in loss_types]
-    loss_graphs_by_dim_paths = [os.path.join(self.export_path_graphs_dir, f'{dim}_features{str(params)}{n_tag}.png') for dim in dims]
-
-    loss_graphs_paths = loss_graphs_by_losstype_paths + loss_graphs_by_dim_paths
-    loss_graphs_paths = [os.path.relpath(path, report_service_conf['reports_path']).replace(os.path.sep, '/') for path in loss_graphs_paths]
-
-    time_consumption_graph_losstypes_path = os.path.join(self.export_path_graphs_dir, f'loss_type_time{str(params)}{n_tag}.png')
-    time_consumption_graph_dims_path = os.path.join(self.export_path_graphs_dir, f'dim_time{str(params)}{n_tag}.png')
-    time_consumption_graph_n_path = os.path.join(self.export_path_graphs_dir, f'n_time{str(params)}{n_tag}.png')
-
-    time_consumption_graphs_paths = time_consumption_graph_losstypes_path, time_consumption_graph_dims_path, time_consumption_graph_n_path
-    time_consumption_graphs_paths = [os.path.relpath(path, report_service_conf['reports_path']).replace(os.path.sep, '/') for path in time_consumption_graphs_paths]
-
-    iteration_graphs_by_losstype_paths = [os.path.join(self.export_path_graphs_dir, f'{loss_type}_iterations{str(params)}{n_tag}.png') for loss_type in loss_types]
-    iteration_graphs_by_dim_paths = [os.path.join(self.export_path_graphs_dir, f'{dim}_features_iterations{str(params)}{n_tag}.png') for dim in dims]
-
-    iteration_graphs_paths = iteration_graphs_by_losstype_paths + iteration_graphs_by_dim_paths
-    iteration_graphs_paths = [os.path.relpath(path, report_service_conf['reports_path']).replace(os.path.sep, '/') for path in iteration_graphs_paths]
-
-    csv_paths_loss = [os.path.join(self.export_path_tables_dir, f'{loss_type}{str(params)}{n_tag}.csv') for loss_type in loss_types]
-    csv_paths_iterations = [os.path.join(self.export_path_tables_dir, f'{loss_type}_iterations{str(params)}{n_tag}.csv') for loss_type in loss_types]
-
-    csv_path_time_loss_types = os.path.join(self.export_path_tables_dir, f'loss_type_time{str(params)}{n_tag}.csv')
-    csv_path_time_dims = os.path.join(self.export_path_tables_dir, f'dim_time{str(params)}{n_tag}.csv')
-    csv_path_time_n = os.path.join(self.export_path_tables_dir, f'n_time{str(params)}{n_tag}.csv')
-    csv_paths_time = [csv_path_time_loss_types, csv_path_time_dims, csv_path_time_n]
-
+      gif_path_abs = self.export_path_animated_gif
 
     params_str = str(params)
+    reports_root = report_service_conf['reports_path']
 
-    # Read the CSV files
-    csv_tables_loss = [pd.read_csv(path) for path in csv_paths_loss]
-    csv_tables_iterations = [pd.read_csv(path) for path in csv_paths_iterations]
-    csv_tables_time = [pd.read_csv(path) for path in csv_paths_time]
+    # ---- Resolve PNG / CSV paths (absolute) ----
+    loss_graphs_by_losstype = [
+      os.path.join(self.export_path_graphs_dir, f'{lt}{params_str}{n_tag}.png')
+      for lt in loss_types
+    ]
+    loss_graphs_by_dim = [
+      os.path.join(self.export_path_graphs_dir, f'{d}_features{params_str}{n_tag}.png')
+      for d in dims
+    ]
+    time_graphs = [
+      os.path.join(self.export_path_graphs_dir, f'loss_type_time{params_str}{n_tag}.png'),
+      os.path.join(self.export_path_graphs_dir, f'dim_time{params_str}{n_tag}.png'),
+      os.path.join(self.export_path_graphs_dir, f'n_time{params_str}{n_tag}.png'),
+    ]
+    iteration_graphs_by_losstype = [
+      os.path.join(self.export_path_graphs_dir, f'{lt}_iterations{params_str}{n_tag}.png')
+      for lt in loss_types
+    ]
+    iteration_graphs_by_dim = [
+      os.path.join(self.export_path_graphs_dir, f'{d}_features_iterations{params_str}{n_tag}.png')
+      for d in dims
+    ]
 
-    # Read N_star tables only if they exist (they may not be computed in test mode or for insufficient data)
-    n_star_theoretical_path = os.path.join(self.export_path_tables_dir, f'N_star_rel_matrix_theoretical{params_str}{n_tag}.csv')
-    n_star_empirical_path = os.path.join(self.export_path_tables_dir, f'N_star_rel_matrix_empirical_test{params_str}{n_tag}.csv')
-    
-    csv_table_N_star_rel_theoretical = pd.read_csv(n_star_theoretical_path) if os.path.exists(n_star_theoretical_path) else None
-    csv_table_N_star_rel_empirical_test = pd.read_csv(n_star_empirical_path) if os.path.exists(n_star_empirical_path) else None
+    csv_paths_loss = [
+      os.path.join(self.export_path_tables_dir, f'{lt}{params_str}{n_tag}.csv')
+      for lt in loss_types
+    ]
+    csv_paths_iter = [
+      os.path.join(self.export_path_tables_dir, f'{lt}_iterations{params_str}{n_tag}.csv')
+      for lt in loss_types
+    ]
+    csv_paths_time = [
+      os.path.join(self.export_path_tables_dir, f'loss_type_time{params_str}{n_tag}.csv'),
+      os.path.join(self.export_path_tables_dir, f'dim_time{params_str}{n_tag}.csv'),
+      os.path.join(self.export_path_tables_dir, f'n_time{params_str}{n_tag}.csv'),
+    ]
 
-    # Create the HTML structure
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Simulation Report {params_str}</title>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-            }}
-            .section {{
-                margin-bottom: 20px;
-            }}
-            .table-container {{
-                margin-bottom: 20px;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 10px;
-            }}
-            th, td {{
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }}
-            th {{
-                background-color: #f2f2f2;
-            }}
-            img {{
-                max-width: 800px;
-                height: auto;
-                border: 2px solid black;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="section">
-            <h2>Simulation Visualizations</h2>
-            <img src="{gif_path}" alt="GIF">
-        </div>
-        <div class="section">
-            <h2>Correlation and Covariance Diagnostics</h2>
-            <p>
-                The theoretical covariance is the within-class covariance used by the Gaussian model.
-                The empirical global covariance is measured after combining samples from both classes.
-                Since rho is a correlation coefficient, the expected and empirical global correlation
-                matrices provide the most direct comparison with correlation-based experiments on real
-                sensor data.
-            </p>
-            {covariance_tables_html}
-        </div>
-        <div class="section">
-            <h2>Loss vs log_2(n)</h2>
-            {loss_graph_images_html}
-            
-            <h2>Time consumption(n)</h2>
-            {time_consumption_graph_images_html}
-            
-            <h2>Iterations vs log_2(n)</h2>
-            {iteration_graph_images_html}
-            
-        </div>
-        <div class="section">
-        
-            <h2>N* Relationship Matrixes</h2>
-            {csv_table_N_star_rel_theoretical_html}
-            {csv_table_N_star_rel_empirical_test_html}
-        
-            <h2>Loss Tables</h2>
-            {loss_tables_html}
-            
-            <h2>Time Consumption Tables</h2>
-            {time_consumption_tables_html}
-            
-            <h2>Iterations Tables</h2>
-            {iterations_tables_html}           
-            
-        </div>
-        
-    </body>
-    </html>
-    """
+    # ---- Load CSV tables ----
+    def _maybe_read(p):
+      return pd.read_csv(p) if os.path.exists(p) else None
 
-    # Generate the HTML for the CSV tables
-    loss_tables_html = ""
-    for i, table in enumerate(csv_tables_loss):
-      loss_tables_html += f"<div class='table-container'><h3>Table {loss_types[i]}</h3>{table.to_html(index=False)}</div>"
+    loss_tables = [_maybe_read(p) for p in csv_paths_loss]
+    iter_tables = [_maybe_read(p) for p in csv_paths_iter]
+    time_tables = [_maybe_read(p) for p in csv_paths_time]
 
-    time_consumption_tables_html = ""
-    for i, table in enumerate(csv_tables_time):
-      time_consumption_tables_html += f"<div class='table-container'><h3>Table {loss_types[i]}</h3>{table.to_html(index=False)}</div>"
+    n_star_theo_path = os.path.join(
+      self.export_path_tables_dir,
+      f'N_star_rel_matrix_theoretical{params_str}{n_tag}.csv',
+    )
+    n_star_emp_path = os.path.join(
+      self.export_path_tables_dir,
+      f'N_star_rel_matrix_empirical_test{params_str}{n_tag}.csv',
+    )
+    n_star_theo_df = _maybe_read(n_star_theo_path)
+    n_star_emp_df = _maybe_read(n_star_emp_path)
 
-    iterations_tables_html = ""
-    for i, table in enumerate(csv_tables_iterations):
-        iterations_tables_html += f"<div class='table-container'><h3>Table {loss_types[i]}</h3>{table.to_html(index=False)}</div>"
-
-    # Generate the HTML for the images
-    loss_graph_images_html = ""
-
-    for i, img_path in enumerate(loss_graphs_paths[:len(loss_types)]):
-      loss_graph_images_html += f"<div class='image-container'><h3>Loss vs log(n) {loss_types[i]}</h3><img src='{img_path}' alt='Image {i + 1}'></div>"
-
-    for i, img_path in enumerate(loss_graphs_paths[len(loss_types):]):
-      loss_graph_images_html += f"<div class='image-container'><h3>Loss vs log(n) {str(dims[i])} features</h3><img src='{img_path}' alt='Image {i + 1 + len(loss_types)}'></div>"
-
-    iteration_graph_images_html = ""
-    for i, img_path in enumerate(iteration_graphs_paths[:len(loss_types)]):
-        iteration_graph_images_html += f"<div class='image-container'><h3>Iterations vs log(n) {loss_types[i]}</h3><img src='{img_path}' alt='Image {i + 1}'></div>"
-
-    for i, img_path in enumerate(iteration_graphs_paths[len(loss_types):]):
-        iteration_graph_images_html += f"<div class='image-container'><h3>Iterations vs log(n) {str(dims[i])} features</h3><img src='{img_path}' alt='Image {i + 1 + len(loss_types)}'></div>"
-
-    time_graph_images_html = ""
-    for i, img_path in enumerate(time_consumption_graphs_paths):
-        time_graph_images_html += f"<div class='image-container'><img src='{img_path}' alt='Image {i + 1}'></div>"
-
-    # Generate N_star tables only if data is available
-    if csv_table_N_star_rel_theoretical is not None:
-        csv_table_N_star_rel_theoretical_html = f'<div class="table-container"><h3>N* theoretical</h3>{csv_table_N_star_rel_theoretical.to_html(index=False)}</div>'
-    else:
-        csv_table_N_star_rel_theoretical_html = '<div class="table-container"><h3>N* theoretical</h3><p><em>N* matrix not computed (insufficient data or test mode)</em></p></div>'
-    
-    if csv_table_N_star_rel_empirical_test is not None:
-        csv_table_N_star_rel_empirical_test_html = f'<div class="table-container"><h3>N* empirical test</h3>{csv_table_N_star_rel_empirical_test.to_html(index=False)}</div>'
-    else:
-        csv_table_N_star_rel_empirical_test_html = '<div class="table-container"><h3>N* empirical test</h3><p><em>N* matrix not computed (insufficient data or test mode)</em></p></div>'
-
-    # Build the four correlation/covariance diagnostic tables in canonical order:
-    #   a) Theoretical Conditional Covariance  (within-class covariance Sigma)
-    #   b) Empirical Global Covariance         (Cov of combined two-class data)
-    #   c) Expected Global Correlation         (analytic, from law of total covariance)
-    #   d) Empirical Global Correlation        (Corrcoef of combined two-class data)
+    # ---- Diagnostic matrices ----
     theoretical_cov = (
-        getattr(self, 'theoretical_conditional_cov', None)
-        or (self.model_tag.get('cov') if hasattr(self, 'model_tag') else None)
+      getattr(self, 'theoretical_conditional_cov', None)
+      or (self.model_tag.get('cov') if hasattr(self, 'model_tag') else None)
     )
     empirical_cov = getattr(self, 'empirical_global_cov', None)
     expected_corr = getattr(self, 'expected_global_corr', None)
     empirical_corr = getattr(self, 'empirical_global_corr', None)
 
-    def _matrix_html(title, matrix):
-        if matrix is None:
-            return (
-                f"<div class='table-container'><h3>{title}</h3>"
-                "<p><em>Not available.</em></p></div>"
-            )
-        df = pd.DataFrame(matrix)
-        return (
-            f"<div class='table-container'><h3>{title}</h3>"
-            f"{df.to_html(index=False, header=False, float_format=lambda x: f'{x:.6f}')}</div>"
+    # ---- Test mode / metadata ----
+    test_mode = False
+    if hasattr(self, 'sim_tag') and isinstance(self.sim_tag, dict):
+      test_mode = bool(self.sim_tag.get('test_mode', False))
+    elif self.report_data is not None:
+      test_mode = bool(getattr(self.report_data, 'test_mode', False))
+
+    sim_id = getattr(self, 'id', None)
+
+    def _build_html(embed: bool) -> str:
+      """Render the full simulation HTML for either embed mode.
+
+      Args:
+        embed: If True, inline images as base64 data URIs.
+
+      Returns:
+        Complete HTML document string.
+      """
+      # 1. Overview
+      overview = (
+        f"<p>Per-simulation report for parameters "
+        f"<strong>{params_str}</strong>"
+        f"{f' (id {sim_id})' if sim_id is not None else ''}"
+        f". Sample-size grid extends up to <strong>n = {N_grid[-1]}</strong>."
+        f"{' Run in <strong>test mode</strong>.' if test_mode else ''}</p>"
+      )
+
+      # 2. Model Parameters
+      param_rows = [["params", params_str], ["dims", str(dims)],
+                    ["loss types", str(loss_types)],
+                    ["N grid", str(N_grid)]]
+      param_df = pd.DataFrame(param_rows, columns=["field", "value"])
+      params_html = render_dataframe_table(
+        "Model & simulation parameters", param_df,
+      )
+
+      # 3. Simulation Visualization (animated GIF, if any)
+      if gif_path_abs and os.path.exists(gif_path_abs):
+        viz_html = render_image_card(
+          "Simulation visualization (animated)",
+          gif_path_abs,
+          caption="Per-iteration sample clouds and decision boundary.",
+          embed=embed, base_dir=reports_root,
+        )
+      else:
+        viz_html = "<p><em>Visualization not available.</em></p>"
+
+      # 4. Covariance / Correlation Diagnostics
+      diag_intro = (
+        "<p>The theoretical conditional covariance is the within-class "
+        "Σ used by the Gaussian model. The empirical global covariance "
+        "is measured after combining samples from both classes, while "
+        "the expected and empirical global correlations are the most "
+        "directly comparable diagnostics with correlation-based "
+        "experiments on real sensor data.</p>"
+      )
+      diag_html = diag_intro
+      diag_html += render_matrix_table(
+        "a) Theoretical Conditional Covariance Σ", theoretical_cov,
+      )
+      diag_html += render_matrix_table(
+        "b) Empirical Global Covariance", empirical_cov,
+      )
+      diag_html += render_matrix_table(
+        "c) Expected Global Correlation", expected_corr,
+      )
+      diag_html += render_matrix_table(
+        "d) Empirical Global Correlation", empirical_corr,
+      )
+
+      # 5. Loss Curves
+      loss_html = ""
+      for i, p in enumerate(loss_graphs_by_losstype):
+        loss_html += render_image_card(
+          f"Loss vs log<sub>2</sub>(n) — {loss_types[i]}",
+          p, embed=embed, base_dir=reports_root,
+        )
+      for i, p in enumerate(loss_graphs_by_dim):
+        loss_html += render_image_card(
+          f"Loss vs log<sub>2</sub>(n) — {dims[i]} features",
+          p, embed=embed, base_dir=reports_root,
         )
 
-    covariance_tables_html = (
-        _matrix_html("Theoretical Conditional Covariance", theoretical_cov)
-        + _matrix_html("Empirical Global Covariance", empirical_cov)
-        + _matrix_html("Expected Global Correlation", expected_corr)
-        + _matrix_html("Empirical Global Correlation", empirical_corr)
+      # 6. N* Relationship Matrices
+      n_star_html = render_dataframe_table(
+        "N* (theoretical)", n_star_theo_df,
+      )
+      n_star_html += render_dataframe_table(
+        "N* (empirical test)", n_star_emp_df,
+      )
+
+      # 7. Time Consumption
+      time_html = ""
+      for i, p in enumerate(time_graphs):
+        time_html += render_image_card(
+          f"Time consumption — graph {i + 1}", p,
+          embed=embed, base_dir=reports_root,
+        )
+
+      # 8. Iteration Counts
+      iter_html = ""
+      for i, p in enumerate(iteration_graphs_by_losstype):
+        iter_html += render_image_card(
+          f"Iterations vs log<sub>2</sub>(n) — {loss_types[i]}",
+          p, embed=embed, base_dir=reports_root,
+        )
+      for i, p in enumerate(iteration_graphs_by_dim):
+        iter_html += render_image_card(
+          f"Iterations vs log<sub>2</sub>(n) — {dims[i]} features",
+          p, embed=embed, base_dir=reports_root,
+        )
+
+      # 9. Detailed Tables (loss, time, iter)
+      tables_html = ""
+      for i, df in enumerate(loss_tables):
+        tables_html += render_dataframe_table(
+          f"Loss table — {loss_types[i]}", df,
+        )
+      for i, df in enumerate(time_tables):
+        labels = ["by loss type", "by dimension", "by n"]
+        tables_html += render_dataframe_table(
+          f"Time consumption — {labels[i]}", df,
+        )
+      for i, df in enumerate(iter_tables):
+        tables_html += render_dataframe_table(
+          f"Iterations table — {loss_types[i]}", df,
+        )
+
+      sections = (
+        render_section("1. Overview", overview, "overview")
+        + render_section("2. Model Parameters", params_html, "model-params")
+        + render_section("3. Simulation Visualization", viz_html, "viz")
+        + render_section("4. Loss Curves", loss_html, "loss")
+        + render_section("5. N* Relationship Matrices", n_star_html, "n-star")
+        + render_section("6. Covariance / Correlation Diagnostics",
+                         diag_html, "diagnostics")
+        + render_section("7. Time Consumption", time_html, "time")
+        + render_section("8. Iteration Counts", iter_html, "iters")
+        + render_section("9. Detailed Tables", tables_html, "tables")
+      )
+      toc = [
+        ("overview", "Overview"),
+        ("model-params", "Model Parameters"),
+        ("viz", "Simulation Visualization"),
+        ("loss", "Loss Curves"),
+        ("n-star", "N* Relationship Matrices"),
+        ("diagnostics", "Covariance / Correlation Diagnostics"),
+        ("time", "Time Consumption"),
+        ("iters", "Iteration Counts"),
+        ("tables", "Detailed Tables"),
+      ]
+      subtitle = (
+        f"Simulation {sim_id if sim_id is not None else ''} &middot; "
+        f"params {params_str}"
+        f"{' &middot; test mode' if test_mode else ''}"
+      )
+      return render_page(
+        title="SLACGS Simulation Report",
+        subtitle=subtitle,
+        toc_items=toc,
+        sections_html=sections,
+      )
+
+    # ---- Write both variants ----
+    embedded_path = self.export_path_html_report.replace(
+      '.html', '_embedded.html',
     )
-
-
-
-
-    # Format the HTML content
-    html_content = html_content.format(params_str=params_str, gif_path=gif_path,
-                                       loss_tables_html=loss_tables_html,
-                                       time_consumption_tables_html=time_consumption_tables_html,
-                                       iterations_tables_html=iterations_tables_html,
-                                       loss_graph_images_html=loss_graph_images_html,
-                                       time_consumption_graph_images_html=time_graph_images_html,
-                                       iteration_graph_images_html=iteration_graph_images_html,
-                                       csv_table_N_star_rel_theoretical_html=csv_table_N_star_rel_theoretical_html,
-                                       csv_table_N_star_rel_empirical_test_html=csv_table_N_star_rel_empirical_test_html,
-                                       covariance_tables_html=covariance_tables_html)
-
-    # Write the HTML content to the output file
-    with open(self.export_path_html_report, 'w') as file:
-      file.write(html_content)
-
-    print(f"HTML file created: {self.export_path_html_report}")
+    try:
+      with open(self.export_path_html_report, 'w') as f:
+        f.write(_build_html(embed=False))
+      with open(embedded_path, 'w') as f:
+        f.write(_build_html(embed=True))
+      print(f"HTML file created: {self.export_path_html_report}")
+      print(f"Embedded HTML file created: {embedded_path}")
+    except Exception as e:
+      print(f"Failed to save HTML report: {e}")
 
   def compile_delta_L_(self):
     """return :math:`∆L` estimations

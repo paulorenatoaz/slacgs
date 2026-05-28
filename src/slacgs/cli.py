@@ -617,12 +617,19 @@ def make_report(
         "-p",
         help="Specific parameters as JSON array",
     ),
+    test_mode: bool = typer.Option(
+        False,
+        "--test-mode",
+        "-t",
+        help="Read from the test-mode JSON data file",
+    ),
 ):
     """
     Generate HTML reports from existing simulation data.
     
     Examples:
         slacgs make-report --scenario 1
+        slacgs make-report --scenario 7 --test-mode
         slacgs make-report --params "[1,4,0.6]"
     """
     logger = get_logger("slacgs.cli.make_report")
@@ -648,7 +655,7 @@ def make_report(
             console.print(f"Parameters: {len(scenario_params)} simulations\n")
             
             with console.status(f"[bold green]Generating report...[/bold green]"):
-                create_scenario_report(scenario_params, scenario)
+                create_scenario_report(scenario_params, scenario, test_mode=test_mode)
             
             console.print(f"[bold green]✓[/bold green] Report generated: scenario_{scenario}_report.html\n")
             
@@ -656,10 +663,20 @@ def make_report(
             import json
             param_list = json.loads(params)
             console.print(f"Parameters: [yellow]{param_list}[/yellow]\n")
-            
-            # Import and create report for specific simulation
-            console.print("[yellow]Note:[/yellow] Individual simulation reports are auto-generated during run-simulation\n")
-            
+
+            from slacgs.reporting.report import Report
+
+            with console.status(
+                f"[bold green]Regenerating individual report from JSON...[/bold green]"
+            ):
+                report = Report(params=param_list)
+                report.create_html_report()
+
+            console.print(
+                f"[bold green]✓[/bold green] Report regenerated: "
+                f"{report.export_path_html_report}\n"
+            )
+
     except Exception as e:
         console.print(f"[red]✗[/red] Report generation failed: {e}", style="bold red")
         logger.error(f"Report error: {e}", exc_info=True)
