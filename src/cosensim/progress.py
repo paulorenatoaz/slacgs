@@ -1,5 +1,5 @@
 """
-Rich-based progress tracking for SLACGS simulations.
+Rich-based progress tracking for CoSenSim simulations.
 
 Provides:
 - Beautiful console panels for simulation start, progress, and completion
@@ -79,7 +79,7 @@ class ProgressTracker:
             card_text = f"{N[0]} → {N[-1]} (steps: {len(N)})"
         
         panel_content = (
-            f"[bold green]🚀 SLACGS Simulation Started[/bold green]\n"
+            f"[bold green]🚀 CoSenSim Simulation Started[/bold green]\n"
             f"\n[cyan]Model Configuration:[/cyan]\n"
             f"  Parameters: {model_params}\n"
             f"  Dimensionalities: {dims}\n"

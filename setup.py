@@ -6,8 +6,8 @@ with open('README.md', 'r', encoding='utf-8') as file:
 
 
 setup(
-    name='slacgs',
-    version='0.2.0',
+    name='cosensim',
+    version='0.1.0',
     package_dir={'': 'src'},
     packages=find_packages('src'),
     python_requires='>=3.8,<4.0',
@@ -48,13 +48,13 @@ setup(
     },
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',
-    description='A Simulator for Loss Analysis of Classifiers on Gaussian Samples.',
+    description='CoSenSim: a simulator for evaluating cooperative advantage in sensor and measurement-channel systems.',
     long_description=long_description,
     long_description_content_type='text/markdown',  # Use 'text/x-rst' for reStructuredText
-    url='https://github.com/paulorenatoaz/slacgs',
+    url='https://github.com/paulorenatoaz/cosensim',
     entry_points={
         'console_scripts': [
-            'slacgs=slacgs.cli:main',
+            'cosensim=cosensim.cli:main',
         ],
     },
 )

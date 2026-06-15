@@ -1,54 +1,54 @@
-slacgs Package
+cosensim Package
 ==============
 
 Model
 ------------
 
-.. automodule:: slacgs.model
+.. automodule:: cosensim.model
    :members:
 
 Simulator
 ----------------
 
-.. automodule:: slacgs.simulator
+.. automodule:: cosensim.simulator
    :members:
 
 Report
 -------------
 
-.. automodule:: slacgs.report
+.. automodule:: cosensim.report
    :members:
 
 Enumtypes
 ----------------
 
-.. automodule:: slacgs.enumtypes
+.. automodule:: cosensim.enumtypes
    :members:
 
 Gspread_client
 ---------------------
 
-.. automodule:: slacgs.gspread_client
+.. automodule:: cosensim.gspread_client
    :members:
 
 Gdrive_client
 --------------------
 
-.. automodule:: slacgs.gdrive_client
+.. automodule:: cosensim.gdrive_client
    :members:
 
 Utils
 ------------
 
-.. automodule:: slacgs.utils
+.. automodule:: cosensim.utils
    :members:
 
-.. autodata:: slacgs.utils.report_service_conf
+.. autodata:: cosensim.utils.report_service_conf
 
 Demo
 -----------
 
-.. automodule:: slacgs.demo
+.. automodule:: cosensim.demo
     :members:
     :undoc-members:
     :show-inheritance:

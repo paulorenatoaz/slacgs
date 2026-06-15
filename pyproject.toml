@@ -2,14 +2,6 @@
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "cosensim"
-version = "0.1.0"
-description = "CoSenSim: simulator for evaluating cooperative advantage in sensor networks"
-authors = [ { name = "Your Name", email = "you@example.edu" } ]
-dependencies = [
-    "numpy",
-    "scipy",
-    "scikit-learn",
-    "pandas",
-]
+# Project metadata (name, version, dependencies, console scripts) is defined in
+# setup.py to keep a single source of truth for CoSenSim packaging.
+# See: https://github.com/paulorenatoaz/cosensim

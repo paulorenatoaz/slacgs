@@ -1,9 +1,9 @@
-# 🚀 SLACGS Publish Checklist (0.2.0)
+# 🚀 CoSenSim Publish Checklist (0.2.0)
 
 Short, actionable steps to publish v0.2.0 while keeping the full history below.
 
 ## Version Status
-- Current code version: 0.2.0 (setup.py and src/slacgs/__init__.py)
+- Current code version: 0.2.0 (setup.py and src/cosensim/__init__.py)
 - PyPI latest: check after upload
 
 ## Do Now
@@ -16,11 +16,11 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - `twine check dist/*`
 - [ ] Test install (wheel)
   - `python -m venv .venv-publish && source .venv-publish/bin/activate`
-  - `pip install dist/slacgs-*.whl`
-  - `slacgs --help`
+  - `pip install dist/cosensim-*.whl`
+  - `cosensim --help`
 - [ ] TestPyPI (optional)
   - `twine upload --repository testpypi dist/*`
-  - `pip install --index-url https://test.pypi.org/simple/ slacgs`
+  - `pip install --index-url https://test.pypi.org/simple/ cosensim`
 - [ ] Publish to PyPI
   - `twine upload dist/*`
 - [ ] Publish reports to Pages
@@ -30,7 +30,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
 
 ---
 
-# 📋 SLACGS Development Tasks
+# 📋 CoSenSim Development Tasks
 
 **Last Updated:** 2026-01-14  
 **Current Phase:** Repository Cleanup & Publication Preparation
@@ -65,7 +65,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
 ### Configuration & Logging Infrastructure
 - [x] **023** - Update setup.py dependencies (CLI tools, extras_require)
 - [x] **024** - Create config.py (TOML-based, 544 lines, 35 tests)
-  - Priority: CLI > Env > ./slacgs.toml > ~/.config/slacgs/ > defaults
+  - Priority: CLI > Env > ./cosensim.toml > ~/.config/cosensim/ > defaults
   - Config is OPTIONAL (sane defaults work out of the box)
 - [x] **025** - Create logging_config.py (rotating logs, Rich output)
 
@@ -90,10 +90,10 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - ✅ Deleted: demo_examples.py, demo_examples_test.py, doctest_*.py
   - ✅ Kept: test_config.py (443 lines, 35 tests)
 - [x] **CLEANUP-02** - Fix docs/source/conf.py paths for src/ layout
-  - ✅ Updated sys.path to `../../src` (was `..\\slacgs`)
+  - ✅ Updated sys.path to `../../src` (was `..\\cosensim`)
 - [x] **CLEANUP-03** - Create MANIFEST.in for PyPI distribution control
 - [x] **CLEANUP-04** - Update .gitignore
-  - ✅ Added: docs/_build/, slacgs.toml, task tracking patterns
+  - ✅ Added: docs/_build/, cosensim.toml, task tracking patterns
 - [x] **CLEANUP-05** - Remove internal task tracking files
   - ✅ Deleted: TASK_025_COMPLETE.md, TASKS_026_027_COMPLETE.md, etc.
   - ✅ Kept: TASKS.md (this file - active development tracker)
@@ -109,10 +109,10 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
     - Option C: Publish to Read the Docs (external hosting)
   
 - [ ] **DOC-02** - Update README.md for publication
-  - [ ] Add installation: `pip install slacgs`
+  - [ ] Add installation: `pip install cosensim`
   - [ ] Add quick start with CLI examples
   - [ ] Add badges (PyPI version, Python versions, license, CI status)
-  - [ ] Ensure slacgs.pdf and learning_with_few_features_and_samples.pdf links work
+  - [ ] Ensure cosensim.pdf and learning_with_few_features_and_samples.pdf links work
   - [ ] Add "Citation" section pointing to CITATION.cff (see DOC-03)
 
 - [ ] **DOC-03** - Create scientific citation metadata
@@ -125,14 +125,14 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - [ ] Install build tools: `pip install build twine`
   - [ ] Build: `python -m build`
   - [ ] Check: `twine check dist/*`
-  - [ ] Test install in clean venv: `pip install dist/slacgs-*.whl`
-  - [ ] Verify: `slacgs --version`, `slacgs --help`
+  - [ ] Test install in clean venv: `pip install dist/cosensim-*.whl`
+  - [ ] Verify: `cosensim --version`, `cosensim --help`
 
 - [ ] **PYPI-02** - Test publish to TestPyPI
   - [ ] Create TestPyPI account: https://test.pypi.org/account/register/
   - [ ] Configure ~/.pypirc with TestPyPI credentials
   - [ ] Upload: `twine upload --repository testpypi dist/*`
-  - [ ] Test install: `pip install --index-url https://test.pypi.org/simple/ slacgs`
+  - [ ] Test install: `pip install --index-url https://test.pypi.org/simple/ cosensim`
   - [ ] Verify functionality
 
 ---
@@ -147,7 +147,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - [ ] Create test_cli.py (use typer.testing.CliRunner)
   - [ ] Create test_integration.py (end-to-end workflows)
   - [ ] Add pytest.ini with coverage settings
-  - [ ] Run: `pytest --cov=slacgs --cov-report=html --cov-report=term`
+  - [ ] Run: `pytest --cov=cosensim --cov-report=html --cov-report=term`
 
 - [ ] **QUALITY-01** - Set up code quality tools
   - [ ] Create pyproject.toml with tool configs
@@ -187,7 +187,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - [ ] Documentation complete and builds without errors
   - [ ] CHANGELOG.md created with all changes since v0.1.9
   - [ ] Version bumped to 1.0.0 in:
-    - [ ] src/slacgs/__init__.py (__version__)
+    - [ ] src/cosensim/__init__.py (__version__)
     - [ ] setup.py (version=)
   - [ ] README.md has correct PyPI install instructions
   - [ ] All deprecation warnings in place
@@ -197,9 +197,9 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
   - [ ] Build: `python -m build`
   - [ ] Final check: `twine check dist/*`
   - [ ] Upload: `twine upload dist/*`
-  - [ ] Verify on PyPI: https://pypi.org/project/slacgs/
-  - [ ] Test install: `pip install slacgs` (from fresh venv)
-  - [ ] Test CLI: `slacgs --version`, `slacgs run-simulation --help`
+  - [ ] Verify on PyPI: https://pypi.org/project/cosensim/
+  - [ ] Test install: `pip install cosensim` (from fresh venv)
+  - [ ] Test CLI: `cosensim --version`, `cosensim run-simulation --help`
 
 - [ ] **RELEASE-03** - Create GitHub Release
   - [ ] Tag version: `git tag -a v1.0.0 -m "Release v1.0.0"`
@@ -242,7 +242,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
 ## 📝 Notes & Decisions
 
 ### Files Kept in Repository
-- ✅ **slacgs.pdf** - Undergraduate thesis (linked in README)
+- ✅ **cosensim.pdf** - Undergraduate thesis (linked in README)
 - ✅ **learning_with_few_features_and_samples.pdf** - Research paper (linked in README)
 - ✅ **scripts/** - Publishing automation (publish_output_to_pages.sh, setup_pages.sh)
 - ✅ **docs/** - Sphinx documentation source (needs regeneration)
@@ -260,7 +260,7 @@ Short, actionable steps to publish v0.2.0 while keeping the full history below.
 - __pycache__/ (bytecode cache)
 - *.egg-info/ (build artifacts)
 - docs/_build/ (generated docs)
-- slacgs.toml (user-specific config)
+- cosensim.toml (user-specific config)
 
 ---
 

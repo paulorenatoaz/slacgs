@@ -103,7 +103,7 @@ Please cite this repository once experiments and results are published. A prelim
 
 ## License
 
-This repository currently includes a `LICENSE` placeholder. If you derived this repository from SLACGS, preserve and carry forward the original license; otherwise choose an appropriate open-source license (e.g., MIT, BSD, Apache-2.0).
+CoSenSim is distributed under the GNU General Public License v3.0 (GPL-3.0), inherited from the SLACGS project from which it is derived. See the [LICENSE](LICENSE) file for the full text.
 
 ## Contributing / development notes
 

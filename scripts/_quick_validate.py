@@ -8,9 +8,9 @@ import json
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, src_path)
 
-from slacgs.core.model import Model
-from slacgs.core.simulator import Simulator
-from slacgs.utils import report_service_conf
+from cosensim.core.model import Model
+from cosensim.core.simulator import Simulator
+from cosensim.utils import report_service_conf
 
 # Use a fast 2D parameter set from scenario_6_min
 params = [1, 1, 0.4]

@@ -1,7 +1,7 @@
 @echo off
 
-echo Uninstalling slacgs...
-pip uninstall slacgs -y
+echo Uninstalling cosensim...
+pip uninstall cosensim -y
 
 echo Installing from parent directory...
 pip install ..
@@ -12,13 +12,13 @@ if exist .\build (
 )
 
 echo Removing gh-pages branch build directory...
-if exist ..\..\slacgs.gh-pages\*.html (
-    rmdir /S /Q ..\..\slacgs.gh-pages\_sources
-    rmdir /S /Q ..\..\slacgs.gh-pages\_static
-    del /S /Q /F ..\..\slacgs.gh-pages\*.html
-    del /S /Q /F ..\..\slacgs.gh-pages\*.buildinfo
-    del /S /Q /F ..\..\slacgs.gh-pages\*.inv
-    del /S /Q /F ..\..\slacgs.gh-pages\*.js
+if exist ..\..\cosensim.gh-pages\*.html (
+    rmdir /S /Q ..\..\cosensim.gh-pages\_sources
+    rmdir /S /Q ..\..\cosensim.gh-pages\_static
+    del /S /Q /F ..\..\cosensim.gh-pages\*.html
+    del /S /Q /F ..\..\cosensim.gh-pages\*.buildinfo
+    del /S /Q /F ..\..\cosensim.gh-pages\*.inv
+    del /S /Q /F ..\..\cosensim.gh-pages\*.js
 )
 
 
@@ -31,9 +31,9 @@ if %ERRORLEVEL% neq 0 (
 
 echo Moving build directory...
 if exist .\build (
-    xcopy .\build\html\_sources ..\..\slacgs.gh-pages\_sources /E /Y /I
-    xcopy .\build\html\_static ..\..\slacgs.gh-pages\_static /E /Y /I
-    copy .\build\html\* ..\..\slacgs.gh-pages\
+    xcopy .\build\html\_sources ..\..\cosensim.gh-pages\_sources /E /Y /I
+    xcopy .\build\html\_static ..\..\cosensim.gh-pages\_static /E /Y /I
+    copy .\build\html\* ..\..\cosensim.gh-pages\
 )
 
 

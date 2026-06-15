@@ -12,13 +12,13 @@ import math
 from pygsheets.client import Client
 from typing import TYPE_CHECKING
 
-from slacgs.utils import report_service_conf
+from cosensim.utils import report_service_conf
 
 if TYPE_CHECKING:
-	from slacgs.reporting.report import Report
+	from cosensim.reporting.report import Report
 
 warnings.warn(
-    "slacgs.legacy.gspread_client is deprecated and will be removed in a future version. "
+    "cosensim.legacy.gspread_client is deprecated and will be removed in a future version. "
     "Please use local file-based workflows instead.",
     DeprecationWarning,
     stacklevel=2
@@ -90,7 +90,7 @@ class GspreadClient:
 		"""write loss_report to spreadsheet, a report that contains all results of Loss estimations
 
     - Reports with results will be stored in a Google Spreadsheet
-    - The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
+    - The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
 
     Reports Exported:
       - Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
@@ -341,7 +341,7 @@ class GspreadClient:
 		"""write compare_report to spreadsheet, a report that compare Loss estimantions for a pair of dimensionalities and find N*.
 
     - Reports with results will be stored in a Google Spreadsheet
-    - The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
+    - The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
 
     Reports Exported:
       - Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
@@ -557,7 +557,7 @@ class GspreadClient:
 		"""update scenario report of a spreadsheet, a report that contains a summary of N* results for a pair of dimensionalities.
 
     - Reports with results will be stored in a Google Spreadsheet
-    - The Spreadsheets are stored in a Google Drive folder named 'slacgs.demo.<user_email>'	owned by slacgs' google service	account and shared with the user's Google Drive account.
+    - The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
 
     Reports Exported:
       - Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
@@ -766,10 +766,10 @@ class GspreadClient:
 					N_count_reported + 1) else None if i == 0 else 'min(L)| ' + str(dims[0]) + 'feat' for i in
 			             range(N_count_reported + 2)] * len(loss_types)
 
-			cost_title = ['slacgs', 'iters'] + [loss_type for loss_type in loss_types] + [''] + ['n=' + str(2 ** (i + 1)) for
+			cost_title = ['cosensim', 'iters'] + [loss_type for loss_type in loss_types] + [''] + ['n=' + str(2 ** (i + 1)) for
 			                                                                                     i in
 			                                                                                     range(N_count_reported)] + [
-				             ''] + ['dim=' + str(dim) for dim in dims_sim] + ['slacgs', 'iter'] + [loss_type for loss_type in
+				             ''] + ['dim=' + str(dim) for dim in dims_sim] + ['cosensim', 'iter'] + [loss_type for loss_type in
 			                                                                                     loss_types] + [''] + [
 				             'n=' + str(2 ** (i + 1)) for i in range(N_count_reported)] + [''] + ['dim=' + str(dim) for dim in
 			                                                                                    dims_sim] + [loss_type for

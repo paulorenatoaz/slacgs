@@ -10,8 +10,8 @@ from scipy.stats import norm
 from sklearn.svm import SVC
 from PIL import Image
 
-from slacgs.core.enumtypes import DictionaryType
-from slacgs.utils import report_service_conf
+from cosensim.core.enumtypes import DictionaryType
+from cosensim.utils import report_service_conf
 
 
 class Model:
@@ -19,7 +19,7 @@ class Model:
 
 	def __init__(self, params, max_n=int(2 ** 13), N=tuple([int(2 ** i) for i in range(1, 11)]),
 	             dictionary=('LINEAR',)):
-		"""This Model for SLACGS contains:
+		"""This Model for CoSenSim contains:
 			- :math:`d`: dimensionality of the Model
 			- :math:`\mathbf{\sigma} = \\bigcup_{i=1}^{d} \sigma_i` : list of standard deviations for each feature
 			- :math:`\mathbf{\\rho} = \\bigcup_{i=1}^{d} \\bigcup_{j=i+1}^{d}  \\rho_{ij}`: list of correlations between each pair of features

@@ -10,10 +10,10 @@ import re
 from googleapiclient.discovery import Resource
 from googleapiclient.http import MediaIoBaseUpload
 
-from slacgs.utils import report_service_conf, set_report_service_conf
+from cosensim.utils import report_service_conf, set_report_service_conf
 
 warnings.warn(
-    "slacgs.legacy.gdrive_client is deprecated and will be removed in a future version. "
+    "cosensim.legacy.gdrive_client is deprecated and will be removed in a future version. "
     "Please use local file-based workflows instead.",
     DeprecationWarning,
     stacklevel=2

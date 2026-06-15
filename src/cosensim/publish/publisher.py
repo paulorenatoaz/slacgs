@@ -79,12 +79,12 @@ footer {{ margin-top:28px; color:var(--muted); font-size:.85rem; }}
     (site_dir / "index.html").write_text(index_html, encoding="utf-8")
 
 
-def publish_to_pages(output_dir=None, title="slacgs Reports"):
+def publish_to_pages(output_dir=None, title="cosensim Reports"):
     """
     Convenience function to generate index and publish to reports-pages branch.
     
     Args:
-        output_dir: Path to output directory (default: ~/slacgs/output)
+        output_dir: Path to output directory (default: ~/cosensim/output)
         title: Title for the index page
     
     Returns:
@@ -93,7 +93,7 @@ def publish_to_pages(output_dir=None, title="slacgs Reports"):
     try:
         # Determine output directory
         if output_dir is None:
-            output_dir = os.path.join(os.path.expanduser("~"), 'slacgs', 'output')
+            output_dir = os.path.join(os.path.expanduser("~"), 'cosensim', 'output')
         
         site_dir = Path(output_dir).resolve()
         reports_dir = (site_dir / "reports").resolve()
@@ -106,7 +106,7 @@ def publish_to_pages(output_dir=None, title="slacgs Reports"):
         print(f"✓ Generated index with {len(scenarios)} scenario reports and {len(json_files)} data files")
         
         # Locate and run publish script
-        # Assume we're in package: slacgs/publish/publisher.py, so repo root is 2 levels up
+        # Assume we're in package: cosensim/publish/publisher.py, so repo root is 2 levels up
         repo_root = Path(__file__).resolve().parents[2]
         script = repo_root / "scripts" / "publish_output_to_pages.sh"
         
@@ -137,7 +137,7 @@ def main(argv=None):
     ap.add_argument("--reports-dir", default="reports", help="Path to reports root (on gh-pages)")
     ap.add_argument("--data-dir", default="data", help="Path to JSON root (on gh-pages)")
     ap.add_argument("--site-dir", default="output", help="Where to write index.html (recommend: output)")
-    ap.add_argument("--title", default="slacgs Reports", help="Index title")
+    ap.add_argument("--title", default="cosensim Reports", help="Index title")
     ap.add_argument("--publish", action="store_true", help="After generating index, publish output/ to reports-pages via scripts/publish_output_to_pages.sh")
     args = ap.parse_args(argv)
 
@@ -151,7 +151,7 @@ def main(argv=None):
     print(f"Wrote {site_dir / 'index.html'}")
 
     if args.publish:
-        # Locate repo root (publisher.py is at slacgs/publish/publisher.py)
+        # Locate repo root (publisher.py is at cosensim/publish/publisher.py)
         repo_root = Path(__file__).resolve().parents[2]
         script = repo_root / "scripts" / "publish_output_to_pages.sh"
         if not script.exists():

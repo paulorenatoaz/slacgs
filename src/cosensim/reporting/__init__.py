@@ -1,7 +1,7 @@
 """
-SLACGS Reporting Module
+CoSenSim Reporting Module
 
-Report generation and visualization functionality for SLACGS.
+Report generation and visualization functionality for CoSenSim.
 Contains Report, ReportData and report utility functions.
 """
 

@@ -1,5 +1,5 @@
 """
-Logging configuration for SLACGS.
+Logging configuration for CoSenSim.
 
 Provides structured logging with:
 - Rotating file handler (10MB max, 5 backups)
@@ -11,13 +11,13 @@ Provides structured logging with:
 - Exception tracking
 
 Example:
-    >>> from slacgs.logging_config import setup_logging, get_logger
-    >>> setup_logging(level="INFO", log_file="./output/logs/slacgs.log")
+    >>> from cosensim.logging_config import setup_logging, get_logger
+    >>> setup_logging(level="INFO", log_file="./output/logs/cosensim.log")
     >>> logger = get_logger(__name__)
     >>> logger.info("Simulation started")
     
     >>> # With context manager for timing
-    >>> from slacgs.logging_config import log_time
+    >>> from cosensim.logging_config import log_time
     >>> with log_time("simulation"):
     >>>     run_simulation()
 """
@@ -50,7 +50,7 @@ def setup_logging(
     force_reconfigure: bool = False,
 ) -> None:
     """
-    Configure logging for SLACGS.
+    Configure logging for CoSenSim.
 
     This should be called once at the start of the application (e.g., in CLI entry point).
     Multiple calls are safe - will only configure once unless force_reconfigure=True.
@@ -63,7 +63,7 @@ def setup_logging(
         force_reconfigure: If True, reconfigures even if already configured
 
     Example:
-        >>> setup_logging(level="DEBUG", log_file="./output/logs/slacgs.log")
+        >>> setup_logging(level="DEBUG", log_file="./output/logs/cosensim.log")
         >>> setup_logging(level="WARNING", quiet=True)  # Only errors to console
     """
     global _LOGGING_CONFIGURED
@@ -77,7 +77,7 @@ def setup_logging(
         level = getattr(logging, level, logging.INFO)
 
     # Get root logger
-    root_logger = logging.getLogger("slacgs")
+    root_logger = logging.getLogger("cosensim")
     root_logger.setLevel(level)
     root_logger.handlers.clear()  # Remove existing handlers
 
@@ -146,15 +146,15 @@ def get_logger(name: str) -> logging.Logger:
         name: Logger name (typically __name__ of the calling module)
 
     Returns:
-        Logger instance under the 'slacgs' namespace
+        Logger instance under the 'cosensim' namespace
 
     Example:
         >>> logger = get_logger(__name__)
         >>> logger.info("Starting simulation")
     """
-    # Ensure logger is under 'slacgs' namespace
-    if not name.startswith("slacgs"):
-        name = f"slacgs.{name}"
+    # Ensure logger is under 'cosensim' namespace
+    if not name.startswith("cosensim"):
+        name = f"cosensim.{name}"
     return logging.getLogger(name)
 
 
@@ -169,7 +169,7 @@ def setup_logging_from_config(
     Priority order (highest to lowest):
     1. CLI arguments (cli_overrides)
     2. Config dict (from config.toml)
-    3. Environment variables (SLACGS_LOG_LEVEL)
+    3. Environment variables (CoSenSim_LOG_LEVEL)
     4. Defaults
 
     Args:
@@ -177,12 +177,12 @@ def setup_logging_from_config(
         cli_overrides: CLI arguments dict with keys: log_level, log_file, quiet, no_color
 
     Example:
-        >>> from slacgs.config import load_config
+        >>> from cosensim.config import load_config
         >>> config = load_config()
         >>> setup_logging_from_config(config, {"log_level": "DEBUG", "quiet": False})
     """
     import os
-    from slacgs.config import get_log_file
+    from cosensim.config import get_log_file
 
     # Default values
     level = "INFO"
@@ -208,7 +208,7 @@ def setup_logging_from_config(
         module_levels = logging_config.get("levels", {})
 
     # 2. Check environment variables
-    env_level = os.environ.get("SLACGS_LOG_LEVEL")
+    env_level = os.environ.get("CoSenSim_LOG_LEVEL")
     if env_level:
         level = env_level
 
@@ -252,7 +252,7 @@ def reset_logging() -> None:
     """
     global _LOGGING_CONFIGURED
     
-    root_logger = logging.getLogger("slacgs")
+    root_logger = logging.getLogger("cosensim")
     root_logger.handlers.clear()
     root_logger.setLevel(logging.WARNING)
     
@@ -276,13 +276,13 @@ def log_session_start(command: str, version: str, output_dir: str, **kwargs) -> 
     
     Args:
         command: Command being executed (e.g., 'run-experiment')
-        version: SLACGS version
+        version: CoSenSim version
         output_dir: Output directory path
         **kwargs: Additional metadata to log
     """
-    logger = get_logger("slacgs")
+    logger = get_logger("cosensim")
     logger.info("=" * 70)
-    logger.info(f"SLACGS v{version} - Session started")
+    logger.info(f"CoSenSim v{version} - Session started")
     logger.info(f"Command: {command}")
     logger.info(f"Output directory: {output_dir}")
     
@@ -299,7 +299,7 @@ def log_session_end(elapsed_time: float = None) -> None:
     Args:
         elapsed_time: Total elapsed time in seconds
     """
-    logger = get_logger("slacgs")
+    logger = get_logger("cosensim")
     logger.info("=" * 70)
     if elapsed_time:
         logger.info(f"Session completed in {elapsed_time:.2f}s")
@@ -323,7 +323,7 @@ def log_time(operation: str, level: str = "INFO"):
         >>>     data = load_large_dataset()
         >>> # Logs: "Starting: data loading" and "Completed: data loading (12.34s)"
     """
-    logger = get_logger("slacgs")
+    logger = get_logger("cosensim")
     log_func = getattr(logger, level.lower(), logger.info)
     
     start = time.time()
@@ -353,7 +353,7 @@ def setup_exception_logging() -> None:
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
         
-        logger = get_logger("slacgs")
+        logger = get_logger("cosensim")
         logger.critical(
             "Uncaught exception",
             exc_info=(exc_type, exc_value, exc_traceback)
@@ -365,29 +365,29 @@ def setup_exception_logging() -> None:
 # Convenience functions for quick logging without logger instances
 def log_info(message: str) -> None:
     """Quick info log."""
-    get_logger("slacgs").info(message)
+    get_logger("cosensim").info(message)
 
 
 def log_warning(message: str) -> None:
     """Quick warning log."""
-    get_logger("slacgs").warning(message)
+    get_logger("cosensim").warning(message)
 
 
 def log_error(message: str) -> None:
     """Quick error log."""
-    get_logger("slacgs").error(message)
+    get_logger("cosensim").error(message)
 
 
 def log_debug(message: str) -> None:
     """Quick debug log."""
-    get_logger("slacgs").debug(message)
+    get_logger("cosensim").debug(message)
 
 
 def log_error(message: str) -> None:
     """Quick error log."""
-    get_logger("slacgs").error(message)
+    get_logger("cosensim").error(message)
 
 
 def log_debug(message: str) -> None:
     """Quick debug log."""
-    get_logger("slacgs").debug(message)
+    get_logger("cosensim").debug(message)

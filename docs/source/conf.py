@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'slacgs'
+project = 'cosensim'
 copyright = '2023, Paulo R C Azevedo Filho'
 author = 'Paulo R C Azevedo Filho'
 release = '1.0'
@@ -19,7 +19,7 @@ import sys
 import sphinx_rtd_theme
 
 
-# Add src directory to path for autodoc to find slacgs package
+# Add src directory to path for autodoc to find cosensim package
 sys.path.insert(0, os.path.abspath('../../src'))
 extensions = ['sphinx.ext.autodoc',
               "sphinx_rtd_theme",
@@ -55,5 +55,5 @@ html_theme_options = {
 
 
 html_theme = "sphinx_rtd_theme"
-html_baseurl = 'https://paulorenatoaz.github.io/slacgs/'
+html_baseurl = 'https://paulorenatoaz.github.io/cosensim/'
 # html_theme = 'readthedocs-sphinx-ext'

@@ -1,21 +1,21 @@
-# SLACGS - AI Agent Instructions
+# CoSenSim - AI Agent Instructions
 
-**SLACGS** is a scientific Python package for simulating Loss Analysis of Linear Classifiers on Gaussian Samples. It evaluates the trade-off between sample size (n) and feature dimensionality (d) in classification problems.
+**CoSenSim** is a scientific Python package for simulating Loss Analysis of Linear Classifiers on Gaussian Samples. It evaluates the trade-off between sample size (n) and feature dimensionality (d) in classification problems.
 
 ## Architecture Overview
 
 ### Core Components
-- **`Model`** (`src/slacgs/core/model.py`): Defines Gaussian distributions with parameters `[σ₁, σ₂, ..., σₐ, ρ₁₂, ρ₁₃, ...]`
+- **`Model`** (`src/cosensim/core/model.py`): Defines Gaussian distributions with parameters `[σ₁, σ₂, ..., σₐ, ρ₁₂, ρ₁₃, ...]`
   - Standard deviations (σ) and correlations (ρ) between features
   - Validates covariance matrix is positive definite and symmetric
   - Minimum 3 params for 2D: `[σ₁, σ₂, ρ₁₂]`
-- **`Simulator`** (`src/slacgs/core/simulator.py`): Runs experiments across cardinalities N = [2, 4, 8, 16, ..., 1024+]
+- **`Simulator`** (`src/cosensim/core/simulator.py`): Runs experiments across cardinalities N = [2, 4, 8, 16, ..., 1024+]
   - Computes three loss types: `THEORETICAL`, `EMPIRICAL_TRAIN`, `EMPIRICAL_TEST`
   - `test_mode=True` reduces computation by 10x (for rapid testing)
-- **`Report`** (`src/slacgs/reporting/report.py`): Generates HTML reports and JSON data files
-  - Stores results in `~/slacgs/output/` (configurable via `config.py`)
+- **`Report`** (`src/cosensim/reporting/report.py`): Generates HTML reports and JSON data files
+  - Stores results in `~/cosensim/output/` (configurable via `config.py`)
 
-### Package Structure (src/slacgs/)
+### Package Structure (src/cosensim/)
 ```
 core/           # Model, Simulator, enumtypes (DictionaryType, LossType)
 reporting/      # Report generation (HTML, JSON, visualizations)
@@ -31,7 +31,7 @@ utils.py        # Helpers (report_service_conf, path utilities)
 ### Running Simulations
 1. **Single Simulation** (`demo_scripts/run_simulation.py`):
    ```python
-   from slacgs import Model, Simulator
+   from cosensim import Model, Simulator
    model = Model([1, 4, 0.6])  # σ₁=1, σ₂=4, ρ₁₂=0.6
    sim = Simulator(model, test_mode=False)
    sim.run()
@@ -44,19 +44,19 @@ utils.py        # Helpers (report_service_conf, path utilities)
    - Uses `is_param_in_simulation_reports()` to resume from previous runs (JSON-based checkpointing)
    - Auto-skips already-simulated parameters
 
-3. **Publishing to GitHub Pages** (`scripts/publish_output_to_pages.sh` or `slacgs.publish.publisher`):
+3. **Publishing to GitHub Pages** (`scripts/publish_output_to_pages.sh` or `cosensim.publish.publisher`):
    - Copies `output/reports/*.html` and `output/data/*.json` to `reports-pages` branch
    - Uses git worktree to avoid checkout conflicts
 
 ### Configuration System (Task 024 Complete)
-- **Priority**: CLI args > Env vars > `./slacgs.toml` > `~/.config/slacgs/config.toml` > defaults
+- **Priority**: CLI args > Env vars > `./cosensim.toml` > `~/.config/cosensim/config.toml` > defaults
 - **Key functions** (all in `config.py`):
   - `load_config()` - Merges all config sources
   - `get_output_dir(config, create=True)` - Returns Path object with optional lazy creation
-  - `init_project_config(path)` - Creates `slacgs.toml` template
-- **Environment variables**: `SLACGS_OUTPUT_DIR`, `SLACGS_LOG_LEVEL`
+  - `init_project_config(path)` - Creates `cosensim.toml` template
+- **Environment variables**: `CoSenSim_OUTPUT_DIR`, `CoSenSim_LOG_LEVEL`
 - **Config is OPTIONAL** - defaults to `./output/` with sane settings
-- **Example**: See `slacgs.toml.example` for comprehensive documentation
+- **Example**: See `cosensim.toml.example` for comprehensive documentation
 
 ### Testing
 - Run tests: `pytest test/` (use `-v` for verbose)
@@ -81,10 +81,10 @@ sys.path.insert(0, src_path)
 - **Test identifier**: Reports use `[test]` suffix in filenames when `test_mode=True`
 
 ### Import Guidelines
-- **DO**: `from slacgs import Model, Simulator, Report, load_config`
-- **DON'T**: Import from `slacgs.legacy.*` (deprecated Google Drive code)
+- **DO**: `from cosensim import Model, Simulator, Report, load_config`
+- **DON'T**: Import from `cosensim.legacy.*` (deprecated Google Drive code)
 - **DON'T**: Use wildcard imports (Task 021 - cleaned up)
-- **Public API**: See `__all__` in `src/slacgs/__init__.py` (16 exported symbols)
+- **Public API**: See `__all__` in `src/cosensim/__init__.py` (16 exported symbols)
 
 ### Output Organization
 ```
@@ -103,9 +103,9 @@ output/
 - ✅ Split dependencies: core vs `extras_require['legacy']` vs `extras_require['dev']`
 
 ### In Progress (Tasks 025-027)
-- 🚧 CLI implementation with `typer` (`src/slacgs/cli.py` - not yet created)
-  - Planned commands: `slacgs run-experiment`, `slacgs run-simulation`, `slacgs make-report`, `slacgs publish`, `slacgs config`
-- 🚧 Structured logging with rotation (`src/slacgs/logging_config.py` - not yet created)
+- 🚧 CLI implementation with `typer` (`src/cosensim/cli.py` - not yet created)
+  - Planned commands: `cosensim run-experiment`, `cosensim run-simulation`, `cosensim make-report`, `cosensim publish`, `cosensim config`
+- 🚧 Structured logging with rotation (`src/cosensim/logging_config.py` - not yet created)
 
 ### Known Issues
 - `demo.py` still has legacy Google Drive code (Task 090 - to be deprecated)
@@ -117,14 +117,14 @@ output/
 - **Legacy** (DO NOT USE in new code): pygsheets, google-api-python-client
 
 ## Multi-Workspace Context
-This repo has a companion **`slacgs-reports-pages`** repo (sibling directory) for GitHub Pages hosting. Publishing workflow syncs `output/` to that repo's `reports-pages` branch.
+This repo has a companion **`cosensim-reports-pages`** repo (sibling directory) for GitHub Pages hosting. Publishing workflow syncs `output/` to that repo's `reports-pages` branch.
 
 ## When Editing Code
 1. **Parameter validation**: Model constructor has strict checks - preserve them
 2. **Test mode awareness**: Check `self.test_mode` flag reduces computational load
 3. **Output paths**: Always use `report_service_conf` or new `config.py` functions, never hardcode paths
 4. **JSON format**: Simulation results stored as JSON arrays in `output/data/simulation_reports.json`
-5. **Reproducibility**: Configuration files (`slacgs.toml`) are meant for version control
+5. **Reproducibility**: Configuration files (`cosensim.toml`) are meant for version control
 
 ## Command Cheat Sheet
 ```bash
@@ -147,5 +147,5 @@ bash scripts/publish_output_to_pages.sh
 pytest test/ -v
 
 # Initialize config file
-python -c "from slacgs.config import init_project_config; init_project_config('.')"
+python -c "from cosensim.config import init_project_config; init_project_config('.')"
 ```

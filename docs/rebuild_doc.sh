@@ -1,7 +1,7 @@
 #!/bin/sh
 
-echo "Uninstalling slacgs..."
-pip uninstall slacgs -y
+echo "Uninstalling cosensim..."
+pip uninstall cosensim -y
 
 echo "Installing from parent directory..."
 pip install ..

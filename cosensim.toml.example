@@ -1,5 +1,5 @@
-# SLACGS Project Configuration Example
-# Copy this file to 'slacgs.toml' and customize for your project.
+# CoSenSim Project Configuration Example
+# Copy this file to 'cosensim.toml' and customize for your project.
 # This file is version-controlled for reproducible scientific experiments.
 
 [paths]
@@ -30,7 +30,7 @@ verbose = true
 level = "INFO"
 
 # Log file location
-# null = <output_dir>/slacgs.log (default)
+# null = <output_dir>/cosensim.log (default)
 # false = disable file logging
 # "path/to/file.log" = custom location
 file = null
@@ -44,7 +44,7 @@ enabled = false
 
 # Target directory for published reports
 # Should point to your *-pages repository
-target_dir = "../slacgs-reports-pages"
+target_dir = "../cosensim-reports-pages"
 
 # Automatically git push after publishing
 auto_push = false
@@ -58,10 +58,10 @@ auto_push = false
 # seed = 42
 
 # HPC/Cluster configuration (use environment variables instead):
-# export SLACGS_OUTPUT_DIR=/scratch/username/slacgs-results
-# export SLACGS_SEED=42
-# export SLACGS_N_JOBS=16
-# export SLACGS_LOG_LEVEL=WARNING
+# export CoSenSim_OUTPUT_DIR=/scratch/username/cosensim-results
+# export CoSenSim_SEED=42
+# export CoSenSim_N_JOBS=16
+# export CoSenSim_LOG_LEVEL=WARNING
 
 # Reproducible research paper:
 # [paths]
@@ -84,9 +84,9 @@ auto_push = false
 # ============================================================================
 # Configuration is merged in this order (highest to lowest priority):
 # 1. Command-line arguments (--output-dir, --seed, etc.)
-# 2. Environment variables (SLACGS_OUTPUT_DIR, SLACGS_SEED, etc.)
-# 3. This project config file (./slacgs.toml)
-# 4. User config file (~/.config/slacgs/config.toml)
+# 2. Environment variables (CoSenSim_OUTPUT_DIR, CoSenSim_SEED, etc.)
+# 3. This project config file (./cosensim.toml)
+# 4. User config file (~/.config/cosensim/config.toml)
 # 5. Built-in defaults
 
 # This means you can:

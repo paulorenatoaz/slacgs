@@ -1,7 +1,7 @@
 """
-SLACGS Core Module
+CoSenSim Core Module
 
-Core simulation and modeling functionality for SLACGS.
+Core simulation and modeling functionality for CoSenSim.
 Contains the main Model and Simulator classes.
 """
 

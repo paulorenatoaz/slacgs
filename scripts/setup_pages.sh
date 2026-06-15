@@ -29,7 +29,7 @@ fi
 require_clean
 
 # Commit current publishing setup to main (if not committed yet)
-if ! git diff --quiet -- .gitignore slacgs/publish .github/workflows scripts/publish_output_to_pages.sh 2>/dev/null; then
+if ! git diff --quiet -- .gitignore cosensim/publish .github/workflows scripts/publish_output_to_pages.sh 2>/dev/null; then
   git add -A
   git commit -m "chore(publish): add gh-pages index (scenarios+data), CI updater, publish helper; ignore output/ on main"
 fi
@@ -44,7 +44,7 @@ if ! git ls-remote --exit-code --heads "$REMOTE" "$PAGES" >/dev/null 2>&1; then
   rm -rf ./* || true
   mkdir -p "$REPORTS_DIR" "$DATA_DIR"
   touch .nojekyll
-  echo "<!doctype html><title>slacgs</title><h1>Publishing…</h1>" > index.html
+  echo "<!doctype html><title>cosensim</title><h1>Publishing…</h1>" > index.html
   git add -A
   git commit -m "chore(publish): initialize reports-pages branch"
   git push -u "$REMOTE" "$PAGES"

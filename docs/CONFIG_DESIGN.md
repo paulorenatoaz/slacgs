@@ -1,4 +1,4 @@
-# SLACGS Configuration Design
+# CoSenSim Configuration Design
 
 **Design Philosophy:** Reproducibility > Convenience
 
@@ -14,43 +14,43 @@ Scientific research requires reproducible experiments. Configuration should be:
 
 1. **CLI arguments** (highest) - One-off experiments
    ```bash
-   slacgs run-experiment --output-dir ./results --log-level DEBUG
+   cosensim run-experiment --output-dir ./results --log-level DEBUG
    ```
 
 2. **Environment variables** - CI/CD and cluster configs
    ```bash
-   export SLACGS_OUTPUT_DIR=/scratch/user/exp_001
-   export SLACGS_LOG_LEVEL=DEBUG
-   slacgs run-experiment
+   export CoSenSim_OUTPUT_DIR=/scratch/user/exp_001
+   export CoSenSim_LOG_LEVEL=DEBUG
+   cosensim run-experiment
    ```
 
 3. **Project config** - Version-controlled, reproducible
    ```bash
-   # ./slacgs.toml committed to git
-   slacgs run-experiment  # Uses ./slacgs.toml
+   # ./cosensim.toml committed to git
+   cosensim run-experiment  # Uses ./cosensim.toml
    ```
 
 4. **User config** - Personal defaults (optional)
    ```bash
-   # ~/.config/slacgs/config.toml
-   slacgs run-experiment  # Falls back to user config
+   # ~/.config/cosensim/config.toml
+   cosensim run-experiment  # Falls back to user config
    ```
 
 5. **Built-in defaults** (lowest) - Always available
    ```bash
-   slacgs run-experiment  # Works without any config!
+   cosensim run-experiment  # Works without any config!
    ```
 
 ---
 
-## Config File Format: `slacgs.toml`
+## Config File Format: `cosensim.toml`
 
 ```toml
-# Example slacgs.toml - Simple, flat, readable
+# Example cosensim.toml - Simple, flat, readable
 # Place in project root for reproducible experiments
 
 [paths]
-output_dir = "./slacgs_output"  # Relative to project (reproducible)
+output_dir = "./cosensim_output"  # Relative to project (reproducible)
 reports_dir = "reports"          # Subdirectory of output_dir
 data_dir = "data"                # Subdirectory of output_dir
 images_dir = "images"            # Subdirectory of output_dir
@@ -65,7 +65,7 @@ test_mode = false
 
 [logging]
 level = "INFO"               # DEBUG, INFO, WARNING, ERROR
-file = "slacgs.log"          # Log file name (in output_dir)
+file = "cosensim.log"          # Log file name (in output_dir)
 format = "json"              # json or pretty
 console = true               # Show logs in console
 colors = true                # Colored console output
@@ -73,7 +73,7 @@ colors = true                # Colored console output
 [publishing]
 auto_push = false            # Auto-push to GitHub Pages
 remote_branch = "reports-pages"
-title = "SLACGS Reports"
+title = "CoSenSim Reports"
 ```
 
 ---
@@ -83,34 +83,34 @@ title = "SLACGS Reports"
 ### Minimal - Just Works
 ```bash
 # No config needed, uses defaults
-$ slacgs run-experiment
+$ cosensim run-experiment
 ✓ Using default configuration
-✓ Output: ./slacgs_output/
+✓ Output: ./cosensim_output/
 ```
 
 ### Reproducible Research Project
 ```bash
 # Step 1: Initialize project config
-$ slacgs config init
-✓ Created: slacgs.toml
+$ cosensim config init
+✓ Created: cosensim.toml
 
-# Step 2: Edit slacgs.toml for your experiment
-$ nano slacgs.toml
+# Step 2: Edit cosensim.toml for your experiment
+$ nano cosensim.toml
 
 # Step 3: Commit to git
-$ git add slacgs.toml
+$ git add cosensim.toml
 $ git commit -m "Add experiment configuration"
 
 # Step 4: Run (anyone can reproduce with same config)
-$ slacgs run-experiment
-✓ Using config: ./slacgs.toml
-✓ Output: ./slacgs_output/
+$ cosensim run-experiment
+✓ Using config: ./cosensim.toml
+✓ Output: ./cosensim_output/
 ```
 
 ### Quick Exploration
 ```bash
 # Override specific settings without editing config
-$ slacgs run-experiment \
+$ cosensim run-experiment \
     --output-dir ~/experiments/quick_test \
     --dimensions "2,3" \
     --log-level DEBUG
@@ -119,8 +119,8 @@ $ slacgs run-experiment \
 ### Cluster/HPC Usage
 ```bash
 # Set output to scratch storage via environment
-export SLACGS_OUTPUT_DIR=/scratch/$USER/experiment_001
-export SLACGS_LOG_LEVEL=INFO
+export CoSenSim_OUTPUT_DIR=/scratch/$USER/experiment_001
+export CoSenSim_LOG_LEVEL=INFO
 
 # Run batch jobs
 sbatch run_experiment.sh  # Uses env vars
@@ -134,11 +134,11 @@ sbatch run_experiment.sh  # Uses env vars
 def find_config_file():
     """Find config file in priority order."""
     # 1. Project-local (best for reproducibility)
-    if Path("slacgs.toml").exists():
-        return Path("slacgs.toml")
+    if Path("cosensim.toml").exists():
+        return Path("cosensim.toml")
     
     # 2. User config (personal defaults)
-    user_config = platformdirs.user_config_path("slacgs") / "config.toml"
+    user_config = platformdirs.user_config_path("cosensim") / "config.toml"
     if user_config.exists():
         return user_config
     
@@ -158,10 +158,10 @@ def load_config(cli_args=None):
         config.update(file_config)
     
     # Layer 2: Override with environment variables
-    if os.getenv("SLACGS_OUTPUT_DIR"):
-        config["paths"]["output_dir"] = os.getenv("SLACGS_OUTPUT_DIR")
-    if os.getenv("SLACGS_LOG_LEVEL"):
-        config["logging"]["level"] = os.getenv("SLACGS_LOG_LEVEL")
+    if os.getenv("CoSenSim_OUTPUT_DIR"):
+        config["paths"]["output_dir"] = os.getenv("CoSenSim_OUTPUT_DIR")
+    if os.getenv("CoSenSim_LOG_LEVEL"):
+        config["logging"]["level"] = os.getenv("CoSenSim_LOG_LEVEL")
     
     # Layer 3: Override with CLI arguments (highest priority)
     if cli_args:
@@ -181,11 +181,11 @@ def load_config(cli_args=None):
 
 ```python
 # BAD: Creates directories on import
-import slacgs  # Suddenly ~/slacgs/ exists!
+import cosensim  # Suddenly ~/cosensim/ exists!
 
 # GOOD: Only create when needed
-import slacgs
-slacgs.run_experiment()  # Creates ./slacgs_output/ now
+import cosensim
+cosensim.run_experiment()  # Creates ./cosensim_output/ now
 ```
 
 **Implementation:**
@@ -233,7 +233,7 @@ Error: No config.toml found!
 
 ❌ **Hidden magic**
 ```python
-import slacgs  # Creates ~/.slacgs/ silently
+import cosensim  # Creates ~/.cosensim/ silently
 ```
 
 ❌ **Complex hierarchies**
@@ -246,23 +246,23 @@ base: &defaults
 
 ❌ **Mutating globals**
 ```python
-slacgs.config.OUTPUT_DIR = "/tmp"  # Side effects!
+cosensim.config.OUTPUT_DIR = "/tmp"  # Side effects!
 ```
 
 ---
 
 ## Implementation Checklist (Task 024)
 
-- [ ] Create `src/slacgs/config.py`
+- [ ] Create `src/cosensim/config.py`
 - [ ] Implement `load_config()` with proper precedence
 - [ ] Implement `get_output_dir()` helper
 - [ ] Implement `validate_config()` for type checking
 - [ ] Create `DEFAULT_CONFIG` with sensible defaults
 - [ ] Support tomllib (3.11+) with tomli fallback
-- [ ] Add `slacgs config init` command to generate template
+- [ ] Add `cosensim config init` command to generate template
 - [ ] Write tests for config loading and precedence
 - [ ] Document in README.md
-- [ ] Add example `slacgs.toml` to repository
+- [ ] Add example `cosensim.toml` to repository
 
 ---
 

@@ -2,10 +2,10 @@ import json
 import os
 
 # Import centralized configuration system
-from slacgs.config import load_config, get_output_dir, get_reports_dir, get_data_dir
+from cosensim.config import load_config, get_output_dir, get_reports_dir, get_data_dir
 
 # Legacy imports for Google Drive/Sheets functionality (optional)
-# These are only needed for deprecated features - install with: pip install slacgs[legacy]
+# These are only needed for deprecated features - install with: pip install cosensim[legacy]
 try:
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -91,7 +91,7 @@ report_service_conf: dict
     - 'spreadsheet_service': object or None, the Google Sheets service object (legacy)
     - 'pygsheets_service': object or None, the Pygsheets service object (legacy)
 
-    This dictionary is automatically initialized from slacgs.config system.
+    This dictionary is automatically initialized from cosensim.config system.
     Call init_report_service_conf(config) to update paths.
 """
 
@@ -168,11 +168,11 @@ def is_param_in_simulation_reports(params, test_mode=False):
 
 
 def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, user_google_account_email=None,
-                            slacgs_password=None):
+                            cosensim_password=None):
   """Set the report service configuration. This function must be called before using the report service dependencies models (e.g. GspreadClient, GdriveClient).
 
   Parameters:
-    slacgs_password (str): The password used to enable our Report Service. Defaults to None.
+    cosensim_password (str): The password used to enable our Report Service. Defaults to None.
     user_google_account_email (str): The user email used to authenticate the Google services. Defaults to None.
     path_to_google_cloud_service_account_api_key (str): The Google Cloud Service Account API Json Key used to build your own Report Service. Must be able to access Google Drive and Google Sheets API's. Defaults to None.
 
@@ -190,7 +190,7 @@ def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, u
 
   """
 
-  if slacgs_password is not None and not isinstance(slacgs_password, str):
+  if cosensim_password is not None and not isinstance(cosensim_password, str):
     raise TypeError("slags_password must be a string.")
 
   if user_google_account_email is not None and not isinstance(user_google_account_email, str):
@@ -208,7 +208,7 @@ def set_report_service_conf(path_to_google_cloud_service_account_api_key=None, u
     credentials = service_account.Credentials.from_service_account_file(path_to_google_cloud_service_account_api_key, scopes=SCOPES)
   else:
     # TODO(TASK-090): Remove dependency on interactive password flow; deprecate Google services
-    key_obj = eval(get_key(slacgs_password))
+    key_obj = eval(get_key(cosensim_password))
     credentials = service_account.Credentials.from_service_account_info(key_obj, scopes=SCOPES)
 
   report_service_conf['pygsheets_service'] = pygsheets.authorize(custom_credentials=credentials)

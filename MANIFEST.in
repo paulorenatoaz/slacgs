@@ -4,7 +4,7 @@
 include LICENSE
 include README.md
 include requirements.txt
-include slacgs.toml.example
+include cosensim.toml.example
 
 # Include docs source (users can build locally)
 recursive-include docs/source *.rst *.py
@@ -19,7 +19,7 @@ exclude TASKS.md
 exclude REFACTOR_PLAN.md
 exclude TASK_*.md
 exclude TASKS_*.md
-exclude slacgs.toml
+exclude cosensim.toml
 exclude *.pdf
 
 # Exclude build/cache directories

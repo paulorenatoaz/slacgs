@@ -1,8 +1,8 @@
-# SLACGS Console Output Design (Phase 1)
+# CoSenSim Console Output Design (Phase 1)
 
 **Status**: Design finalized, ready for implementation  
 **Date**: 2026-01-14  
-**Module**: `src/slacgs/progress.py`
+**Module**: `src/cosensim/progress.py`
 
 ---
 
@@ -22,7 +22,7 @@ Replace old-style line-per-iteration console output with **rich live panels** th
 
 ### Module Structure
 ```
-src/slacgs/
+src/cosensim/
 ├── progress.py              # ProgressTracker class (standalone)
 │   ├── ProgressTracker     # Main class
 │   ├── SimulationMetrics   # Data class for tracking
@@ -50,12 +50,12 @@ src/slacgs/
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🚀 SLACGS Simulator Started             ┃
+┃  🚀 CoSenSim Simulator Started             ┃
 ┃  Model params: [1, 4, 0.6]               ┃
 ┃  Dimensions: [2, 3]                      ┃
 ┃  Cardinalities: [2, 4, 8, 16, ..., 1024] ┃
 ┃  Mode: Normal (test_mode=False)          ┃
-┃  Output: ~/slacgs/output/                ┃
+┃  Output: ~/cosensim/output/                ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -120,9 +120,9 @@ src/slacgs/
 ┃    d=3: 0.1654 ✓                                    ┃
 ┃                                                     ┃
 ┃ 📁 Output                                           ┃
-┃    Reports: /home/pr/slacgs/output/reports/        ┃
-┃    Data:    /home/pr/slacgs/output/data/           ┃
-┃    Logs:    /home/pr/slacgs/output/logs/           ┃
+┃    Reports: /home/pr/cosensim/output/reports/        ┃
+┃    Data:    /home/pr/cosensim/output/data/           ┃
+┃    Logs:    /home/pr/cosensim/output/logs/           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -156,13 +156,13 @@ Three modes controlled via CLI flags:
 
 ### Normal Mode (default)
 ```bash
-slacgs run-simulation --params "[1,1,0.4]" --test-mode
+cosensim run-simulation --params "[1,1,0.4]" --test-mode
 ```
 Shows: Start message + checkpoint updates + end summary
 
 ### Debug Mode
 ```bash
-slacgs run-simulation --params "[1,1,0.4]" --test-mode --debug
+cosensim run-simulation --params "[1,1,0.4]" --test-mode --debug
 ```
 Shows: Normal + per-iteration detailed logs (useful for troubleshooting)
 
@@ -181,7 +181,7 @@ Example output with --debug:
 
 ### Quiet Mode
 ```bash
-slacgs run-experiment --scenarios 1 --test-mode --quiet
+cosensim run-experiment --scenarios 1 --test-mode --quiet
 ```
 Shows: Only initialization message and final summary (good for batch/CI)
 
@@ -203,9 +203,9 @@ Shows: Only initialization message and final summary (good for batch/CI)
   - [ ] Pass these flags to Simulator
 
 - [ ] **Testing**
-  - [ ] Test normal mode: `slacgs run-experiment --scenarios 1 --test-mode`
-  - [ ] Test debug mode: `slacgs run-experiment --scenarios 1 --test-mode --debug`
-  - [ ] Test quiet mode: `slacgs run-experiment --scenarios 1 --test-mode --quiet`
+  - [ ] Test normal mode: `cosensim run-experiment --scenarios 1 --test-mode`
+  - [ ] Test debug mode: `cosensim run-experiment --scenarios 1 --test-mode --debug`
+  - [ ] Test quiet mode: `cosensim run-experiment --scenarios 1 --test-mode --quiet`
   - [ ] Verify panel updates in-place (doesn't scroll)
   - [ ] Verify convergence detection shows correct colors
 
