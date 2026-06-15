@@ -1,182 +1,114 @@
-# SLACGS [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://slacgs.netlify.app/)
+# CoSenSim: A Simulator for Evaluating Cooperative Advantage in Sensor Networks
 
-SLACGS is a scientific Python package for simulating loss/error behavior of linear classifiers on Gaussian samples, with a focus on the trade-off between sample size ($n$) and feature dimensionality ($d$).
+CoSenSim is a research simulator for evaluating cooperative advantage in sensor and measurement-channel systems. It is an academic evolution of the SLACGS project and extends SLACGS's experimental framing toward real-data‑anchored studies that ask when combinations of signals become more useful than isolated signals or smaller subsets.
 
-SLACGS supports arbitrary dimensionality ($d \ge 2$). The model is defined by a single parameter vector containing:
+## Short description
 
-- $d$ standard deviations: $[\sigma_1,\ldots,\sigma_d]$
-- $d(d-1)/2$ correlations in upper-triangular order: $[\rho_{12},\rho_{13},\ldots,\rho_{(d-1)d}]$
+CoSenSim simulates and evaluates classification performance for different subsets of sensor or measurement channels. The simulator estimates class-conditional structures from real datasets, generates synthetic datasets anchored in those estimates, and compares cooperative patterns across isolated channels, pairs, and larger subsets under controlled sample-size regimes.
 
-This package supported contributions to:
+## Relationship to SLACGS
 
-- the undergraduate thesis ["SLACGS: Simulator for Loss Analysis of Classifiers using Gaussian Samples"](./slacgs.pdf) by Paulo Azevedo (advisor: Daniel Menasché; co-advisor: João Pinheiro)
-- the work ["Learning with Few Features and Samples"](./learning_with_few_features_and_samples.pdf) by João Pinheiro, Y.Z. Janice Chen, Paulo Azevedo, Daniel Menasché, and Don Towsley
+CoSenSim is a derivative and conceptual evolution of the SLACGS repository. It preserves SLACGS's core experimental perspective (margin-based and simple linear baselines) while prioritizing real-data anchoring and a systematic two-phase roadmap focused on operational costs and decision-making.
 
-## Updated SLACGS (current system)
+## Research motivation
 
-The current SLACGS system is centered around a CLI + a clean data/reporting pipeline:
+Many practical sensing problems expose decisions about which signals or instruments to acquire and combine. Some measurements are inexpensive and abundant, while others are costly or slow. Our central question is: when does cooperation among sensor or measurement channels become advantageous? CoSenSim provides a controlled simulation environment to study this question using real-data anchors and synthetic experiments.
 
-- CLI entrypoint: `slacgs` (or `python -m slacgs`) with commands to run simulations/experiments and generate reports.
-- Configuration: optional TOML config with precedence **CLI args > env vars > ./slacgs.toml > ~/.config/slacgs/config.toml > defaults**.
-- Outputs: simulation results are persisted as JSON and exported as HTML reports plus images/tables.
-- Logging: structured logs with rotation; `cleanup-logs` command for retention.
-- Reporting: `ReportData` data object decouples `Simulator` from `Report` (no circular dependency).
+## Core empirical object
 
-By default, output is written under `~/slacgs/output/` (configurable).
+We evaluate Monte Carlo average classification loss for subsets of channels. Formally, for a subset of channels $A$, classifier $f$, and sample size per class $n$, the central empirical object is
 
-## Legacy note
+$$
+\\bar{L}_{A,f}(n)
+$$
 
-Older Google Drive / Google Sheets integration is considered legacy and is not part of the recommended workflow. Legacy dependencies are optional via `slacgs[legacy]`.
+where $\\bar{L}_{A,f}(n)$ denotes the Monte Carlo average classification loss (e.g., average misclassification rate or other loss) when training classifier $f$ on $n$ labeled samples per class using channels in $A$.
 
+The simulator compares $\\bar{L}_{A,f}(n)$ across isolated channels, pairs, and larger channel subsets to quantify cooperative gains.
 
-# Experiment Description Available in the PDF
+## Methodological overview
 
-[Download Experiment PDF](./slacgs.pdf)
+1. Estimate class-conditional parameters from a chosen real dataset $D_{real}$.
+2. Generate synthetic datasets $D_{synth}$ anchored to those estimates.
+3. For each non-empty subset $A$ of selected channels and each classifier $f$, estimate $\\bar{L}_{A,f}(n)$ via Monte Carlo sampling across a range of $n$.
+4. Compare cooperative patterns between $D_{real}$ and $D_{synth}$ and evaluate operational trade-offs when acquisition costs are introduced.
 
+In early experiments we will typically restrict the signal space to $d=3$ selected channels so that there are $2^{3}-1 = 7$ non-empty subsets to compare (three isolated channels, three pairs, and the full 3-channel set).
 
-# Demo
+## Two-phase roadmap
 
-1. Download and Install
-2. Configure output/logging (optional)
-3. Experiment Scenarios
-4. Demo workflows (CLI + Python API)
+- Phase 1 — Real-data-anchored cooperative simulation
+  - Focus on small, interpretable real datasets from the start.
+  - Estimate class-conditional structures from $D_{real}$, generate $D_{synth}$ anchored to these estimates, then compare cooperative patterns.
+  - Early experiments will often use $d=3$ selected channels for interpretability.
 
+- Phase 2 — Operational decision with costs
+  - Introduce acquisition and operational costs per channel.
+  - Ask operational questions: which channel subset gives acceptable loss at lower cost? Can low-cost channels partially replace expensive ones? How many labeled samples are needed before cooperation becomes useful?
 
-## 1. Download And Install
+## Initial classifier plan
 
-```bash
-pip install slacgs
-```
+Initial classifier set (concise):
 
+- Linear SVM — a margin-based linear baseline, preserving continuity with SLACGS.
+- Logistic Regression — a lightweight probabilistic linear baseline.
+- Gaussian Naive Bayes — a simple, interpretable baseline that assumes conditional independence across channels; useful for diagnosing whether cooperative gains arise from interaction structure beyond marginal evidence accumulation.
 
-Quick sanity check:
+Expansion classifiers (short list): RBF SVM, k‑nearest neighbors, Random Forest. Future work may explore neural networks or gradient boosting methods.
 
-```bash
-slacgs --help
-# or
-python -m slacgs --help
-```
+## Initial real-data directions (candidate datasets)
 
+Early empirical work will focus on small, interpretable studies with $d=3$ selected channels. Candidate directions include:
 
-## 2. Configure Output & Logging (optional)
-
-Configuration is optional; defaults work out of the box.
-
-Create a project config template:
-
-```bash
-slacgs config init --project
-slacgs config show
-slacgs config validate
-```
-
-Common environment variables:
-
-```bash
-export SLACGS_OUTPUT_DIR="/path/to/output"
-export SLACGS_LOG_LEVEL="INFO"
-```
+- Occupancy Detection: CO2, light, temperature.
+- Water Potability: pH, conductivity, turbidity.
+- Air Quality: field gas sensor responses vs. certified reference measurements.
+- Hydraulic Systems Condition Monitoring: fault detection and predictive maintenance (future work).
 
 
-## 3. Predefined Experiment Scenarios
+## Installation (developer quick-start)
 
-SLACGS ships with predefined scenarios (see `slacgs.demo.SCENARIOS`). You can run all scenarios or select a subset.
+These are minimal local setup instructions for development. They assume Python 3.10+ and a virtual environment.
+
+1. Create and activate a virtual environment:
 
 ```bash
-# Run all predefined scenarios
-slacgs run-experiment
-
-# Run scenarios 1, 2, 3
-slacgs run-experiment --scenarios 1,2,3
-
-# Fast exploratory run
-slacgs run-experiment --scenarios 1 --test-mode
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-
-## 4. Workflows 
-
-### 4.1 Run a single simulation
+2. Install minimal dependencies:
 
 ```bash
-# 2D: [sigma1, sigma2, rho12]
-slacgs run-simulation --params "[1,4,0.6]"
-
-# 3D: [sigma1, sigma2, sigma3, rho12, rho13, rho23]
-slacgs run-simulation --params "[1,1,2,0,0,0]" --test-mode
-
-# 4D: [sigma1, sigma2, sigma3, sigma4, rho12, rho13, rho14, rho23, rho24, rho34]
-slacgs run-simulation --params "[1,1,1,2,0,0,0,0,0,-0.1]" --test-mode
+pip install -r requirements.txt
 ```
 
-### 4.2 Run custom experiments
+3. Install the package in editable mode for development:
 
 ```bash
-# Inline parameter sets
-slacgs run-experiment --custom-params "[[1,1,-0.4], [1,1,0.4]]" --test-mode
-
-# Load parameter sets from JSON
-slacgs run-experiment --params-file my_scenario.json
-
-# Organize an experiment under ~/slacgs/experiments/{tag}/
-slacgs run-experiment --params-file my_scenario.json --tag custom_experiment_1
+pip install -e .
 ```
 
-### 4.3 Generate reports from existing JSON
+## Basic usage (placeholder)
 
-```bash
-slacgs make-report --scenario 1
-slacgs make-report --params "[1,4,0.6]"
-```
+This repository is an early-stage scaffold. After Sprint 1, typical workflows will include:
 
-### 4.4 Publishing (GitHub Pages)
+- `src/cosensim` code to estimate class-conditional parameters from real data
+- `experiments/` scripts to generate anchored synthetic datasets and compute $\\bar{L}_{A,f}(n)$
+- Jupyter notebooks in `notebooks/` for exploration and figures
 
-```bash
-slacgs publish
-slacgs publish --auto-push
-```
+## Citation
 
-### 4.5 Log cleanup
+Please cite this repository once experiments and results are published. A preliminary CITATION.cff is included as a placeholder.
 
-```bash
-slacgs cleanup-logs --older-than 30 --dry-run
-slacgs cleanup-logs --older-than 30
-```
+## License
 
-### 4.6 Python API
+This repository currently includes a `LICENSE` placeholder. If you derived this repository from SLACGS, preserve and carry forward the original license; otherwise choose an appropriate open-source license (e.g., MIT, BSD, Apache-2.0).
 
-```python
-from slacgs import Model, Simulator
+## Contributing / development notes
 
-model = Model([1, 4, 0.6])
-sim = Simulator(model, test_mode=True)
-sim.run()
-
-sim.report.save_graphs_png_images_files()
-sim.report.create_report_tables()
-sim.report.write_to_json()
-sim.report.create_html_report()
-```
-
-### Output structure
-
-By default, outputs go to `~/slacgs/output/`:
-
-```text
-~/slacgs/output/
-  data/
-    simulation_reports.json
-    simulation_reports_test.json
-    tables/
-      sim_tables_id[...]/
-  reports/
-    sim_report_id[...].html
-    scenario_1_report.html
-    images/
-      graphs/
-      visualizations/
-  logs/
-    slacgs.log
-```
+- This is an academic research project under active development.
+- Keep pull requests small and focused; refactorings should be proposed and discussed in issue threads before large changes.
+- Preserve reproducibility: experiments should have manifests listing random seeds and environment details.
 
 

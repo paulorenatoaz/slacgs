@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use CoSenSim for published research, please cite this repository."
+title: "CoSenSim: A Simulator for Evaluating Cooperative Advantage in Sensor Networks"
+version: 0.1.0
+authors:
+  - family-names: "Your"
+    given-names: "Name"
+    affiliation: "Your Institution"
+date-released: 2026-06-15
+url: https://github.com/YOUR-ORG/CoSenSim
+doi: TODO
+keywords:
+  - cooperative sensing
+  - sensor networks
+  - simulation
+  - classification
