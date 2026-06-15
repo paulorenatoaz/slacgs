@@ -57,7 +57,7 @@ except ImportError:
 # Default configuration
 DEFAULT_CONFIG: Dict[str, Any] = {
     "paths": {
-        "output_dir": None,  # None means use ~/cosensim/output
+        "output_dir": "./output",  # Relative to current working directory (reproducible, portable)
         "reports_dir": None,  # None means <output_dir>/reports
         "data_dir": None,  # None means <output_dir>/data
     },
@@ -68,7 +68,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     "logging": {
         "level": "INFO",
-        "file": "cosensim.log",  # Relative to <output_dir>/logs/
+        "file": None,  # None means <output_dir>/cosensim.log; False disables file logging
         "quiet": False,  # Suppress console output
         "max_age_days": 30,  # Auto-delete logs older than 30 days
         "levels": {},  # Module-specific log levels: {"cosensim.core.simulator": "DEBUG"}
@@ -317,16 +317,18 @@ def get_output_dir(config: Optional[Dict[str, Any]] = None, create: bool = False
     Example:
         >>> output_dir = get_output_dir(create=True)
         >>> print(output_dir)
-        PosixPath('/home/user/cosensim/output')
+        PosixPath('/path/to/cwd/output')
     """
     if config is None:
         config = load_config()
     
     output_dir_value = config["paths"]["output_dir"]
     
-    # If None, use ~/cosensim/output (user home folder for visibility)
+    # If None, default to ./output relative to the current working directory.
+    # A project-relative default keeps experiment outputs next to the code/config
+    # that produced them (reproducible, portable across machines/HPC).
     if output_dir_value is None:
-        output_dir = Path.home() / "cosensim" / "output"
+        output_dir = (Path.cwd() / "output").resolve()
     else:
         output_dir = Path(output_dir_value).resolve()
     
@@ -400,7 +402,7 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
     """
     Get the log file path.
     
-    Defaults to <output_dir>/logs/cosensim.log if not explicitly configured.
+    Defaults to <output_dir>/cosensim.log if not explicitly configured.
     
     Args:
         config: Configuration dictionary (loads default if None)
@@ -411,7 +413,7 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
         
     Examples:
         >>> log_file = get_log_file()  # Uses default config
-        >>> # Returns: <output_dir>/logs/cosensim.log
+        >>> # Returns: <output_dir>/cosensim.log
         
         >>> config = {"logging": {"file": "/var/log/cosensim.log"}}
         >>> log_file = get_log_file(config)
@@ -427,18 +429,21 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
     log_file = config["logging"]["file"]
     
     if log_file is None:
-        # Default to <output_dir>/logs/cosensim.log
-        log_path = get_output_dir(config) / "logs" / "cosensim.log"
+        # Default to <output_dir>/cosensim.log
+        log_path = get_output_dir(config) / "cosensim.log"
     elif log_file is False:
         # Explicitly disabled
         return None
     else:
         log_path = Path(log_file)
-        # If relative path, place in <output_dir>/logs/
-        if not log_path.is_absolute():
-            log_path = get_output_dir(config) / "logs" / log_file
-        else:
+        if log_path.is_absolute():
             log_path = log_path.resolve()
+        elif (os.sep in str(log_file)) or (os.altsep and os.altsep in str(log_file)):
+            # Path with a directory component -> resolve relative to cwd
+            log_path = log_path.resolve()
+        else:
+            # Bare filename -> place inside <output_dir>
+            log_path = get_output_dir(config) / log_file
     
     # Create log directory if requested
     if create_dir and log_path:
