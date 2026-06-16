@@ -1,4 +1,4 @@
-# CoSenSim Configuration Design
+# CoInfoSim Configuration Design
 
 **Design Philosophy:** Reproducibility > Convenience
 
@@ -14,43 +14,43 @@ Scientific research requires reproducible experiments. Configuration should be:
 
 1. **CLI arguments** (highest) - One-off experiments
    ```bash
-   cosensim run-experiment --output-dir ./results --log-level DEBUG
+   coinfosim run-experiment --output-dir ./results --log-level DEBUG
    ```
 
 2. **Environment variables** - CI/CD and cluster configs
    ```bash
-   export CoSenSim_OUTPUT_DIR=/scratch/user/exp_001
-   export CoSenSim_LOG_LEVEL=DEBUG
-   cosensim run-experiment
+   export COINFOSIM_OUTPUT_DIR=/scratch/user/exp_001
+   export COINFOSIM_LOG_LEVEL=DEBUG
+   coinfosim run-experiment
    ```
 
 3. **Project config** - Version-controlled, reproducible
    ```bash
-   # ./cosensim.toml committed to git
-   cosensim run-experiment  # Uses ./cosensim.toml
+   # ./coinfosim.toml committed to git
+   coinfosim run-experiment  # Uses ./coinfosim.toml
    ```
 
 4. **User config** - Personal defaults (optional)
    ```bash
-   # ~/.config/cosensim/config.toml
-   cosensim run-experiment  # Falls back to user config
+   # ~/.config/coinfosim/config.toml
+   coinfosim run-experiment  # Falls back to user config
    ```
 
 5. **Built-in defaults** (lowest) - Always available
    ```bash
-   cosensim run-experiment  # Works without any config!
+   coinfosim run-experiment  # Works without any config!
    ```
 
 ---
 
-## Config File Format: `cosensim.toml`
+## Config File Format: `coinfosim.toml`
 
 ```toml
-# Example cosensim.toml - Simple, flat, readable
+# Example coinfosim.toml - Simple, flat, readable
 # Place in project root for reproducible experiments
 
 [paths]
-output_dir = "./cosensim_output"  # Relative to project (reproducible)
+output_dir = "./coinfosim_output"  # Relative to project (reproducible)
 reports_dir = "reports"          # Subdirectory of output_dir
 data_dir = "data"                # Subdirectory of output_dir
 images_dir = "images"            # Subdirectory of output_dir
@@ -65,7 +65,7 @@ test_mode = false
 
 [logging]
 level = "INFO"               # DEBUG, INFO, WARNING, ERROR
-file = "cosensim.log"          # Log file name (in output_dir)
+file = "coinfosim.log"          # Log file name (in output_dir)
 format = "json"              # json or pretty
 console = true               # Show logs in console
 colors = true                # Colored console output
@@ -73,7 +73,7 @@ colors = true                # Colored console output
 [publishing]
 auto_push = false            # Auto-push to GitHub Pages
 remote_branch = "reports-pages"
-title = "CoSenSim Reports"
+title = "CoInfoSim Reports"
 ```
 
 ---
@@ -83,34 +83,34 @@ title = "CoSenSim Reports"
 ### Minimal - Just Works
 ```bash
 # No config needed, uses defaults
-$ cosensim run-experiment
+$ coinfosim run-experiment
 ✓ Using default configuration
-✓ Output: ./cosensim_output/
+✓ Output: ./coinfosim_output/
 ```
 
 ### Reproducible Research Project
 ```bash
 # Step 1: Initialize project config
-$ cosensim config init
-✓ Created: cosensim.toml
+$ coinfosim config init
+✓ Created: coinfosim.toml
 
-# Step 2: Edit cosensim.toml for your experiment
-$ nano cosensim.toml
+# Step 2: Edit coinfosim.toml for your experiment
+$ nano coinfosim.toml
 
 # Step 3: Commit to git
-$ git add cosensim.toml
+$ git add coinfosim.toml
 $ git commit -m "Add experiment configuration"
 
 # Step 4: Run (anyone can reproduce with same config)
-$ cosensim run-experiment
-✓ Using config: ./cosensim.toml
-✓ Output: ./cosensim_output/
+$ coinfosim run-experiment
+✓ Using config: ./coinfosim.toml
+✓ Output: ./coinfosim_output/
 ```
 
 ### Quick Exploration
 ```bash
 # Override specific settings without editing config
-$ cosensim run-experiment \
+$ coinfosim run-experiment \
     --output-dir ~/experiments/quick_test \
     --dimensions "2,3" \
     --log-level DEBUG
@@ -119,8 +119,8 @@ $ cosensim run-experiment \
 ### Cluster/HPC Usage
 ```bash
 # Set output to scratch storage via environment
-export CoSenSim_OUTPUT_DIR=/scratch/$USER/experiment_001
-export CoSenSim_LOG_LEVEL=INFO
+export COINFOSIM_OUTPUT_DIR=/scratch/$USER/experiment_001
+export COINFOSIM_LOG_LEVEL=INFO
 
 # Run batch jobs
 sbatch run_experiment.sh  # Uses env vars
@@ -134,11 +134,11 @@ sbatch run_experiment.sh  # Uses env vars
 def find_config_file():
     """Find config file in priority order."""
     # 1. Project-local (best for reproducibility)
-    if Path("cosensim.toml").exists():
-        return Path("cosensim.toml")
+    if Path("coinfosim.toml").exists():
+        return Path("coinfosim.toml")
     
     # 2. User config (personal defaults)
-    user_config = platformdirs.user_config_path("cosensim") / "config.toml"
+    user_config = platformdirs.user_config_path("coinfosim") / "config.toml"
     if user_config.exists():
         return user_config
     
@@ -158,10 +158,10 @@ def load_config(cli_args=None):
         config.update(file_config)
     
     # Layer 2: Override with environment variables
-    if os.getenv("CoSenSim_OUTPUT_DIR"):
-        config["paths"]["output_dir"] = os.getenv("CoSenSim_OUTPUT_DIR")
-    if os.getenv("CoSenSim_LOG_LEVEL"):
-        config["logging"]["level"] = os.getenv("CoSenSim_LOG_LEVEL")
+    if os.getenv("COINFOSIM_OUTPUT_DIR"):
+        config["paths"]["output_dir"] = os.getenv("COINFOSIM_OUTPUT_DIR")
+    if os.getenv("COINFOSIM_LOG_LEVEL"):
+        config["logging"]["level"] = os.getenv("COINFOSIM_LOG_LEVEL")
     
     # Layer 3: Override with CLI arguments (highest priority)
     if cli_args:
@@ -181,11 +181,11 @@ def load_config(cli_args=None):
 
 ```python
 # BAD: Creates directories on import
-import cosensim  # Suddenly ~/cosensim/ exists!
+import coinfosim  # Suddenly ~/coinfosim/ exists!
 
 # GOOD: Only create when needed
-import cosensim
-cosensim.run_experiment()  # Creates ./cosensim_output/ now
+import coinfosim
+coinfosim.run_experiment()  # Creates ./coinfosim_output/ now
 ```
 
 **Implementation:**
@@ -233,7 +233,7 @@ Error: No config.toml found!
 
 ❌ **Hidden magic**
 ```python
-import cosensim  # Creates ~/.cosensim/ silently
+import coinfosim  # Creates ~/.coinfosim/ silently
 ```
 
 ❌ **Complex hierarchies**
@@ -246,23 +246,23 @@ base: &defaults
 
 ❌ **Mutating globals**
 ```python
-cosensim.config.OUTPUT_DIR = "/tmp"  # Side effects!
+coinfosim.config.OUTPUT_DIR = "/tmp"  # Side effects!
 ```
 
 ---
 
 ## Implementation Checklist (Task 024)
 
-- [ ] Create `src/cosensim/config.py`
+- [ ] Create `src/coinfosim/config.py`
 - [ ] Implement `load_config()` with proper precedence
 - [ ] Implement `get_output_dir()` helper
 - [ ] Implement `validate_config()` for type checking
 - [ ] Create `DEFAULT_CONFIG` with sensible defaults
 - [ ] Support tomllib (3.11+) with tomli fallback
-- [ ] Add `cosensim config init` command to generate template
+- [ ] Add `coinfosim config init` command to generate template
 - [ ] Write tests for config loading and precedence
 - [ ] Document in README.md
-- [ ] Add example `cosensim.toml` to repository
+- [ ] Add example `coinfosim.toml` to repository
 
 ---
 

@@ -1,8 +1,8 @@
-# CoSenSim Console Output Design (Phase 1)
+# CoInfoSim Console Output Design (Phase 1)
 
 **Status**: Design finalized, ready for implementation  
 **Date**: 2026-01-14  
-**Module**: `src/cosensim/progress.py`
+**Module**: `src/coinfosim/progress.py`
 
 ---
 
@@ -22,7 +22,7 @@ Replace old-style line-per-iteration console output with **rich live panels** th
 
 ### Module Structure
 ```
-src/cosensim/
+src/coinfosim/
 ├── progress.py              # ProgressTracker class (standalone)
 │   ├── ProgressTracker     # Main class
 │   ├── SimulationMetrics   # Data class for tracking
@@ -50,12 +50,12 @@ src/cosensim/
 
 ```
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  🚀 CoSenSim Simulator Started             ┃
+┃  🚀 CoInfoSim Simulator Started             ┃
 ┃  Model params: [1, 4, 0.6]               ┃
 ┃  Dimensions: [2, 3]                      ┃
 ┃  Cardinalities: [2, 4, 8, 16, ..., 1024] ┃
 ┃  Mode: Normal (test_mode=False)          ┃
-┃  Output: ~/cosensim/output/                ┃
+┃  Output: ~/coinfosim/output/                ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -120,9 +120,9 @@ src/cosensim/
 ┃    d=3: 0.1654 ✓                                    ┃
 ┃                                                     ┃
 ┃ 📁 Output                                           ┃
-┃    Reports: /home/pr/cosensim/output/reports/        ┃
-┃    Data:    /home/pr/cosensim/output/data/           ┃
-┃    Logs:    /home/pr/cosensim/output/logs/           ┃
+┃    Reports: /home/pr/coinfosim/output/reports/        ┃
+┃    Data:    /home/pr/coinfosim/output/data/           ┃
+┃    Logs:    /home/pr/coinfosim/output/logs/           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -156,13 +156,13 @@ Three modes controlled via CLI flags:
 
 ### Normal Mode (default)
 ```bash
-cosensim run-simulation --params "[1,1,0.4]" --test-mode
+coinfosim run-simulation --params "[1,1,0.4]" --test-mode
 ```
 Shows: Start message + checkpoint updates + end summary
 
 ### Debug Mode
 ```bash
-cosensim run-simulation --params "[1,1,0.4]" --test-mode --debug
+coinfosim run-simulation --params "[1,1,0.4]" --test-mode --debug
 ```
 Shows: Normal + per-iteration detailed logs (useful for troubleshooting)
 
@@ -181,7 +181,7 @@ Example output with --debug:
 
 ### Quiet Mode
 ```bash
-cosensim run-experiment --scenarios 1 --test-mode --quiet
+coinfosim run-experiment --scenarios 1 --test-mode --quiet
 ```
 Shows: Only initialization message and final summary (good for batch/CI)
 
@@ -203,9 +203,9 @@ Shows: Only initialization message and final summary (good for batch/CI)
   - [ ] Pass these flags to Simulator
 
 - [ ] **Testing**
-  - [ ] Test normal mode: `cosensim run-experiment --scenarios 1 --test-mode`
-  - [ ] Test debug mode: `cosensim run-experiment --scenarios 1 --test-mode --debug`
-  - [ ] Test quiet mode: `cosensim run-experiment --scenarios 1 --test-mode --quiet`
+  - [ ] Test normal mode: `coinfosim run-experiment --scenarios 1 --test-mode`
+  - [ ] Test debug mode: `coinfosim run-experiment --scenarios 1 --test-mode --debug`
+  - [ ] Test quiet mode: `coinfosim run-experiment --scenarios 1 --test-mode --quiet`
   - [ ] Verify panel updates in-place (doesn't scroll)
   - [ ] Verify convergence detection shows correct colors
 

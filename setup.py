@@ -6,7 +6,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
 
 
 setup(
-    name='cosensim',
+    name='coinfosim',
     version='0.1.0',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -48,13 +48,13 @@ setup(
     },
     author='Paulo Azevedo',
     author_email='paulorenatoaz@dcc.ufrj.br',
-    description='CoSenSim: a simulator for evaluating cooperative advantage in sensor and measurement-channel systems.',
+    description='CoInfoSim: a simulator for cooperative classification from multiple information channels.',
     long_description=long_description,
     long_description_content_type='text/markdown',  # Use 'text/x-rst' for reStructuredText
-    url='https://github.com/paulorenatoaz/cosensim',
+    url='https://github.com/paulorenatoaz/coinfosim',
     entry_points={
         'console_scripts': [
-            'cosensim=cosensim.cli:main',
+            'coinfosim=coinfosim.cli:main',
         ],
     },
 )

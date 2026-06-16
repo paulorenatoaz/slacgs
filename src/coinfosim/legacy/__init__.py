@@ -1,5 +1,5 @@
 """
-CoSenSim Legacy Module
+CoInfoSim Legacy Module
 
 DEPRECATED: This module contains deprecated functionality that is maintained
 for backward compatibility only. These features will be removed in a future version.
@@ -11,7 +11,7 @@ Please use local file-based workflows instead.
 import warnings
 
 warnings.warn(
-    "The cosensim.legacy module contains deprecated functionality. "
+    "The coinfosim.legacy module contains deprecated functionality. "
     "Google Drive/Sheets integration is no longer actively maintained. "
     "Please use local file-based workflows with the CLI tools instead.",
     DeprecationWarning,

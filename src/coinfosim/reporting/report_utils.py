@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
-from cosensim.utils import report_service_conf
-from cosensim.reporting.html_render import format_param_label
+from coinfosim.utils import report_service_conf
+from coinfosim.reporting.html_render import format_param_label
 
 
 def load_simulation_data(file_path):
@@ -87,7 +87,7 @@ def detect_alpha_index(scenario_params, scenario_dim):
 		}
 		return alpha_index, labels
 
-	# Special case in 3D: the CoSenSim scenario 4 uses a single slider for
+	# Special case in 3D: the CoInfoSim scenario 4 uses a single slider for
 	# rho_{13} = rho_{23} stored in the same position. Preserve the original
 	# combined label when index points to the rho_{13} slot of a 3D model.
 	if scenario_dim == 3 and alpha_index == scenario_dim + 1:
@@ -738,7 +738,7 @@ def create_html_scenario_report(scenario, scenario_id, test_mode=False):
 		``scenario_{id}_report{[test]}.html`` (local image references) and
 		``scenario_{id}_report{[test]}_embedded.html`` (base64-inlined).
 	"""
-	from cosensim.reporting.html_render import (
+	from coinfosim.reporting.html_render import (
 		render_section,
 		render_image_card,
 		render_dataframe_table,
@@ -784,7 +784,7 @@ def create_html_scenario_report(scenario, scenario_id, test_mode=False):
 		# 1. Overview
 		overview = (
 			f"<p>This scenario aggregates <strong>{len(scenario)}</strong> "
-			f"CoSenSim simulations sharing a common Gaussian model template; "
+			f"CoInfoSim simulations sharing a common Gaussian model template; "
 			f"the parameter <strong>{alpha_html}</strong> varies across "
 			f"simulations while the others are held fixed."
 			f"{' Run in <strong>test mode</strong>.' if test_mode else ''}"
@@ -925,7 +925,7 @@ def create_html_scenario_report(scenario, scenario_id, test_mode=False):
 			f"{' &middot; test mode' if test_mode else ''}"
 		)
 		return render_page(
-			title=f"CoSenSim Scenario Report — Scenario {scenario_id}",
+			title=f"CoInfoSim Scenario Report — Scenario {scenario_id}",
 			subtitle=subtitle,
 			toc_items=toc,
 			sections_html=sections,

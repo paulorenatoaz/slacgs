@@ -1,17 +1,18 @@
 cff-version: 1.2.0
-message: "If you use CoSenSim for published research, please cite this repository."
-title: "CoSenSim: A Simulator for Evaluating Cooperative Advantage in Sensor Networks"
+message: "If you use CoInfoSim for published research, please cite this repository."
+title: "CoInfoSim: A Simulator for Cooperative Classification from Multiple Information Channels"
 version: 0.1.0
 authors:
   - family-names: "Azevedo"
     given-names: "Paulo"
     affiliation: "PPGI/UFRJ"
 date-released: 2026-06-15
-url: https://github.com/paulorenatoaz/cosensim
+url: https://github.com/paulorenatoaz/coinfosim
 doi: TODO
 license: GPL-3.0
 keywords:
-  - cooperative sensing
-  - sensor networks
-  - simulation
-  - classification
+  - cooperative classification
+  - information channels
+  - multi-channel classification
+  - Monte Carlo simulation
+  - channel subset selection

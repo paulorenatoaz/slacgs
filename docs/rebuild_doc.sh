@@ -1,7 +1,7 @@
 #!/bin/sh
 
-echo "Uninstalling cosensim..."
-pip uninstall cosensim -y
+echo "Uninstalling coinfosim..."
+pip uninstall coinfosim -y
 
 echo "Installing from parent directory..."
 pip install ..

@@ -1,35 +1,35 @@
-"""Smoke tests for the CoSenSim package identity and CLI."""
+"""Smoke tests for the CoInfoSim package identity and CLI."""
 
 import subprocess
 import sys
 
 
-def test_import_cosensim():
-    import cosensim
+def test_import_coinfosim():
+    import coinfosim
 
-    assert cosensim is not None
+    assert coinfosim is not None
 
 
 def test_version_present():
-    import cosensim
+    import coinfosim
 
-    assert isinstance(cosensim.__version__, str)
-    assert cosensim.__version__
+    assert isinstance(coinfosim.__version__, str)
+    assert coinfosim.__version__
 
 
 def test_public_api_symbols():
-    import cosensim
+    import coinfosim
 
     for symbol in ("Model", "Simulator", "Report", "load_config"):
-        assert hasattr(cosensim, symbol), f"missing public symbol: {symbol}"
+        assert hasattr(coinfosim, symbol), f"missing public symbol: {symbol}"
 
 
 def test_cli_help_runs():
-    """`python -m cosensim --help` should exit cleanly."""
+    """`python -m coinfosim --help` should exit cleanly."""
     result = subprocess.run(
-        [sys.executable, "-m", "cosensim", "--help"],
+        [sys.executable, "-m", "coinfosim", "--help"],
         capture_output=True,
         text=True,
     )
     assert result.returncode == 0
-    assert "cosensim" in (result.stdout + result.stderr).lower()
+    assert "coinfosim" in (result.stdout + result.stderr).lower()

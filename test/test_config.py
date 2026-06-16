@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from cosensim.config import (
+from coinfosim.config import (
     load_config,
     validate_config,
     get_output_dir,
@@ -30,12 +30,12 @@ def temp_dir():
 
 @pytest.fixture
 def clean_env(monkeypatch):
-    """Remove CoSenSim environment variables."""
+    """Remove CoInfoSim environment variables."""
     env_vars = [
-        "CoSenSim_OUTPUT_DIR",
-        "CoSenSim_LOG_LEVEL",
-        "CoSenSim_SEED",
-        "CoSenSim_N_JOBS",
+        "COINFOSIM_OUTPUT_DIR",
+        "COINFOSIM_LOG_LEVEL",
+        "COINFOSIM_SEED",
+        "COINFOSIM_N_JOBS",
     ]
     for var in env_vars:
         monkeypatch.delenv(var, raising=False)
@@ -83,11 +83,11 @@ class TestLoadConfig:
         assert config["logging"]["level"] == "INFO"
     
     def test_load_project_config(self, clean_env, temp_dir, monkeypatch):
-        """Should load project config (./cosensim.toml)."""
+        """Should load project config (./coinfosim.toml)."""
         monkeypatch.chdir(temp_dir)
         
         # Create project config
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text("""
 [paths]
 output_dir = "./custom_output"
@@ -116,7 +116,7 @@ output_dir = "./explicit_output"
         monkeypatch.chdir(temp_dir)
         
         # Create project config
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text("""
 [paths]
 output_dir = "./config_output"
@@ -127,10 +127,10 @@ n_jobs = 4
 """)
         
         # Set environment variables
-        monkeypatch.setenv("CoSenSim_OUTPUT_DIR", "/env/output")
-        monkeypatch.setenv("CoSenSim_SEED", "99")
-        monkeypatch.setenv("CoSenSim_N_JOBS", "8")
-        monkeypatch.setenv("CoSenSim_LOG_LEVEL", "DEBUG")
+        monkeypatch.setenv("COINFOSIM_OUTPUT_DIR", "/env/output")
+        monkeypatch.setenv("COINFOSIM_SEED", "99")
+        monkeypatch.setenv("COINFOSIM_N_JOBS", "8")
+        monkeypatch.setenv("COINFOSIM_LOG_LEVEL", "DEBUG")
         
         config = load_config()
         assert config["paths"]["output_dir"] == "/env/output"
@@ -143,14 +143,14 @@ n_jobs = 4
         monkeypatch.chdir(temp_dir)
         
         # Create project config
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text("""
 [paths]
 output_dir = "./config_output"
 """)
         
         # Set environment variable
-        monkeypatch.setenv("CoSenSim_OUTPUT_DIR", "/env/output")
+        monkeypatch.setenv("COINFOSIM_OUTPUT_DIR", "/env/output")
         
         # CLI override
         cli_overrides = {
@@ -266,7 +266,7 @@ class TestPathHelpers:
         """Should return custom output dir from config."""
         monkeypatch.chdir(temp_dir)
         
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text('[paths]\noutput_dir = "./my_output"')
         
         output_dir = get_output_dir()
@@ -290,7 +290,7 @@ class TestPathHelpers:
         """Should use custom reports dir from config."""
         monkeypatch.chdir(temp_dir)
         
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text('[paths]\nreports_dir = "./custom_reports"')
         
         reports_dir = get_reports_dir()
@@ -306,23 +306,23 @@ class TestPathHelpers:
         """Should use custom data dir from config."""
         monkeypatch.chdir(temp_dir)
         
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text('[paths]\ndata_dir = "./custom_data"')
         
         data_dir = get_data_dir()
         assert data_dir == (temp_dir / "custom_data").resolve()
     
     def test_get_log_file_default(self, clean_env, temp_dir, monkeypatch):
-        """Should default to <output_dir>/cosensim.log."""
+        """Should default to <output_dir>/coinfosim.log."""
         monkeypatch.chdir(temp_dir)
         log_file = get_log_file()
-        assert log_file == (temp_dir / "output" / "cosensim.log").resolve()
+        assert log_file == (temp_dir / "output" / "coinfosim.log").resolve()
     
     def test_get_log_file_custom(self, clean_env, temp_dir, monkeypatch):
         """Should use custom log file from config."""
         monkeypatch.chdir(temp_dir)
         
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text('[logging]\nfile = "./custom.log"')
         
         log_file = get_log_file()
@@ -332,7 +332,7 @@ class TestPathHelpers:
         """Should return None when file logging disabled."""
         monkeypatch.chdir(temp_dir)
         
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text('[logging]\nfile = false')
         
         log_file = get_log_file()
@@ -347,7 +347,7 @@ class TestConfigInit:
         monkeypatch.chdir(temp_dir)
         
         config_path = init_project_config()
-        assert config_path == temp_dir / "cosensim.toml"
+        assert config_path == temp_dir / "coinfosim.toml"
         assert config_path.exists()
         
         content = config_path.read_text()
@@ -361,7 +361,7 @@ class TestConfigInit:
         monkeypatch.chdir(temp_dir)
         
         # Create existing config
-        (temp_dir / "cosensim.toml").write_text("[paths]\noutput_dir = './old'")
+        (temp_dir / "coinfosim.toml").write_text("[paths]\noutput_dir = './old'")
         
         with pytest.raises(ConfigError, match="already exists"):
             init_project_config()
@@ -371,7 +371,7 @@ class TestConfigInit:
         monkeypatch.chdir(temp_dir)
         
         # Create existing config
-        (temp_dir / "cosensim.toml").write_text("[paths]\noutput_dir = './old'")
+        (temp_dir / "coinfosim.toml").write_text("[paths]\noutput_dir = './old'")
         
         config_path = init_project_config(force=True)
         content = config_path.read_text()
@@ -383,33 +383,33 @@ class TestConfigInit:
         def mock_user_config_dir(appname, **kwargs):
             return str(temp_dir / ".config" / appname)
         
-        monkeypatch.setattr("cosensim.config.user_config_dir", mock_user_config_dir)
+        monkeypatch.setattr("coinfosim.config.user_config_dir", mock_user_config_dir)
         
         config_path = init_user_config()
-        assert config_path == temp_dir / ".config" / "cosensim" / "config.toml"
+        assert config_path == temp_dir / ".config" / "coinfosim" / "config.toml"
         assert config_path.exists()
         
         content = config_path.read_text()
-        assert "CoSenSim User Configuration" in content
+        assert "CoInfoSim User Configuration" in content
 
 
 class TestEnvironmentVariables:
     """Test environment variable handling."""
     
     def test_invalid_seed_env(self, clean_env, temp_dir, monkeypatch):
-        """Should raise error for invalid CoSenSim_SEED."""
+        """Should raise error for invalid COINFOSIM_SEED."""
         monkeypatch.chdir(temp_dir)
-        monkeypatch.setenv("CoSenSim_SEED", "not_a_number")
+        monkeypatch.setenv("COINFOSIM_SEED", "not_a_number")
         
-        with pytest.raises(ConfigError, match="Invalid CoSenSim_SEED"):
+        with pytest.raises(ConfigError, match="Invalid COINFOSIM_SEED"):
             load_config()
     
     def test_invalid_n_jobs_env(self, clean_env, temp_dir, monkeypatch):
-        """Should raise error for invalid CoSenSim_N_JOBS."""
+        """Should raise error for invalid COINFOSIM_N_JOBS."""
         monkeypatch.chdir(temp_dir)
-        monkeypatch.setenv("CoSenSim_N_JOBS", "not_a_number")
+        monkeypatch.setenv("COINFOSIM_N_JOBS", "not_a_number")
         
-        with pytest.raises(ConfigError, match="Invalid CoSenSim_N_JOBS"):
+        with pytest.raises(ConfigError, match="Invalid COINFOSIM_N_JOBS"):
             load_config()
 
 
@@ -421,7 +421,7 @@ class TestConfigMerging:
         monkeypatch.chdir(temp_dir)
         
         # Project config only sets some paths
-        project_config = temp_dir / "cosensim.toml"
+        project_config = temp_dir / "coinfosim.toml"
         project_config.write_text("""
 [paths]
 output_dir = "./custom"

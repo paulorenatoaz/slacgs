@@ -1,13 +1,13 @@
 """
-DEPRECATED MODULE: cosensim.demo
+DEPRECATED MODULE: coinfosim.demo
 
 ⚠️  This module is DEPRECATED and will be removed in v1.0.0
 
 For new code, use the CLI interface instead:
-    - cosensim run-simulation
-    - cosensim run-experiment  
-    - cosensim make-report
-    - cosensim config
+    - coinfosim run-simulation
+    - coinfosim run-experiment  
+    - coinfosim make-report
+    - coinfosim config
 
 Legacy functions in this module rely on deprecated Google Drive/Sheets integration.
 Use JSON-based workflows through the CLI for reproducible, version-controlled experiments.
@@ -25,16 +25,16 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from tabulate import tabulate
 
-from cosensim.core.model import Model
-from cosensim.core.simulator import Simulator
+from coinfosim.core.model import Model
+from coinfosim.core.simulator import Simulator
 
 # Emit deprecation warning when module is imported
 warnings.warn(
-    "The cosensim.demo module is deprecated. Use the CLI interface instead:\n"
-    "  - cosensim run-simulation\n"
-    "  - cosensim run-experiment\n"
-    "  - cosensim make-report\n"
-    "  - cosensim config\n"
+    "The coinfosim.demo module is deprecated. Use the CLI interface instead:\n"
+    "  - coinfosim run-simulation\n"
+    "  - coinfosim run-experiment\n"
+    "  - coinfosim make-report\n"
+    "  - coinfosim config\n"
     "This module will be removed in v1.0.0",
     DeprecationWarning,
     stacklevel=2
@@ -42,9 +42,9 @@ warnings.warn(
 
 # Legacy imports - optional, only imported if used
 try:
-    from cosensim.legacy.gspread_client import GspreadClient
-    from cosensim.legacy.gdrive_client import GdriveClient
-    from cosensim.utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
+    from coinfosim.legacy.gspread_client import GspreadClient
+    from coinfosim.legacy.gdrive_client import GdriveClient
+    from coinfosim.utils import report_service_conf, set_report_service_conf, get_grandparent_folder_path
 except ImportError:
     # Legacy dependencies not installed - these will be None
     GspreadClient = None
@@ -181,7 +181,7 @@ def start_google_drive_service(password=None, user_email=None):
 	"""start Google Drive Client for demo report service
 
 	Parameters:
-		password (str): password for cosensim report service
+		password (str): password for coinfosim report service
 		user_email (str): email for Google Drive account to be used for report service
 
 	Notes:
@@ -190,7 +190,7 @@ def start_google_drive_service(password=None, user_email=None):
 
 	## create GdriveClient object and connect to Google Drive for reports service
 	if report_service_conf['drive_service'] is None:
-		set_report_service_conf(user_google_account_email=user_email, cosensim_password=password)
+		set_report_service_conf(user_google_account_email=user_email, coinfosim_password=password)
 
 	global GDC
 	if GDC is None:
@@ -198,10 +198,10 @@ def start_google_drive_service(password=None, user_email=None):
 		                   report_service_conf['user_email'])
 
 	if GDC.gdrive_account_email:
-		if not GDC.folder_exists('cosensim.demo.' + GDC.gdrive_account_email):
-			folder_id = GDC.create_folder('cosensim.demo.' + GDC.gdrive_account_email)
+		if not GDC.folder_exists('coinfosim.demo.' + GDC.gdrive_account_email):
+			folder_id = GDC.create_folder('coinfosim.demo.' + GDC.gdrive_account_email)
 		else:
-			folder_id = GDC.get_folder_id_by_name('cosensim.demo.' + GDC.gdrive_account_email)
+			folder_id = GDC.get_folder_id_by_name('coinfosim.demo.' + GDC.gdrive_account_email)
 
 	# GDC.share_folder_with_gdrive_account(folder_id)
 
@@ -210,15 +210,15 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	""" run a simulation for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -252,13 +252,13 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> run_experiment_simulation()
@@ -275,7 +275,7 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -322,16 +322,16 @@ def run_experiment_simulation(start_scenario=1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	cosensim = Simulator(model, verbose=verbose)
+	coinfosim = Simulator(model, verbose=verbose)
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -356,16 +356,16 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 			if scenario is not between 1 and 4
 
 	See Also:
-		:func:`cosensim.demo.run_experiment_simulation`
+		:func:`coinfosim.demo.run_experiment_simulation`
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> scenario_number = 1
@@ -436,7 +436,7 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -459,31 +459,31 @@ def add_simulation_to_experiment_scenario_spreadsheet(params, scenario_number, v
 	model = Model(params)
 
 	## create simulator object
-	cosensim = Simulator(model, verbose=verbose)
+	coinfosim = Simulator(model, verbose=verbose)
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 
 def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, verbose=True):
 	""" run a custom scenario and write the results to a Google Spreadsheet shared with the user.	A Scenario is a list with params to simulate.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -520,13 +520,13 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-1,2)]
@@ -581,7 +581,7 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 		raise ValueError("dims_to_compare length must be 2")
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -600,29 +600,29 @@ def run_custom_scenario(scenario_list, scenario_number, dims_to_simulate=None, d
 	## create gspread client object
 	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
-	for cosensim in simulators:
+	for coinfosim in simulators:
 		if dims_to_compare == (2, 3) or dims_to_compare == [2, 3]:
-			if gsc.param_not_in_scenario(cosensim.model.params):
+			if gsc.param_not_in_scenario(coinfosim.model.params):
 				## run simulation
-				cosensim.run()
+				coinfosim.run()
 
 				## upload png images to drive
-				cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+				coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 				## write results to spreadsheet
-				cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+				coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 			else:
 				continue
 
 		else:
 			## run simulation
-			cosensim.run()
+			coinfosim.run()
 
 			## upload png images to drive
-			cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+			coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
-			cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+			coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -656,13 +656,13 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 
 	Example:
 
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> params = (1, 1, 3, -0.2, 0, 0)
@@ -700,10 +700,10 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 	model = Model(params)
 
 	## create Simulator object to test parameters before continuing
-	cosensim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose)
+	coinfosim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose)
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -723,13 +723,13 @@ def add_simulation_to_custom_scenario_spreadsheet(params, scenario_number, dims_
 	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -738,15 +738,15 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 	""" run a custom simulation for any dimensionality and cardinality
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -779,13 +779,13 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 
 
 	Examples:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> ## 2 features
@@ -836,10 +836,10 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 	model = Model(params)
 
 	## create simulator object
-	cosensim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose)
+	coinfosim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, verbose=verbose)
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -859,13 +859,13 @@ def run_custom_simulation(params, dims_to_simulate=None, dims_to_compare=None, v
 	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
 
 	return True
 
@@ -874,15 +874,15 @@ def run_experiment(start_scenario=1, verbose=True):
 	""" run all simulations in all experiment scenarios
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -916,13 +916,13 @@ def run_experiment(start_scenario=1, verbose=True):
 
 
 	Examples:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> run_experiment()
@@ -941,7 +941,7 @@ def run_experiment(start_scenario=1, verbose=True):
 		print("An error occurred while saving scenario data plots animation as gif: ", e)
 	else:
 		start_google_drive_service()
-		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('cosensim.demo.' + GDC.gdrive_account_email), verbose=verbose)
+		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('coinfosim.demo.' + GDC.gdrive_account_email), verbose=verbose)
 		GDC.upload_file_to_drive(file_path, drive_images_folder_id, verbose=verbose)
 
 	while run_experiment_simulation(start_scenario):
@@ -959,13 +959,13 @@ def doctest_next_parameter():
 	:rtype: tuple
 
 	:Example:
-	>>> from cosensim.demo import *
+	>>> from coinfosim.demo import *
 
 	>>> # opt-1. set report service configuration with your own google cloud service account key file
 	>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 	>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-	>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+	>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 	>>> set_report_service_conf()
 
 	>>> params, spreadsheet_title = doctest_next_parameter()
@@ -973,7 +973,7 @@ def doctest_next_parameter():
 	"""
 	start_google_drive_service()
 
-	REPORT_FOLDER_NAME = 'cosensim.doctest'
+	REPORT_FOLDER_NAME = 'coinfosim.doctest'
 	SPREADSHEET_TITLE = 'scenario1.doctest'
 	## create spreadsheet for the first simulation if it doesn't exist
 	if not GDC.check_spreadsheet_existence(SPREADSHEET_TITLE):
@@ -1013,15 +1013,15 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	""" run a simulation test for one of the experiment scenarios and return True if there are still parameters to be simulated and False otherwise.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -1055,13 +1055,13 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> run_experiment_simulation_test(verbose=False)
@@ -1077,7 +1077,7 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	start_google_drive_service()
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -1124,16 +1124,16 @@ def run_experiment_simulation_test(start_scenario=1, power=0.1, verbose=True):
 	model = Model(PARAM)
 
 	## create simulator object
-	cosensim = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024, verbose=verbose)
+	coinfosim = Simulator(model, step_size=5, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024, verbose=verbose)
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -1158,16 +1158,16 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 			if scenario is not between 1 and 4
 
 	See Also:
-		:func:`cosensim.demo.run_experiment_simulation_test`
+		:func:`coinfosim.demo.run_experiment_simulation_test`
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> scenario_number = 1
@@ -1235,7 +1235,7 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	start_google_drive_service()
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -1258,17 +1258,17 @@ def add_simulation_to_experiment_scenario_spreadsheet_test(params, scenario_numb
 	model = Model(params)
 
 	## create simulator object
-	cosensim = Simulator(model, step_size=1, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024,
+	coinfosim = Simulator(model, step_size=1, max_steps=int(200*power), min_steps=int(100*power), precision=1e-4, augmentation_until_n=1024,
 	                   verbose=verbose)
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 
 def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=None, dims_to_compare=None, power=0.1,
@@ -1276,15 +1276,15 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	""" run a custom test scenario and write the results to a Google Spreadsheet shared with the user. A Scenario is a list with params to simulate.
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -1321,13 +1321,13 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 
 
 	Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> scenario_list = [[1,1,3,round(0.1*rho,1),0,0] for rho in range(-1,2)]
@@ -1385,7 +1385,7 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 		raise ValueError("dims_to_compare length must be 2")
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -1404,29 +1404,29 @@ def run_custom_scenario_test(scenario_list, scenario_number, dims_to_simulate=No
 	## create gspread client object
 	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
-	for cosensim in simulators:
+	for coinfosim in simulators:
 		if dims_to_compare == (2, 3) or dims_to_compare == [2, 3]:
-			if gsc.param_not_in_scenario(cosensim.model.params):
+			if gsc.param_not_in_scenario(coinfosim.model.params):
 				## run simulation
-				cosensim.run()
+				coinfosim.run()
 
 				## upload png images to drive
-				cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+				coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 				## write results to spreadsheet
-				cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+				coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 			else:
 				continue
 
 		else:
 			## run simulation
-			cosensim.run()
+			coinfosim.run()
 
 			## upload png images to drive
-			cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+			coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 			## write results to spreadsheet
-			cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+			coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -1460,13 +1460,13 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 
 	Example:
 
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> params = (1, 1, 3, -0.2, 0, 0)
@@ -1502,12 +1502,12 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	model = Model(params)
 
 	## create Simulator object to test parameters before continuing
-	cosensim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
+	coinfosim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
 	                   min_steps=int(100*power), precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -1527,13 +1527,13 @@ def add_simulation_to_custom_scenario_spreadsheet_test(params, scenario_number, 
 	gsc = GspreadClient(SPREADSHEET_TITLE, report_service_conf['pygsheets_service'])
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, verbose=verbose)
 
 	return True
 
@@ -1542,15 +1542,15 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	""" run a custom simulation for any dimensionality and cardinality
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -1583,13 +1583,13 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 
 
 	:Example:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> ## 2 features
@@ -1641,12 +1641,12 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	model = Model(params)
 
 	## create simulator object
-	cosensim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
+	coinfosim = Simulator(model, dims=dims_to_simulate, dims_to_compare=dims_to_compare, step_size=1, max_steps=int(200*power),
 	                   min_steps=int(100*power), precision=1e-4,
 	                   augmentation_until_n=1024, verbose=verbose)
 
 	## define folder name for storing reports
-	REPORT_FOLDER_NAME = 'cosensim.demo.' + GDC.gdrive_account_email
+	REPORT_FOLDER_NAME = 'coinfosim.demo.' + GDC.gdrive_account_email
 
 	## create folder if it doesn't exist
 	if not GDC.folder_exists(REPORT_FOLDER_NAME):
@@ -1666,13 +1666,13 @@ def run_custom_simulation_test(params, dims_to_simulate=None, dims_to_compare=No
 	gsc = GspreadClient( SPREADSHEET_TITLE)
 
 	## run simulation
-	cosensim.run()
+	coinfosim.run()
 
 	## upload png images to drive
-	cosensim.report.upload_report_images_to_drive(GDC, verbose=verbose)
+	coinfosim.report.upload_report_images_to_drive(GDC, verbose=verbose)
 
 	## write results to spreadsheet
-	cosensim.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
+	coinfosim.report.write_to_spreadsheet(gsc, dims_to_compare=dims_to_compare, verbose=verbose)
 
 	return True
 
@@ -1681,15 +1681,15 @@ def run_experiment_test(start_scenario=1, power=0.1, verbose=True):
 	""" run all simulations in all experiment scenarios
 
 	- Reports with results will be stored in a Google Spreadsheet for each:  Experiment Scenario, Custom Experiment Scenario	and another one for the Custom Simulations.
-	- The Spreadsheets are stored in a Google Drive folder named 'cosensim.demo.<user_email>'	owned by cosensim' google service	account and shared with the user's Google Drive account.
-	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/cosensim/images/ or /content/cosensim/images (for G-colab) )
+	- The Spreadsheets are stored in a Google Drive folder named 'coinfosim.demo.<user_email>'	owned by coinfosim' google service	account and shared with the user's Google Drive account.
+	- Also, images with data visualization will be exported to a local folder inside user's local folder (<user>/coinfosim/images/ or /content/coinfosim/images (for G-colab) )
 
 	Reports Exported:
 		- Loss Report: Contains mainly results focused on Loss Functions evaluations for each dimensionality of the model.
 		- Compare Resport: Contains mainly results focused on comparing the performance of the Model using 2 features and 3 features.
 		- Home Report (Scenario): Contains results from all simulations in a Scenario and links to the other reports. (available only for comparison between 2D and 3D)
 
-	Images Exported (<user>/cosensim/images/ or /content/cosensim/images [for G-colab] ):
+	Images Exported (<user>/coinfosim/images/ or /content/coinfosim/images [for G-colab] ):
 		- Scenario Data plots .gif: Contains a gif with all plots with the data points (n = 1024, dims=[2,3] ) generated for all Models in an Experiment Scenario.
 		- Simulation Data plot .png: Contains a plot with the data points (n = 1024, dims=[2,3] ) generated for a Model in a Simulation.
 		- Simulation Loss plot .png: Contains a plot with the loss values (Theoretical, Empirical with Train Data, Empirical with Test data) generated for a Model in a Simulation.
@@ -1723,13 +1723,13 @@ def run_experiment_test(start_scenario=1, power=0.1, verbose=True):
 
 
 	Examples:
-		>>> from cosensim.demo import *
+		>>> from coinfosim.demo import *
 
 		>>> # opt-1. set report service configuration with your own google cloud service account key file
 		>>> PATH_TO_KEY_FILE = '/path/to/your/google/cloud/service/account/key/file.json'
 		>>> set_report_service_conf(PATH_TO_KEY_FILE)
 
-		>>> # opt-2 set report service configuration to use cosensim' server if you have the access password
+		>>> # opt-2 set report service configuration to use coinfosim' server if you have the access password
 		>>> set_report_service_conf()
 
 		>>> run_experiment_test()
@@ -1748,7 +1748,7 @@ def run_experiment_test(start_scenario=1, power=0.1, verbose=True):
 		print("An error occurred while saving scenario data plots animation as gif: ", e)
 	else:
 		start_google_drive_service()
-		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('cosensim.demo.' + GDC.gdrive_account_email), verbose=verbose)
+		drive_images_folder_id = GDC.create_folder('images', GDC.get_folder_id_by_name('coinfosim.demo.' + GDC.gdrive_account_email), verbose=verbose)
 		GDC.upload_file_to_drive(file_path, drive_images_folder_id, verbose=verbose)
 
 

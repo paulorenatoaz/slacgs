@@ -8,11 +8,11 @@ from sklearn import svm
 from scipy.stats import multivariate_normal, norm
 from IPython.display import clear_output, display
 
-from cosensim.core.enumtypes import LossType
-from cosensim.core.model import Model
-from cosensim.reporting.report import Report
-from cosensim.utils import is_notebook
-from cosensim.progress import ProgressTracker
+from coinfosim.core.enumtypes import LossType
+from coinfosim.core.model import Model
+from coinfosim.reporting.report import Report
+from coinfosim.utils import is_notebook
+from coinfosim.progress import ProgressTracker
 
 def cls():
   """
@@ -368,8 +368,8 @@ class Simulator:
   def __init__(self, model: Model, dims=None, dims_to_compare=None, loss_types = ('EMPIRICAL_TRAIN', 'THEORETICAL', 'EMPIRICAL_TEST'), test_samples_amt=1024, step_size=5, max_steps=200, min_steps=100, precision=1e-6, augmentation_until_n = 1024, test_mode=False, full_n_range=False, verbose=True, debug=False):
 
     """
-    This Simulator for a CoSenSim' Model Contains:
-      - :math:`m`: a Model object for CoSenSim
+    This Simulator for a CoInfoSim' Model Contains:
+      - :math:`m`: a Model object for CoInfoSim
       - :math:`\mathbf{d}`: an array of dimensionalities :math:`d_i` to be simulated
       - :math:`\mathbf{d_{comp}}`: a pair of dimensionalities :math:`(d_a, d_b)` to be compared
       - :math:`\mathbf{L_{types}}`: a list of Loss functions :math:`L` to be estimated for each dimensionality :math:`d`
@@ -433,42 +433,42 @@ class Simulator:
 
 
     Examples:
-      >>> from cosensim import Model
+      >>> from coinfosim import Model
 
       >>> param = [1,1,2,0,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,-0.1,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,0,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,2,-0.1,-0.4,-0.4]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,2,-0.1]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, dims=(1,2), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, dims=(1,2), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
       >>> param = [1,1,1,2,0,0,0,0,0,0]
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
-      >>> cosensim = Simulator(model, dims=(3,4), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim = Simulator(model, dims=(3,4), step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
 
     """
@@ -559,7 +559,7 @@ class Simulator:
     
     self.model = model
     # Create report with ReportData instead of passing self (Task 030-032)
-    from cosensim.reporting.report_data import ReportData
+    from coinfosim.reporting.report_data import ReportData
     report_data = self.generate_report_data()
     self.report = Report(report_data=report_data)
     self.time_spent_test = 0
@@ -580,7 +580,7 @@ class Simulator:
     Returns:
         ReportData: Data container with simulation configuration and model info
     """
-    from cosensim.reporting.report_data import ReportData
+    from coinfosim.reporting.report_data import ReportData
     
     return ReportData(
         # Simulation configuration
@@ -806,7 +806,7 @@ class Simulator:
     
     # Initialize progress tracker with simulation start panel
     self.progress.start_cardinality_loop(self.model.N)
-    from cosensim.utils import report_service_conf
+    from coinfosim.utils import report_service_conf
     output_path = report_service_conf.get('output_dir', './output')
     self.progress.log_simulation_init(
         self.model.params, 
@@ -1078,7 +1078,7 @@ class Simulator:
     elapsed_time = et - st
     
     # Log simulation completion to progress tracker with actual output paths
-    from cosensim.utils import report_service_conf
+    from coinfosim.utils import report_service_conf
     output_dir = report_service_conf.get('output_dir', './output')
     reports_dir = report_service_conf.get('reports_dir', './output/reports')
     data_dir = report_service_conf.get('data_dir', './output/data')

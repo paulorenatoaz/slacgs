@@ -23,13 +23,13 @@ try:
 except ImportError:
     GOOGLEAPI_AVAILABLE = False
 
-from cosensim.core.model import Model
-from cosensim.core.enumtypes import LossType
-from cosensim.utils import cls, report_service_conf
+from coinfosim.core.model import Model
+from coinfosim.core.enumtypes import LossType
+from coinfosim.utils import cls, report_service_conf
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cosensim.core.simulator import Simulator
+    from coinfosim.core.simulator import Simulator
 
 
 class Report:
@@ -98,7 +98,7 @@ class Report:
     Returns:
       ReportData instance
     """
-    from cosensim.reporting.report_data import ReportData
+    from coinfosim.reporting.report_data import ReportData
     return ReportData(
         dims=sim.dims,
         loss_types=sim.loss_types,
@@ -1058,12 +1058,12 @@ class Report:
     """Create the per-simulation HTML report (plain + embedded variants).
 
     Builds the HTML using shared primitives from
-    :mod:`cosensim.reporting.html_render`. The output is written to
+    :mod:`coinfosim.reporting.html_render`. The output is written to
     ``self.export_path_html_report`` as well as a sibling file with the
     ``_embedded`` suffix that inlines every PNG as a base64 data URI for
     fully self-contained sharing.
     """
-    from cosensim.reporting.html_render import (
+    from coinfosim.reporting.html_render import (
       render_page,
       render_section,
       render_image_card,
@@ -1311,7 +1311,7 @@ class Report:
         f"{' &middot; test mode' if test_mode else ''}"
       )
       return render_page(
-        title="CoSenSim Simulation Report",
+        title="CoInfoSim Simulation Report",
         subtitle=subtitle,
         toc_items=toc,
         sections_html=sections,
@@ -1535,7 +1535,7 @@ class Report:
     if self.visualizations is not None:
 
       #creates image folder if it does not exist
-      drive_images_folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('cosensim.demo.' + gdc.gdrive_account_email), verbose=verbose)
+      drive_images_folder_id = gdc.create_folder('images', gdc.get_folder_id_by_name('coinfosim.demo.' + gdc.gdrive_account_email), verbose=verbose)
 
       #creates report images folder if it does not exist
 
@@ -1791,27 +1791,27 @@ class Report:
 
     :Example:
       >>> import os
-      >>> from cosensim import Model
-      >>> from cosensim import Simulator
-      >>> from cosensim import GspreadClient
-      >>> from cosensim import doctest_next_parameter
+      >>> from coinfosim import Model
+      >>> from coinfosim import Simulator
+      >>> from coinfosim import GspreadClient
+      >>> from coinfosim import doctest_next_parameter
 
       >>> ## run simulation for parameter
       >>> ### choose your own parameter
       >>> ### param = [1, 1, 2, 0, 0, 0]
 
       >>> ### get parameter from demo.dodoctest_next_parameter()
-      >>> set_report_service_conf(cosensim_password, gdrive_user_email)
+      >>> set_report_service_conf(coinfosim_password, gdrive_user_email)
       >>> param, _ = doctest_next_parameter()
 
       >>> ## create model object
       >>> model = Model(param, N=[2**i for i in range(1,11)], max_n=1024)
 
       >>> ## create simulator object
-      >>> cosensim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
+      >>> coinfosim = Simulator(model, step_size=1, max_steps=10, min_steps=5, precision=1e-4, augmentation_until_n = 1024, verbose=False)
 
       >>> ## run simulation
-      >>> cosensim.run() # doctest: +ELLIPSIS
+      >>> coinfosim.run() # doctest: +ELLIPSIS
 
       >>> ## define spreadsheet title
       >>> ## spreadsheet_title = 'title of spreadsheet'
@@ -1821,7 +1821,7 @@ class Report:
       >>> gc = GspreadClient(spreadsheet_title)
 
       >>> ## write simulation results to spreadsheet
-      >>> cosensim.report.write_to_spreadsheet(gc, verbose=False)
+      >>> coinfosim.report.write_to_spreadsheet(gc, verbose=False)
 
     """
 

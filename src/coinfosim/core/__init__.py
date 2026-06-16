@@ -1,7 +1,7 @@
 """
-CoSenSim Core Module
+CoInfoSim Core Module
 
-Core simulation and modeling functionality for CoSenSim.
+Core simulation and modeling functionality for CoInfoSim.
 Contains the main Model and Simulator classes.
 """
 

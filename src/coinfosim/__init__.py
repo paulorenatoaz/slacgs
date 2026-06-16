@@ -1,18 +1,20 @@
 """
-CoSenSim - A Simulator for Evaluating Cooperative Advantage in Sensor Networks
+CoInfoSim - A Simulator for Cooperative Classification from Multiple Information Channels
 
-A scientific Python package for evaluating when combinations of sensor or
-measurement channels become more useful than isolated channels or smaller
-subsets. CoSenSim is an academic evolution of the SLACGS project.
+A scientific Python package for evaluating when cooperation among information
+channels improves supervised classification. CoInfoSim compares isolated
+channels, channel pairs, and larger channel subsets through Monte Carlo
+simulation of the average classification loss. It is an academic evolution of
+the SLACGS and CoSenSim lines of work.
 """
 
 # Import from subpackages for backward compatibility
-from cosensim.core import Model, Simulator
-from cosensim.core.enumtypes import DictionaryType, LossType
-from cosensim.reporting import Report, create_scenario_report
+from coinfosim.core import Model, Simulator
+from coinfosim.core.enumtypes import DictionaryType, LossType
+from coinfosim.reporting import Report, create_scenario_report
 
 # Configuration module
-from cosensim.config import (
+from coinfosim.config import (
     load_config,
     validate_config,
     get_output_dir,
@@ -26,7 +28,7 @@ from cosensim.config import (
 )
 
 # Logging module
-from cosensim.logging_config import (
+from coinfosim.logging_config import (
     setup_logging,
     setup_logging_from_config,
     get_logger,
@@ -35,7 +37,7 @@ from cosensim.logging_config import (
 )
 
 # Utils module
-from cosensim.utils import init_report_service_conf
+from coinfosim.utils import init_report_service_conf
 
 # Public API (backward compatible)
 __all__ = [

@@ -31,7 +31,7 @@ jobs:
       - name: Generate index for reports-pages
         run: |
           python -m pip install --upgrade pip
-          python -m cosensim.publish.publisher --reports-dir reports --data-dir data --site-dir reports-pages --title "cosensim Reports"
+          python -m coinfosim.publish.publisher --reports-dir reports --data-dir data --site-dir reports-pages --title "coinfosim Reports"
           cd reports-pages
           if [ -n "$(git status --porcelain)" ]; then
             git add -A

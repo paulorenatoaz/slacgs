@@ -1,54 +1,54 @@
-cosensim Package
+coinfosim Package
 ==============
 
 Model
 ------------
 
-.. automodule:: cosensim.model
+.. automodule:: coinfosim.model
    :members:
 
 Simulator
 ----------------
 
-.. automodule:: cosensim.simulator
+.. automodule:: coinfosim.simulator
    :members:
 
 Report
 -------------
 
-.. automodule:: cosensim.report
+.. automodule:: coinfosim.report
    :members:
 
 Enumtypes
 ----------------
 
-.. automodule:: cosensim.enumtypes
+.. automodule:: coinfosim.enumtypes
    :members:
 
 Gspread_client
 ---------------------
 
-.. automodule:: cosensim.gspread_client
+.. automodule:: coinfosim.gspread_client
    :members:
 
 Gdrive_client
 --------------------
 
-.. automodule:: cosensim.gdrive_client
+.. automodule:: coinfosim.gdrive_client
    :members:
 
 Utils
 ------------
 
-.. automodule:: cosensim.utils
+.. automodule:: coinfosim.utils
    :members:
 
-.. autodata:: cosensim.utils.report_service_conf
+.. autodata:: coinfosim.utils.report_service_conf
 
 Demo
 -----------
 
-.. automodule:: cosensim.demo
+.. automodule:: coinfosim.demo
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,15 +1,15 @@
 """
-CoSenSim Command Line Interface.
+CoInfoSim Command Line Interface.
 
 Beautiful CLI for running simulations, generating reports, and managing experiments.
 
 Usage:
-    cosensim --help
-    cosensim run-simulation --params "[1,4,0.6]"
-    cosensim run-experiment --scenarios 1,2,3
-    cosensim make-report --scenario 1
-    cosensim publish
-    cosensim config show
+    coinfosim --help
+    coinfosim run-simulation --params "[1,4,0.6]"
+    coinfosim run-experiment --scenarios 1,2,3
+    coinfosim make-report --scenario 1
+    coinfosim publish
+    coinfosim config show
 """
 
 import sys
@@ -22,15 +22,15 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import print as rprint
 
-from cosensim import __version__
-from cosensim.config import load_config, init_project_config, validate_config, ConfigError, get_output_dir, get_reports_dir, get_data_dir
-from cosensim.logging_config import setup_logging_from_config, get_logger
+from coinfosim import __version__
+from coinfosim.config import load_config, init_project_config, validate_config, ConfigError, get_output_dir, get_reports_dir, get_data_dir
+from coinfosim.logging_config import setup_logging_from_config, get_logger
 import re
 
 # Create Typer app
 app = typer.Typer(
-    name="cosensim",
-    help="CoSenSim - A Simulator for Evaluating Cooperative Advantage in Sensor Networks",
+    name="coinfosim",
+    help="CoInfoSim - A Simulator for Cooperative Classification from Multiple Information Channels",
     add_completion=False,
     rich_markup_mode="rich",
 )
@@ -89,11 +89,11 @@ def main_callback(
         None,
         "--config",
         "-c",
-        help="Path to config file (default: ./cosensim.toml or ~/.config/cosensim/config.toml)",
+        help="Path to config file (default: ./coinfosim.toml or ~/.config/coinfosim/config.toml)",
     ),
 ):
     """
-    Global options for CoSenSim CLI.
+    Global options for CoInfoSim CLI.
     
     Configure logging, output, and load configuration before running any command.
     """
@@ -122,11 +122,11 @@ def main_callback(
     
     try:
         setup_logging_from_config(config, cli_overrides)
-        logger = get_logger("cosensim.cli")
+        logger = get_logger("coinfosim.cli")
         
         # Phase 2: Log session metadata
-        from cosensim.logging_config import log_session_start
-        from cosensim import __version__
+        from coinfosim.logging_config import log_session_start
+        from coinfosim import __version__
         log_session_start(
             command=ctx.invoked_subcommand or "help",
             version=__version__,
@@ -148,10 +148,10 @@ def main_callback(
 def version():
     """Show version information."""
     panel = Panel(
-        f"[bold]CoSenSim[/bold] version [cyan]{__version__}[/cyan]\n\n"
-        f"[dim]A Simulator for Evaluating Cooperative Advantage in Sensor Networks[/dim]\n"
-        f"[dim]https://github.com/paulorenatoaz/cosensim[/dim]",
-        title="CoSenSim",
+        f"[bold]CoInfoSim[/bold] version [cyan]{__version__}[/cyan]\n\n"
+        f"[dim]A Simulator for Cooperative Classification from Multiple Information Channels[/dim]\n"
+        f"[dim]https://github.com/paulorenatoaz/coinfosim[/dim]",
+        title="CoInfoSim",
         border_style="cyan",
     )
     console.print(panel)
@@ -194,12 +194,12 @@ def run_simulation(
     Run a single simulation with specified parameters.
     
     Examples:
-        cosensim run-simulation --params "[1,4,0.6]"
-        cosensim run-simulation --params "[1,1,2,0,0,0]" --test-mode
-        cosensim run-simulation --params "[1,1,0.4]" --test-mode --debug
-        cosensim run-simulation --params "[1,1,0.4]" --test-mode --quiet
+        coinfosim run-simulation --params "[1,4,0.6]"
+        coinfosim run-simulation --params "[1,1,2,0,0,0]" --test-mode
+        coinfosim run-simulation --params "[1,1,0.4]" --test-mode --debug
+        coinfosim run-simulation --params "[1,1,0.4]" --test-mode --quiet
     """
-    logger = get_logger("cosensim.cli.run_simulation")
+    logger = get_logger("coinfosim.cli.run_simulation")
     config = ctx.obj["config"]
     
     # Determine verbose mode (not quiet by default)
@@ -209,11 +209,11 @@ def run_simulation(
     if output_dir:
         config["paths"]["output_dir"] = output_dir
         # Reinitialize report paths with new config
-        from cosensim.utils import init_report_service_conf, report_service_conf
+        from coinfosim.utils import init_report_service_conf, report_service_conf
         report_service_conf.update(init_report_service_conf(config))
         
         # Reconfigure logging with new output directory
-        from cosensim.logging_config import setup_logging_from_config
+        from coinfosim.logging_config import setup_logging_from_config
         setup_logging_from_config(config, force_reconfigure=True)
     
     if verbose_mode:
@@ -232,7 +232,7 @@ def run_simulation(
         logger.info(f"Starting simulation with params: {param_list}")
         
         # Import here to avoid loading heavy dependencies at CLI startup
-        from cosensim import Model, Simulator
+        from coinfosim import Model, Simulator
         
         # Create model
         if verbose_mode:
@@ -330,7 +330,7 @@ def run_experiment(
     tag: Optional[str] = typer.Option(
         None,
         "--tag",
-        help="Organize this experiment under ~/cosensim/experiments/{tag}/ (ignored if --output-dir is set)",
+        help="Organize this experiment under ~/coinfosim/experiments/{tag}/ (ignored if --output-dir is set)",
     ),
 ):
     """
@@ -338,26 +338,26 @@ def run_experiment(
     
     Examples:
         # Predefined scenarios
-        cosensim run-experiment
-        cosensim run-experiment --scenarios 1,2,3
+        coinfosim run-experiment
+        coinfosim run-experiment --scenarios 1,2,3
         
         # Custom inline parameters
-        cosensim run-experiment --custom-params "[[1,4,0.6], [1,2,0.5]]"
+        coinfosim run-experiment --custom-params "[[1,4,0.6], [1,2,0.5]]"
         
         # Load from file
-        cosensim run-experiment --params-file my_scenario.json
+        coinfosim run-experiment --params-file my_scenario.json
         
-        # Organize with tag (creates ~/cosensim/experiments/{tag}/)
-        cosensim run-experiment --params-file exp.json --tag paper1_v1
-        cosensim run-experiment --scenarios 1,2,3 --tag demo
+        # Organize with tag (creates ~/coinfosim/experiments/{tag}/)
+        coinfosim run-experiment --params-file exp.json --tag paper1_v1
+        coinfosim run-experiment --scenarios 1,2,3 --tag demo
         
         # Full control with output directory (overrides --tag)
-        cosensim run-experiment --params-file exp.json --output-dir ./results/batch_001
+        coinfosim run-experiment --params-file exp.json --output-dir ./results/batch_001
         
         # Test mode
-        cosensim run-experiment --scenarios 1 --test-mode
+        coinfosim run-experiment --scenarios 1 --test-mode
     """
-    logger = get_logger("cosensim.cli.run_experiment")
+    logger = get_logger("coinfosim.cli.run_experiment")
     config = ctx.obj["config"]
     
     # Handle tag for experiment organization (before output_dir override)
@@ -371,18 +371,18 @@ def run_experiment(
             raise typer.Exit(1)
         
         # Set output to experiments/{tag}/
-        output_dir = str(Path.home() / "cosensim" / "experiments" / tag)
+        output_dir = str(Path.home() / "coinfosim" / "experiments" / tag)
         console.print(f"[dim]→ Using tagged experiment folder: {output_dir}[/dim]")
     
     # Override output_dir if specified (from --tag or --output-dir)
     if output_dir:
         config["paths"]["output_dir"] = output_dir
         # Reinitialize report paths with new config
-        from cosensim.utils import init_report_service_conf, report_service_conf
+        from coinfosim.utils import init_report_service_conf, report_service_conf
         report_service_conf.update(init_report_service_conf(config))
         
         # Reconfigure logging with new output directory
-        from cosensim.logging_config import setup_logging_from_config
+        from coinfosim.logging_config import setup_logging_from_config
         setup_logging_from_config(config, force_reconfigure=True)
     
     console.print(f"\n[bold cyan]Running experiment[/bold cyan]")
@@ -390,8 +390,8 @@ def run_experiment(
     
     try:
         # Import heavy dependencies
-        from cosensim import Model, Simulator
-        from cosensim.utils import is_param_in_simulation_reports
+        from coinfosim import Model, Simulator
+        from coinfosim.utils import is_param_in_simulation_reports
         import json
         
         # Validate mutually exclusive options
@@ -493,7 +493,7 @@ def run_experiment(
         
         else:
             # Mode: Predefined scenarios (default)
-            from cosensim.demo import SCENARIOS
+            from coinfosim.demo import SCENARIOS
             
             scenario_filter = None
             if scenarios:
@@ -571,7 +571,7 @@ def run_experiment(
         # Generate scenario reports
         if completed > 0 and scenario_list:
             console.print("[bold cyan]Generating scenario reports...[/bold cyan]\n")
-            from cosensim.reporting.report_utils import create_scenario_report
+            from coinfosim.reporting.report_utils import create_scenario_report
             
             # Get reports directory
             reports_dir = Path(get_reports_dir(config))
@@ -628,11 +628,11 @@ def make_report(
     Generate HTML reports from existing simulation data.
     
     Examples:
-        cosensim make-report --scenario 1
-        cosensim make-report --scenario 7 --test-mode
-        cosensim make-report --params "[1,4,0.6]"
+        coinfosim make-report --scenario 1
+        coinfosim make-report --scenario 7 --test-mode
+        coinfosim make-report --params "[1,4,0.6]"
     """
-    logger = get_logger("cosensim.cli.make_report")
+    logger = get_logger("coinfosim.cli.make_report")
     
     if not scenario and not params:
         console.print("[red]✗[/red] Must specify either --scenario or --params", style="bold red")
@@ -644,8 +644,8 @@ def make_report(
         if scenario:
             console.print(f"Scenario: [yellow]{scenario}[/yellow]")
             
-            from cosensim.demo import SCENARIOS
-            from cosensim.reporting.report_utils import create_scenario_report
+            from coinfosim.demo import SCENARIOS
+            from coinfosim.reporting.report_utils import create_scenario_report
             
             if scenario < 1 or scenario > len(SCENARIOS):
                 console.print(f"[red]✗[/red] Invalid scenario number. Must be 1-{len(SCENARIOS)}", style="bold red")
@@ -664,7 +664,7 @@ def make_report(
             param_list = json.loads(params)
             console.print(f"Parameters: [yellow]{param_list}[/yellow]\n")
 
-            from cosensim.reporting.report import Report
+            from coinfosim.reporting.report import Report
 
             with console.status(
                 f"[bold green]Regenerating individual report from JSON...[/bold green]"
@@ -702,16 +702,16 @@ def publish(
     Publish reports to GitHub Pages.
     
     Examples:
-        cosensim publish
-        cosensim publish --auto-push
+        coinfosim publish
+        coinfosim publish --auto-push
     """
-    logger = get_logger("cosensim.cli.publish")
+    logger = get_logger("coinfosim.cli.publish")
     
     console.print(f"\n[bold cyan]Publishing to GitHub Pages[/bold cyan]\n")
     console.print(f"Target branch: [yellow]{branch}[/yellow]\n")
     
     try:
-        from cosensim.publish.publisher import publish_to_pages
+        from coinfosim.publish.publisher import publish_to_pages
         
         with console.status(f"[bold green]Publishing...[/bold green]"):
             publish_to_pages(auto_push=auto_push, branch=branch)
@@ -765,7 +765,7 @@ def config_init(
     project: bool = typer.Option(
         True,
         "--project/--user",
-        help="Create project config (./cosensim.toml) or user config (~/.config/cosensim/config.toml)",
+        help="Create project config (./coinfosim.toml) or user config (~/.config/coinfosim/config.toml)",
     ),
     force: bool = typer.Option(
         False,
@@ -779,11 +779,11 @@ def config_init(
     
     try:
         if project:
-            path = Path("./cosensim.toml")
+            path = Path("./coinfosim.toml")
             init_project_config(path, force=force)
             console.print(f"[bold green]SUCCESS:[/bold green] Created: [cyan]{path.absolute()}[/cyan]")
         else:
-            from cosensim.config import init_user_config
+            from coinfosim.config import init_user_config
             path = init_user_config(force=force)
             console.print(f"[bold green]SUCCESS:[/bold green] Created: [cyan]{path}[/cyan]")
         
@@ -849,14 +849,14 @@ def cleanup_logs(
     Uses the configured output directory to find logs.
     
     Examples:
-        cosensim cleanup-logs --older-than 30  # Delete logs older than 30 days
-        cosensim cleanup-logs --dry-run        # See what would be deleted
+        coinfosim cleanup-logs --older-than 30  # Delete logs older than 30 days
+        coinfosim cleanup-logs --dry-run        # See what would be deleted
     """
-    logger = get_logger("cosensim.cli.cleanup_logs")
+    logger = get_logger("coinfosim.cli.cleanup_logs")
     config = ctx.obj["config"]
     
     from datetime import datetime, timedelta
-    from cosensim.config import get_output_dir
+    from coinfosim.config import get_output_dir
     
     console.print(f"\n[bold cyan]Cleaning up log files[/bold cyan]\n")
     

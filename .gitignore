@@ -83,7 +83,7 @@ venv/
 /TCC/
 
 # User-specific config file
-cosensim.toml
+coinfosim.toml
 
 # Development task tracking (internal use only)
 TASK_*.md

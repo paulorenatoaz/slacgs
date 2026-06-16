@@ -1,24 +1,24 @@
 """
-Configuration management for CoSenSim.
+Configuration management for CoInfoSim.
 
 This module provides a layered configuration system optimized for scientific
 reproducibility. Configuration sources are merged in priority order:
 
 1. Command-line arguments (highest priority)
 2. Environment variables
-3. Project-local config file (./cosensim.toml)
-4. User config file (~/.config/cosensim/config.toml)
+3. Project-local config file (./coinfosim.toml)
+4. User config file (~/.config/coinfosim/config.toml)
 5. Built-in defaults (lowest priority)
 
 Design Principles:
 - Config files are OPTIONAL - defaults provide sane behavior
-- Project-local configs (./cosensim.toml) for reproducible experiments
+- Project-local configs (./coinfosim.toml) for reproducible experiments
 - Environment variables for HPC/cluster environments
 - Lazy directory creation (no side effects on import)
 - Clear error messages for validation failures
 
 Example:
-    >>> from cosensim.config import load_config, get_output_dir
+    >>> from coinfosim.config import load_config, get_output_dir
     >>> config = load_config()
     >>> output_dir = get_output_dir(config)
 """
@@ -68,14 +68,14 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
     "logging": {
         "level": "INFO",
-        "file": None,  # None means <output_dir>/cosensim.log; False disables file logging
+        "file": None,  # None means <output_dir>/coinfosim.log; False disables file logging
         "quiet": False,  # Suppress console output
         "max_age_days": 30,  # Auto-delete logs older than 30 days
-        "levels": {},  # Module-specific log levels: {"cosensim.core.simulator": "DEBUG"}
+        "levels": {},  # Module-specific log levels: {"coinfosim.core.simulator": "DEBUG"}
     },
     "publishing": {
         "enabled": False,
-        "target_dir": "../cosensim-reports-pages",
+        "target_dir": "../coinfosim-reports-pages",
         "auto_push": False,
     },
 }
@@ -139,14 +139,14 @@ def _merge_config(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, A
 
 
 def _get_user_config_path() -> Path:
-    """Get path to user config file (~/.config/cosensim/config.toml)."""
-    config_dir = user_config_dir("cosensim", roaming=True)
+    """Get path to user config file (~/.config/coinfosim/config.toml)."""
+    config_dir = user_config_dir("coinfosim", roaming=True)
     return Path(config_dir) / "config.toml"
 
 
 def _get_project_config_path() -> Path:
-    """Get path to project-local config file (./cosensim.toml)."""
-    return Path.cwd() / "cosensim.toml"
+    """Get path to project-local config file (./coinfosim.toml)."""
+    return Path.cwd() / "coinfosim.toml"
 
 
 def _apply_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -154,10 +154,10 @@ def _apply_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
     Apply environment variable overrides to config.
     
     Supported environment variables:
-    - CoSenSim_OUTPUT_DIR: Override paths.output_dir
-    - CoSenSim_LOG_LEVEL: Override logging.level
-    - CoSenSim_SEED: Override experiment.seed
-    - CoSenSim_N_JOBS: Override experiment.n_jobs
+    - COINFOSIM_OUTPUT_DIR: Override paths.output_dir
+    - COINFOSIM_LOG_LEVEL: Override logging.level
+    - COINFOSIM_SEED: Override experiment.seed
+    - COINFOSIM_N_JOBS: Override experiment.n_jobs
     
     Args:
         config: Base configuration
@@ -167,27 +167,27 @@ def _apply_env_overrides(config: Dict[str, Any]) -> Dict[str, Any]:
     """
     result = config.copy()
     
-    if "CoSenSim_OUTPUT_DIR" in os.environ:
-        result["paths"]["output_dir"] = os.environ["CoSenSim_OUTPUT_DIR"]
+    if "COINFOSIM_OUTPUT_DIR" in os.environ:
+        result["paths"]["output_dir"] = os.environ["COINFOSIM_OUTPUT_DIR"]
     
-    if "CoSenSim_LOG_LEVEL" in os.environ:
-        result["logging"]["level"] = os.environ["CoSenSim_LOG_LEVEL"]
+    if "COINFOSIM_LOG_LEVEL" in os.environ:
+        result["logging"]["level"] = os.environ["COINFOSIM_LOG_LEVEL"]
     
-    if "CoSenSim_SEED" in os.environ:
+    if "COINFOSIM_SEED" in os.environ:
         try:
-            result["experiment"]["seed"] = int(os.environ["CoSenSim_SEED"])
+            result["experiment"]["seed"] = int(os.environ["COINFOSIM_SEED"])
         except ValueError:
             raise ConfigError(
-                f"Invalid CoSenSim_SEED: {os.environ['CoSenSim_SEED']} "
+                f"Invalid COINFOSIM_SEED: {os.environ['COINFOSIM_SEED']} "
                 "(must be an integer)"
             )
     
-    if "CoSenSim_N_JOBS" in os.environ:
+    if "COINFOSIM_N_JOBS" in os.environ:
         try:
-            result["experiment"]["n_jobs"] = int(os.environ["CoSenSim_N_JOBS"])
+            result["experiment"]["n_jobs"] = int(os.environ["COINFOSIM_N_JOBS"])
         except ValueError:
             raise ConfigError(
-                f"Invalid CoSenSim_N_JOBS: {os.environ['CoSenSim_N_JOBS']} "
+                f"Invalid COINFOSIM_N_JOBS: {os.environ['COINFOSIM_N_JOBS']} "
                 "(must be an integer)"
             )
     
@@ -203,10 +203,10 @@ def load_config(
     
     Priority order (highest to lowest):
     1. cli_overrides parameter
-    2. Environment variables (CoSenSim_*)
+    2. Environment variables (CoInfoSim_*)
     3. Explicit config_file (if provided)
-    4. Project config (./cosensim.toml)
-    5. User config (~/.config/cosensim/config.toml)
+    4. Project config (./coinfosim.toml)
+    5. User config (~/.config/coinfosim/config.toml)
     6. DEFAULT_CONFIG
     
     Args:
@@ -227,13 +227,13 @@ def load_config(
     # Start with defaults (deep copy to avoid mutation)
     config = deepcopy(DEFAULT_CONFIG)
     
-    # Layer 1: User config (~/.config/cosensim/config.toml)
+    # Layer 1: User config (~/.config/coinfosim/config.toml)
     user_config_path = _get_user_config_path()
     if user_config_path.exists():
         user_config = _load_toml_file(user_config_path)
         config = _merge_config(config, user_config)
     
-    # Layer 2: Project config (./cosensim.toml) or explicit file
+    # Layer 2: Project config (./coinfosim.toml) or explicit file
     if config_file:
         # Explicit config file provided
         explicit_path = Path(config_file)
@@ -402,7 +402,7 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
     """
     Get the log file path.
     
-    Defaults to <output_dir>/cosensim.log if not explicitly configured.
+    Defaults to <output_dir>/coinfosim.log if not explicitly configured.
     
     Args:
         config: Configuration dictionary (loads default if None)
@@ -413,11 +413,11 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
         
     Examples:
         >>> log_file = get_log_file()  # Uses default config
-        >>> # Returns: <output_dir>/cosensim.log
+        >>> # Returns: <output_dir>/coinfosim.log
         
-        >>> config = {"logging": {"file": "/var/log/cosensim.log"}}
+        >>> config = {"logging": {"file": "/var/log/coinfosim.log"}}
         >>> log_file = get_log_file(config)
-        >>> # Returns: /var/log/cosensim.log (absolute path)
+        >>> # Returns: /var/log/coinfosim.log (absolute path)
         
         >>> config = {"logging": {"file": False}}
         >>> log_file = get_log_file(config)
@@ -429,8 +429,8 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
     log_file = config["logging"]["file"]
     
     if log_file is None:
-        # Default to <output_dir>/cosensim.log
-        log_path = get_output_dir(config) / "cosensim.log"
+        # Default to <output_dir>/coinfosim.log
+        log_path = get_output_dir(config) / "coinfosim.log"
     elif log_file is False:
         # Explicitly disabled
         return None
@@ -454,7 +454,7 @@ def get_log_file(config: Optional[Dict[str, Any]] = None, create_dir: bool = Tru
 
 def init_user_config(force: bool = False) -> Path:
     """
-    Create a user config file template at ~/.config/cosensim/config.toml.
+    Create a user config file template at ~/.config/coinfosim/config.toml.
     
     Args:
         force: Overwrite existing file if True
@@ -477,9 +477,9 @@ def init_user_config(force: bool = False) -> Path:
     config_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Write template
-    template = """# CoSenSim User Configuration
-# This file provides default settings for all CoSenSim projects.
-# Project-specific settings should go in ./cosensim.toml
+    template = """# CoInfoSim User Configuration
+# This file provides default settings for all CoInfoSim projects.
+# Project-specific settings should go in ./coinfosim.toml
 
 [paths]
 # Base output directory (can be relative or absolute)
@@ -505,7 +505,7 @@ verbose = true
 level = "INFO"
 
 # Log file path
-# Uncomment to customize, or leave commented for default (<output_dir>/cosensim.log)
+# Uncomment to customize, or leave commented for default (<output_dir>/coinfosim.log)
 # file = "./custom.log"
 # file = false  # Disable file logging
 
@@ -517,7 +517,7 @@ quiet = false
 enabled = false
 
 # Target directory for published reports
-target_dir = "../cosensim-reports-pages"
+target_dir = "../coinfosim-reports-pages"
 
 # Automatically git push after publishing
 auto_push = false
@@ -529,7 +529,7 @@ auto_push = false
 
 def init_project_config(force: bool = False) -> Path:
     """
-    Create a project config file template at ./cosensim.toml.
+    Create a project config file template at ./coinfosim.toml.
     
     Args:
         force: Overwrite existing file if True
@@ -549,9 +549,9 @@ def init_project_config(force: bool = False) -> Path:
         )
     
     # Write template
-    template = """# CoSenSim Project Configuration
+    template = """# CoInfoSim Project Configuration
 # This file should be version-controlled with your project for reproducibility.
-# It overrides user config (~/.config/cosensim/config.toml).
+# It overrides user config (~/.config/coinfosim/config.toml).
 
 [paths]
 output_dir = "./output"
@@ -573,7 +573,7 @@ quiet = false
 
 [publishing]
 enabled = false
-target_dir = "../cosensim-reports-pages"
+target_dir = "../coinfosim-reports-pages"
 auto_push = false
 """
     

@@ -1,24 +1,24 @@
-# Contributing to CoSenSim
+# Contributing to CoInfoSim
 
-Thank you for your interest in contributing to CoSenSim. This file outlines the initial development workflow and expectations for this early-stage research repository.
+Thank you for your interest in contributing to CoInfoSim. This file outlines the initial development workflow and expectations for this early-stage research repository.
 
 1. Preserve reproducibility. Include random seeds and environment details for experiments.
 2. Keep pull requests small and focused. Discuss large refactors or experimental changes in an issue first.
-3. If this repository was derived from SLACGS, preserve and respect the original license and attribution.
+3. CoInfoSim is a conceptual evolution of SLACGS (via the intermediate CoSenSim stage); preserve and respect the original GPL-3.0 license and attribution.
 4. Git workflow (suggested):
 
 ```bash
-# Fork the repository on GitHub (if applicable)
-git clone git@github.com:YOUR-ORG/CoSenSim.git
-cd CoSenSim
-git checkout -b refactor/cosensim-identity
+# Clone the repository
+git clone git@github.com:paulorenatoaz/coinfosim.git
+cd coinfosim
+git checkout -b feature/your-change
 # Work, add files, tests
 git add .
-git commit -m "chore: initialize CoSenSim identity and docs"
-git push --set-upstream origin refactor/cosensim-identity
+git commit -m "feat: describe your change"
+git push --set-upstream origin feature/your-change
 ```
 
-5. If you are preserving SLACGS history, add upstream:
+5. The upstream SLACGS history is preserved; to track it:
 
 ```bash
 git remote add upstream https://github.com/paulorenatoaz/slacgs.git

@@ -1,0 +1,403 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{graphicx}
+
+\definecolor{coinfoBlue}{HTML}{203A73}
+\definecolor{coinfoGray}{HTML}{4D5563}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=coinfoBlue,
+    urlcolor=coinfoBlue,
+    citecolor=coinfoBlue,
+    pdftitle={CoInfoSim: A Simulator for Cooperative Classification from Multiple Information Channels},
+    pdfauthor={Paulo Renato Azevedo}
+}
+
+\titleformat{\section}{\large\bfseries\color{coinfoBlue}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{coinfoBlue}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.7em}{}
+
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{CoInfoSim}
+\rhead{Research proposal}
+\cfoot{\thepage}
+
+\setlist[itemize]{topsep=4pt,itemsep=2pt,parsep=0pt,leftmargin=1.4em}
+\setlist[enumerate]{topsep=4pt,itemsep=2pt,parsep=0pt,leftmargin=1.6em}
+\renewcommand{\arraystretch}{1.15}
+
+\newcommand{\CoInfoSim}{\textsc{CoInfoSim}}
+\newcommand{\CoSenSim}{\textsc{CoSenSim}}
+\newcommand{\SLACGS}{\textsc{SLACGS}}
+\newcommand{\Loss}{\mathcal{L}}
+
+\title{\vspace{-1.2cm}\textbf{\CoInfoSim: A Simulator for Cooperative Classification from Multiple Information Channels}\\[0.35em]
+\large Research proposal and implementation-oriented roadmap}
+\author{Paulo Renato Azevedo}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+\CoInfoSim{} is proposed as a simulation framework for evaluating cooperative advantage among information channels in supervised classification tasks. The project evolves from the previous \SLACGS{} and \CoSenSim{} lines of work, preserving their incremental Monte Carlo protocol, reproducible sample generation, adaptive repetition logic, and scenario-based reporting structure, while reformulating the scientific object from sensor-network dimensionality to multi-channel classification. The central quantity is the Monte Carlo average classification loss
+\[
+    \overline{L}_{A,f}(n),
+\]
+indexed by channel subset $A$, classifier $f$, and number of labeled training samples per class $n$. Each information channel is represented as a component of a standardized input vector $X=(X_1,\ldots,X_d)$. In the Gaussian mode, the simulator receives class-conditional model parameters directly, namely centers and covariance matrices $\{(\mu_c,\Sigma_c)\}_{c=1}^{K}$, which may differ across classes. Training samples are class-balanced throughout the initial protocol. The project is organized into three phases: idealized synthetic multi-channel scenarios, dataset-anchored multi-channel simulation, and cost-aware channel selection.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Modern classification systems often rely on multiple observable sources of information. These sources may be sensor readings, sensor-derived variables, laboratory measurements, contextual measurements, engineered features, or other standardized variables available to a classifier. In this proposal, such sources are called \emph{information channels}.
+
+The central question of \CoInfoSim{} is:
+\[
+    \text{When does cooperation among information channels improve supervised classification?}
+\]
+Rather than asking only whether a single channel is informative, \CoInfoSim{} evaluates when a subset of channels provides a measurable advantage over isolated channels, redundant pairs, or simpler channel subsets.
+
+The project is motivated by multi-channel sensing systems, but its formulation is intentionally broader. A sensor-derived variable is one important type of information channel, but the same framework can represent other observable variables used in a classification pipeline. This makes the simulator useful both for sensor-motivated experiments and for more general multi-channel classification problems.
+
+The initial research questions are:
+\begin{itemize}
+    \item When does a channel subset improve classification loss relative to the best isolated channel?
+    \item When is an apparently useful channel redundant with another channel?
+    \item When can a weaker channel be valuable because it complements stronger channels?
+    \item How many labeled samples per class are required before cooperative advantage appears?
+    \item How should channel subsets be selected when classification performance and channel cost are both relevant?
+\end{itemize}
+
+\section{Background: From SLACGS to CoInfoSim}
+
+\SLACGS{} provided the starting point for this research line. It studied cooperative gains in synthetic Gaussian settings, using Monte Carlo simulation to estimate loss curves under increasing sample sizes. Its implementation included several ideas that remain valuable: reproducible random generation, nested sample growth across cardinalities, adaptive repetition and convergence criteria, and scenario-level reports aggregating multiple simulation runs.
+
+However, \SLACGS{} was primarily organized around dimensionality comparisons. Its core question was often expressed as a comparison between lower-dimensional and higher-dimensional models. The new project generalizes this idea. In \CoInfoSim{}, the object of comparison is not merely dimension $d$, but the subset of information channels used by the classifier:
+\[
+    A \subseteq \{1,\ldots,d\}.
+\]
+This change is central. It allows the simulator to compare isolated channels, channel pairs, full channel sets, and arbitrary channel subsets.
+
+The project also moves from a sensor-network framing to a multi-channel classification framing. Sensor networks and multi-channel sensing systems remain important motivating cases, but the mathematical object is now an input vector of information channels. This makes the simulator more appropriate for a computer-science setting, where classification systems often combine heterogeneous features or signals rather than only physical sensors.
+
+\section{Lessons from Real-Data Experiments}
+
+Experiments with real datasets motivate several design decisions. First, observable variables may live on different numerical scales. For instance, environmental, chemical, or physiological quantities may have units that are not directly comparable. Since classifiers such as Linear SVM and Logistic Regression are sensitive to feature scale, \CoInfoSim{} assumes that channels are standardized before classification.
+
+Second, real datasets highlight that useful cooperation is not simply the result of adding more variables. A channel may be strong in isolation but redundant with another one; conversely, a weaker channel may be useful if it contributes information that is not already contained in stronger channels. This motivates channel-subset evaluation rather than prefix-dimensional evaluation.
+
+Third, real datasets motivate a dataset-anchored mode. Instead of only defining synthetic Gaussian models manually, the simulator should also be able to estimate class-conditional parameters from standardized real data and use them to generate synthetic data. This enables a comparison between real-data sampling and Gaussian synthetic sampling anchored in empirical structure.
+
+\section{Modeling Framework}
+
+Let
+\[
+    X=(X_1,\ldots,X_d)
+\]
+denote a standardized input vector, where each component $X_j$ is an information channel. Let
+\[
+    Y\in\{1,\ldots,K\}
+\]
+denote the class label.
+
+In the parametric Gaussian mode, the model is specified by class-conditional distributions:
+\[
+    X_c \sim \mathcal{N}(\mu_c,\Sigma_c),
+    \qquad c=1,\ldots,K.
+\]
+The primary parameters of a simulation model are therefore
+\[
+    \{(\mu_c,\Sigma_c)\}_{c=1}^{K}.
+\]
+The simulator receives these class centers and covariance matrices directly. Unlike the previous restricted formulation, \CoInfoSim{} does not require covariance matrices to be equal across classes. Each class may have its own center and covariance structure, allowing differences in location, dispersion, correlation, or distributional shape to affect classification.
+
+The initial protocol uses class-balanced training samples. The quantity $n$ always denotes the number of labeled training samples per class. For binary classification, each Monte Carlo training set contains $n$ observations from class 0 and $n$ observations from class 1, for a total training size of $2n$. In real-data experiments, balanced subsets are drawn from the training reservoir; if sampling is performed without replacement, the feasible values of $n$ are limited by the smallest class.
+
+A channel subset is denoted by
+\[
+    A\subseteq\{1,\ldots,d\}.
+\]
+The classifier observes only the restricted vector $X_A$. For $d=3$, the simulator evaluates all non-empty subsets:
+\[
+\{X_1\},\{X_2\},\{X_3\},
+\{X_1,X_2\},\{X_1,X_3\},\{X_2,X_3\},
+\{X_1,X_2,X_3\}.
+\]
+
+\section{Input Modes}
+
+\subsection{Parametric Gaussian Mode}
+
+In the parametric mode, the user defines a simulation model directly:
+\[
+    \mathcal{M}=\{(\mu_c,\Sigma_c)\}_{c=1}^{K}.
+\]
+The simulator then generates balanced training samples from each class distribution and evaluates classifier performance across sample sizes, channel subsets, and classifiers.
+
+This mode supports idealized controlled experiments. It is appropriate for studying redundancy, complementarity, class-center placement, class-specific covariance structure, and the sample size required for cooperative advantage to appear.
+
+\subsection{Dataset-Anchored Mode}
+
+In the dataset-anchored mode, the user provides a real dataset, a class label, and candidate information channels. The selected channels are standardized and the simulator estimates class-conditional parameters from the standardized data:
+\[
+    \hat{\mu}_c,\hat{\Sigma}_c.
+\]
+These estimated parameters define an anchored Gaussian simulation model:
+\[
+    X_c \sim \mathcal{N}(\hat{\mu}_c,\hat{\Sigma}_c).
+\]
+The simulator can then compare performance obtained from balanced real-data sampling with performance obtained from synthetic data generated from the estimated Gaussian model.
+
+\section{Evaluation Metric}
+
+For a channel subset $A$, classifier $f$, and sample size $n$ per class, the loss in Monte Carlo replication $r$ is
+\[
+    \widehat{L}_{A,f,r}(n)
+    =
+    \frac{1}{m}\sum_{i=1}^{m}
+    \mathbf{1}\{\widehat{Y}^{(A,f)}_{i,r}(n)\neq Y_i\},
+\]
+where $m$ is the number of test observations used for evaluation. The main output is the Monte Carlo average loss:
+\[
+    \overline{L}_{A,f}(n)
+    =
+    \frac{1}{R_n}\sum_{r=1}^{R_n}
+    \widehat{L}_{A,f,r}(n).
+\]
+The number of repetitions $R_n$ may depend on $n$, preserving the legacy strategy of using more repetitions for smaller sample sizes and fewer repetitions once the estimates stabilize.
+
+Derived quantities include the best subset for a classifier:
+\[
+    A_f^\star(n)=\arg\min_A \overline{L}_{A,f}(n),
+\]
+and cooperative advantage thresholds. For two channel subsets $A$ and $B$, the threshold
+\[
+    N^*(A,B;f)=\min\{n:\overline{L}_{B,f}(n)<\overline{L}_{A,f}(n)\}
+\]
+identifies the smallest sample size per class at which subset $B$ achieves lower average loss than subset $A$ for classifier $f$.
+
+\section{Initial Classifiers}
+
+The initial classifier set is intentionally small and interpretable:
+\[
+    \mathcal{F}_{initial}=\{\text{Linear SVM},\text{Logistic Regression},\text{Gaussian Naive Bayes}\}.
+\]
+Linear SVM preserves continuity with the previous simulation framework and provides a margin-based linear baseline. Logistic Regression provides a probabilistic linear baseline. Gaussian Naive Bayes provides a lightweight probabilistic baseline whose conditional-independence assumption is useful when analyzing whether gains depend only on marginal evidence or also on multivariate dependence.
+
+Future classifier sets may include RBF SVM, kNN, Random Forest, gradient boosting, neural networks, or other models. These extensions should be added after the first simulator version establishes a stable Monte Carlo and reporting protocol.
+
+\section{Research Plan}
+
+\subsection{Phase 1: Idealized Synthetic Multi-Channel Scenarios}
+
+The first phase uses manually specified Gaussian simulation models. Each model contains class centers and class covariance matrices. A synthetic scenario groups one or more such models around a scientific question.
+
+The initial experiments focus on binary classification with three standardized information channels. Some models may use shared covariance matrices to isolate the effect of class-center geometry and channel correlation. Other models may allow class-specific covariance matrices to represent differences in dispersion or correlation structure.
+
+This phase validates the simulator and studies the fundamental mechanisms of cooperative classification:
+\begin{itemize}
+    \item additive gains from weak but complementary channels;
+    \item redundancy among strong channels;
+    \item channel-subset ranking as $n$ increases;
+    \item cooperative advantage thresholds $N^*$;
+    \item differences among Linear SVM, Logistic Regression, and Gaussian Naive Bayes.
+\end{itemize}
+
+\subsection{Phase 2: Dataset-Anchored Multi-Channel Simulation}
+
+The second phase introduces real datasets. For each dataset, the simulator should produce at least two simulation reports: one using balanced sampling from the standardized real-data reservoir, and another using synthetic Gaussian data generated from parameters estimated on the standardized dataset.
+
+The corresponding dataset-anchored scenario report compares the two modes:
+\[
+    \overline{L}^{real}_{A,f}(n)
+    \quad \text{versus} \quad
+    \overline{L}^{synth}_{A,f}(n).
+\]
+This comparison evaluates whether the Gaussian anchored model preserves the cooperative patterns observed in the real dataset.
+
+\subsection{Phase 3: Cost-Aware Channel Selection}
+
+The third phase introduces cost-aware decision criteria. Instead of limiting cost to a narrow acquisition notion, \CoInfoSim{} treats channel cost as a generic operational quantity associated with using a channel. This may include acquisition, deployment, calibration, maintenance, computation, latency, energy, or logistical constraints.
+
+Many applications also involve a label or reference cost. The class label $Y$ may require laboratory analysis, certified instrumentation, expert annotation, delayed failure observation, or another costly reference process. The initial cost-aware formulation separates channel cost from label cost:
+\[
+    C(A,n)=C_X(A)+C_Y(n),
+\]
+where $C_X(A)$ is the cost of using channel subset $A$ and $C_Y(n)$ is the cost of obtaining $n$ labeled samples per class.
+
+A simple constrained decision problem is
+\[
+    \min_{A,f,n} C_X(A)+C_Y(n)
+    \quad\text{subject to}\quad
+    \overline{L}_{A,f}(n)\leq L_{max}.
+\]
+Alternatively, one may evaluate a penalized objective:
+\[
+    \min_{A,f,n}
+    \left[\overline{L}_{A,f}(n)+\lambda C_X(A)+\gamma C_Y(n)\right].
+\]
+
+\section{Expected Contributions}
+
+The expected contributions are:
+\begin{enumerate}
+    \item a simulator for cooperative classification from multiple information channels;
+    \item a Monte Carlo protocol for balanced, incremental sample-size evaluation;
+    \item a channel-subset comparison framework based on $\overline{L}_{A,f}(n)$;
+    \item a Gaussian class-conditional modeling interface using directly specified class centers and covariance matrices;
+    \item a dataset-anchored mode comparing real-data sampling with Gaussian synthetic sampling;
+    \item a reporting structure with dataset, simulation, and scenario reports;
+    \item a future path toward cost-aware channel selection.
+\end{enumerate}
+
+\appendix
+
+\section{Appendix A: Proposed Synthetic Scenario Grids}
+
+A synthetic scenario is a group of simulation models organized around an experimental question. Each simulation model is defined by class centers and covariance matrices:
+\[
+    \mathcal{M}=\{(\mu_c,\Sigma_c)\}_{c=1}^{K}.
+\]
+A scenario grid is a scenario whose models are generated by systematically varying one or more model parameters.
+
+For the first synthetic studies, the recommended starting point is a three-channel binary problem. The simulator should store each model explicitly in terms of $\mu_0,\mu_1,\Sigma_0,\Sigma_1$, rather than relying on special-purpose derived fields.
+
+One illustrative model is:
+\[
+    \mu_0=(-0.5,-0.4,-0.25),
+    \qquad
+    \mu_1=(0.5,0.4,0.25),
+\]
+with shared covariance
+\[
+\Sigma_0=\Sigma_1=
+\begin{pmatrix}
+1 & 0.8 & 0.1\\
+0.8 & 1 & 0.1\\
+0.1 & 0.1 & 1
+\end{pmatrix}.
+\]
+This model represents two strong but redundant first channels and a weaker, less redundant third channel. Other models in the same scenario may vary the centers or covariance entries while retaining explicit class-conditional parameter storage.
+
+The first scenario reports should emphasize:
+\begin{itemize}
+    \item comparison among isolated channels, pairs, and the full channel set;
+    \item loss curves as $n$ increases;
+    \item best-subset maps;
+    \item cooperative advantage thresholds $N^*$;
+    \item visualizations of synthetic data geometry.
+\end{itemize}
+
+\section{Appendix B: Real-World Motivating Cases}
+
+Real-data experiments motivate the dataset-anchored phase. Examples include:
+
+\subsection*{Occupancy detection}
+Channels such as CO$_2$, light, and temperature may support occupancy classification. The label may come from direct observation, images, or another reference process.
+
+\subsection*{Water potability}
+Channels such as pH, conductivity, turbidity, and chemical measurements may support potability classification. The label or reference determination may be expensive or laboratory-based.
+
+\subsection*{Air quality}
+Field sensor responses may be compared with certified reference measurements. This is a natural setting for evaluating whether cheaper channels can approximate decisions based on costly references.
+
+\subsection*{Hydraulic systems and condition monitoring}
+Multiple physical or operational measurements may support fault classification or degradation detection. Labels may require inspection, delayed failure observation, or domain-specific annotation.
+
+These examples motivate both channel-subset evaluation and the separation between channel cost $C_X(A)$ and label/reference cost $C_Y(n)$.
+
+\section{Appendix C: Simulation and Scenario Reporting Structure}
+
+\CoInfoSim{} should produce layered reports. The reporting system should remain generic: it should display the parameters explicitly defined in each simulation model and scenario grid, together with derived performance and cost metrics. Scenario-specific interpretive quantities may be introduced in accompanying LaTeX analyses, but they are not required as fields in the automated reporting system.
+
+\subsection{Project Index}
+
+The project index is the published entry point for an experiment collection. It should list scenario reports, dataset reports, simulation reports, result files, generation date, and software or commit version when available.
+
+\subsection{Dataset Report}
+
+A dataset report is essential for dataset-anchored scenarios. It should describe:
+\begin{itemize}
+    \item dataset name and source;
+    \item target variable $Y$;
+    \item original class distribution;
+    \item candidate information channels;
+    \item selected channels;
+    \item missing-value handling and preprocessing;
+    \item standardization protocol;
+    \item training reservoir and test set;
+    \item visual diagnostics of the standardized data.
+\end{itemize}
+
+Visual diagnostics should include channel distributions by class, correlation matrices, scatter or pair plots for selected channels, and graphical representations of balanced samples used by the simulator.
+
+\subsection{Simulation Report}
+
+A simulation report summarizes one simulation model. It should include:
+\begin{itemize}
+    \item model id and source;
+    \item class centers and covariance matrices;
+    \item evaluated channel subsets;
+    \item classifiers;
+    \item values of $n$;
+    \item repetitions used and convergence information;
+    \item loss curves $\overline{L}_{A,f}(n)$;
+    \item subset rankings;
+    \item cooperative advantage thresholds $N^*$ when relevant;
+    \item static and animated visualizations of data geometry.
+\end{itemize}
+
+For synthetic models, visualizations may include scatter plots, Gaussian contours when appropriate, and GIF animations showing sample-size growth. For real-data simulations, visualizations should show balanced samples drawn from the standardized real-data reservoir.
+
+\subsection{Scenario Report}
+
+A scenario report aggregates multiple simulation models organized around one scientific question. It should include:
+\begin{itemize}
+    \item the scenario question;
+    \item a table of simulation models;
+    \item links to simulation reports;
+    \item aggregate loss curves;
+    \item cooperative advantage threshold summaries;
+    \item best-subset maps;
+    \item heatmaps or line plots for scenario grids;
+    \item animated visualizations showing how the data geometry changes across the scenario.
+\end{itemize}
+
+\subsection{Dataset-Anchored Scenario Report}
+
+A dataset-anchored scenario is centered on one real dataset and should aggregate at least three components: a dataset report, a real-data simulation report, and a synthetic anchored simulation report. Its purpose is to compare balanced sampling from the real dataset with synthetic sampling from a Gaussian model estimated on the standardized data.
+
+Such a report should include:
+\begin{itemize}
+    \item links to the dataset report and both simulation reports;
+    \item real versus synthetic loss curves;
+    \item real versus synthetic subset rankings;
+    \item comparison of cooperative advantage thresholds $N^*$;
+    \item real-synthetic loss discrepancies;
+    \item visualizations of empirical and synthetic data geometry.
+\end{itemize}
+
+This comparison is central to assessing whether Gaussian synthetic sampling can preserve the cooperative patterns observed in the real dataset.
+
+\end{document}

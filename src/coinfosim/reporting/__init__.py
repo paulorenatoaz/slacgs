@@ -1,7 +1,7 @@
 """
-CoSenSim Reporting Module
+CoInfoSim Reporting Module
 
-Report generation and visualization functionality for CoSenSim.
+Report generation and visualization functionality for CoInfoSim.
 Contains Report, ReportData and report utility functions.
 """
 
