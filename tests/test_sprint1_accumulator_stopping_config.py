@@ -83,7 +83,7 @@ def test_summary_dataframe():
 
 # --- Mode config --------------------------------------------------------------
 
-@pytest.mark.parametrize("mode", ["smoke", "fast", "full"])
+@pytest.mark.parametrize("mode", ["smoke", "report_smoke", "fast", "full"])
 def test_get_mode_config_valid(mode):
     cfg = get_mode_config(mode)
     assert isinstance(cfg, MonteCarloConfig)
@@ -97,7 +97,13 @@ def test_get_mode_config_valid(mode):
 
 
 def test_valid_modes_constant():
-    assert set(VALID_MODES) == {"smoke", "fast", "full"}
+    assert set(VALID_MODES) == {"smoke", "report_smoke", "fast", "full"}
+
+
+def test_report_smoke_extends_to_32():
+    cfg = get_mode_config("report_smoke")
+    assert cfg.sample_sizes == (2, 4, 8, 16, 32)
+    assert max(cfg.sample_sizes) == 32
 
 
 def test_get_mode_config_invalid():

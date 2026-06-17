@@ -27,14 +27,18 @@ def _run():
 
 def test_report_file_created(tmp_path):
     scenario, result, sampler = _run()
-    out = generate_sprint1_report(scenario, result, tmp_path, sampler=sampler)
+    out = generate_sprint1_report(
+        scenario, result, tmp_path, sampler=sampler, make_gif=False
+    )
     assert out.exists()
     assert out.name == "synthetic_scenario_1_report.html"
 
 
 def test_report_contains_required_sections(tmp_path):
     scenario, result, sampler = _run()
-    out = generate_sprint1_report(scenario, result, tmp_path, sampler=sampler)
+    out = generate_sprint1_report(
+        scenario, result, tmp_path, sampler=sampler, make_gif=False
+    )
     text = out.read_text(encoding="utf-8")
 
     # Title / scenario / question.
@@ -48,10 +52,14 @@ def test_report_contains_required_sections(tmp_path):
         "Run configuration",
         "Monte Carlo stopping",
         "Empirical test-loss curves",
-        "Best-subset rankings",
+        "Best subset by sample size",
+        "Final ranking at largest n",
         "Cooperative advantage thresholds",
-        "Monte Carlo uncertainty summary",
-        "2D scatter plots",
+        "Monte Carlo uncertainty",
+        "Synthetic data geometry",
+        "1-D single-channel views",
+        "2-D pairwise views",
+        "3-D triple-wise views",
     ):
         assert section in text, f"missing section: {section}"
 
@@ -69,7 +77,9 @@ def test_report_contains_required_sections(tmp_path):
 
 def test_report_excludes_forbidden_metrics(tmp_path):
     scenario, result, sampler = _run()
-    out = generate_sprint1_report(scenario, result, tmp_path, sampler=sampler)
+    out = generate_sprint1_report(
+        scenario, result, tmp_path, sampler=sampler, make_gif=False
+    )
     text = out.read_text(encoding="utf-8").lower()
 
     # The exclusion notice must be present.
@@ -88,7 +98,9 @@ def test_report_excludes_forbidden_metrics(tmp_path):
 
 def test_report_includes_n_star_table(tmp_path):
     scenario, result, sampler = _run()
-    out = generate_sprint1_report(scenario, result, tmp_path, sampler=sampler)
+    out = generate_sprint1_report(
+        scenario, result, tmp_path, sampler=sampler, make_gif=False
+    )
     text = out.read_text(encoding="utf-8")
     assert "N*" in text
     assert "X1+X3 vs X1" in text

@@ -43,12 +43,91 @@ class BestSubsetEntry:
 
 @dataclass(frozen=True)
 class ThresholdResult:
-    """Cooperative advantage threshold for ``B`` over ``A`` under classifier ``f``."""
+    """Cooperative advantage threshold for ``B`` over ``A`` under classifier ``f``.
+
+    Two estimates are reported:
+
+    - ``n_star_grid``: the smallest evaluated sample size at which ``B``
+      strictly beats ``A`` (discrete grid threshold).
+    - ``n_star_interp``: a linearly interpolated estimate of the crossing
+      between the two consecutive sample sizes that bracket it. ``None`` when
+      no crossing is observed, or equal to the first sample size when the very
+      first evaluated point already favours ``B``.
+    """
 
     classifier: str
     subset_a: Subset
     subset_b: Subset
-    n_star: Optional[int]  # None when no threshold is observed
+    n_star_grid: Optional[int]
+    n_star_interp: Optional[float]
+
+
+def cooperative_threshold(
+    accumulator: LossAccumulator,
+    classifier_name: str,
+    subset_a: Subset,
+    subset_b: Subset,
+    sample_sizes: Sequence[int],
+) -> ThresholdResult:
+    """Return the cooperative advantage threshold of ``B`` over ``A``.
+
+    Define ``Delta(n) = L_A(n) - L_B(n)``; the cooperative subset ``B`` beats
+    ``A`` when ``Delta(n) > 0``. Sample sizes are scanned in ascending order.
+
+    - The grid threshold ``n_star_grid`` is the first ``n`` with ``Delta > 0``.
+    - The interpolated threshold ``n_star_interp`` is estimated by linear
+      interpolation between the consecutive points ``n_left`` (``Delta <= 0``)
+      and ``n_right`` (``Delta > 0``) that bracket the crossing::
+
+          n_star_interp = n_left
+              + (0 - Delta(n_left)) * (n_right - n_left)
+                / (Delta(n_right) - Delta(n_left))
+
+    - If the first evaluated point already has ``Delta > 0``, the grid
+      threshold is that first ``n`` and the interpolated value is set equal to
+      it (no left bracket exists to interpolate from).
+    - If no crossing occurs, both values are ``None``.
+    """
+    a = tuple(subset_a)
+    b = tuple(subset_b)
+    ordered = sorted(sample_sizes)
+
+    deltas = [
+        accumulator.mean_loss(n, a, classifier_name)
+        - accumulator.mean_loss(n, b, classifier_name)
+        for n in ordered
+    ]
+
+    n_star_grid: Optional[int] = None
+    n_star_interp: Optional[float] = None
+
+    for i, n in enumerate(ordered):
+        if deltas[i] > 0:
+            n_star_grid = int(n)
+            if i == 0:
+                # First evaluated point already favours B; no left bracket.
+                n_star_interp = float(n)
+            else:
+                n_left = ordered[i - 1]
+                n_right = n
+                d_left = deltas[i - 1]
+                d_right = deltas[i]
+                denom = d_right - d_left
+                if denom == 0:
+                    n_star_interp = float(n_right)
+                else:
+                    n_star_interp = n_left + (0.0 - d_left) * (
+                        n_right - n_left
+                    ) / denom
+            break
+
+    return ThresholdResult(
+        classifier=classifier_name,
+        subset_a=a,
+        subset_b=b,
+        n_star_grid=n_star_grid,
+        n_star_interp=n_star_interp,
+    )
 
 
 def best_subset(
@@ -101,33 +180,70 @@ def best_subset_rankings(
     return pd.DataFrame(rows)
 
 
-def cooperative_threshold(
+def best_subset_by_sample_size(
     accumulator: LossAccumulator,
-    classifier_name: str,
-    subset_a: Subset,
-    subset_b: Subset,
+    classifier_names: Sequence[str],
     sample_sizes: Sequence[int],
-) -> ThresholdResult:
-    """Return ``N*(A, B; f)`` = smallest ``n`` where ``B`` strictly beats ``A``.
+    subsets: Sequence[Subset],
+) -> pd.DataFrame:
+    """Return a matrix of winning subset labels: rows = ``n``, cols = classifiers.
 
-    Sample sizes are evaluated in ascending order. ``n_star`` is ``None`` if
-    ``B`` never strictly beats ``A`` over the provided sample sizes.
+    The index is ``n_per_class`` and each column (one per classifier, labelled
+    with its display name) holds the label of the subset with the lowest mean
+    test loss at that sample size.
     """
-    a = tuple(subset_a)
-    b = tuple(subset_b)
-    n_star: Optional[int] = None
-    for n in sorted(sample_sizes):
-        loss_a = accumulator.mean_loss(n, a, classifier_name)
-        loss_b = accumulator.mean_loss(n, b, classifier_name)
-        if loss_b < loss_a:
-            n_star = int(n)
-            break
-    return ThresholdResult(
-        classifier=classifier_name,
-        subset_a=a,
-        subset_b=b,
-        n_star=n_star,
-    )
+    data: Dict[str, List[str]] = {}
+    index = [int(n) for n in sample_sizes]
+    for clf in classifier_names:
+        col = []
+        for n in sample_sizes:
+            entry = best_subset(accumulator, clf, n, subsets)
+            col.append(subset_label(entry.subset))
+        data[classifier_label(clf)] = col
+    df = pd.DataFrame(data, index=index)
+    df.index.name = "n_per_class"
+    return df
+
+
+def final_ranking_at_largest_n(
+    accumulator: LossAccumulator,
+    classifier_names: Sequence[str],
+    sample_sizes: Sequence[int],
+    subsets: Sequence[Subset],
+) -> pd.DataFrame:
+    """Rank all subsets by mean test loss at the largest evaluated ``n``.
+
+    Returns a long DataFrame with one row per (classifier, subset). Columns:
+    ``classifier``, ``classifier_label``, ``n_per_class``, ``rank``,
+    ``subset``, ``subset_label``, ``mean_loss``, ``standard_error``.
+    Rank 1 is the lowest mean loss (best) for each classifier.
+    """
+    n = max(sample_sizes)
+    rows: List[dict] = []
+    for clf in classifier_names:
+        scored = [
+            (
+                tuple(s),
+                accumulator.mean_loss(n, tuple(s), clf),
+                accumulator.standard_error(n, tuple(s), clf),
+            )
+            for s in subsets
+        ]
+        scored.sort(key=lambda item: item[1])
+        for rank, (subset_t, mean_loss, se) in enumerate(scored, start=1):
+            rows.append(
+                {
+                    "classifier": clf,
+                    "classifier_label": classifier_label(clf),
+                    "n_per_class": int(n),
+                    "rank": rank,
+                    "subset": subset_t,
+                    "subset_label": subset_label(subset_t),
+                    "mean_loss": mean_loss,
+                    "standard_error": se,
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def _best_single_subset(
@@ -196,7 +312,8 @@ def standard_threshold_comparisons(
                     "subset_a_label": subset_label(a),
                     "subset_b": b,
                     "subset_b_label": subset_label(b),
-                    "n_star": result.n_star,
+                    "n_star_grid": result.n_star_grid,
+                    "n_star_interp": result.n_star_interp,
                 }
             )
     return pd.DataFrame(rows)

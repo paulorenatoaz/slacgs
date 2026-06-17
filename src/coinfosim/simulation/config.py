@@ -2,7 +2,7 @@
 Monte Carlo budget and execution-mode configuration for CoInfoSim Sprint 1.
 
 Provides :class:`MonteCarloConfig` and :func:`get_mode_config` for the
-``smoke``, ``fast``, and ``full`` execution modes.
+``smoke``, ``report_smoke``, ``fast``, and ``full`` execution modes.
 """
 
 from __future__ import annotations
@@ -18,7 +18,8 @@ class MonteCarloConfig:
     Attributes
     ----------
     mode:
-        Execution-mode name (``smoke``, ``fast``, or ``full``).
+        Execution-mode name (``smoke``, ``report_smoke``, ``fast``, or
+        ``full``).
     sample_sizes:
         Tuple of ``n_per_class`` values to evaluate.
     min_replications:
@@ -72,6 +73,17 @@ _MODE_PRESETS: Dict[str, dict] = {
         ci_half_width_target=0.05,
         base_seed=0,
     ),
+    "report_smoke": dict(
+        # Richer than ``smoke`` for a more informative validation report, but
+        # still fast: extends sample sizes up to n_per_class = 32.
+        sample_sizes=(2, 4, 8, 16, 32),
+        min_replications=10,
+        max_replications=60,
+        replication_batch_size=10,
+        test_samples_per_class=500,
+        ci_half_width_target=0.02,
+        base_seed=0,
+    ),
     "fast": dict(
         sample_sizes=(2, 4, 8, 16, 32, 64),
         min_replications=30,
@@ -101,7 +113,8 @@ def get_mode_config(mode: str) -> MonteCarloConfig:
     Raises
     ------
     ValueError
-        If ``mode`` is not one of ``smoke``, ``fast``, ``full``.
+        If ``mode`` is not one of ``smoke``, ``report_smoke``, ``fast``,
+        ``full``.
     """
     if mode not in _MODE_PRESETS:
         raise ValueError(

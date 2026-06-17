@@ -1,6 +1,7 @@
 """Tests for Sprint 1 best-subset and cooperative-threshold analysis (Checkpoint 5)."""
 
 import pandas as pd
+import pytest
 
 from coinfosim.results.accumulator import LossAccumulator
 from coinfosim.results.analysis import (
@@ -67,7 +68,24 @@ def test_cooperative_threshold_found():
     }
     acc = _acc_from_table(table)
     result = cooperative_threshold(acc, "f", (0,), (0, 2), [2, 4, 8, 16])
-    assert result.n_star == 8
+    assert result.n_star_grid == 8
+
+
+def test_cooperative_threshold_interp_between_points():
+    # Delta(n) = L_A - L_B. At n=4 Delta = -0.01, at n=8 Delta = +0.10.
+    # Crossing at Delta=0: n = 4 + 0.01 * (8 - 4) / (0.10 - (-0.01))
+    #                        = 4 + 0.01 * 4 / 0.11 = 4.3636...
+    table = {
+        (4, (0,), "f"): 0.30,
+        (4, (0, 2), "f"): 0.31,  # Delta = -0.01
+        (8, (0,), "f"): 0.30,
+        (8, (0, 2), "f"): 0.20,  # Delta = +0.10
+    }
+    acc = _acc_from_table(table)
+    result = cooperative_threshold(acc, "f", (0,), (0, 2), [4, 8])
+    assert result.n_star_grid == 8
+    expected = 4 + 0.01 * 4 / 0.11
+    assert result.n_star_interp == pytest.approx(expected)
 
 
 def test_cooperative_threshold_first_n():
@@ -79,7 +97,9 @@ def test_cooperative_threshold_first_n():
     }
     acc = _acc_from_table(table)
     result = cooperative_threshold(acc, "f", (0,), (0, 2), [2, 4])
-    assert result.n_star == 2
+    # First evaluated point already favours B: grid == interp == first n.
+    assert result.n_star_grid == 2
+    assert result.n_star_interp == 2.0
 
 
 def test_cooperative_threshold_not_found():
@@ -92,7 +112,8 @@ def test_cooperative_threshold_not_found():
     }
     acc = _acc_from_table(table)
     result = cooperative_threshold(acc, "f", (0,), (0, 2), [2, 4])
-    assert result.n_star is None
+    assert result.n_star_grid is None
+    assert result.n_star_interp is None
 
 
 def test_standard_threshold_comparisons():
@@ -116,6 +137,10 @@ def test_standard_threshold_comparisons():
         "X1+X3 vs X1",
         "X1+X2+X3 vs X1+X2",
     }
-    # n_star is either an int or None.
-    for val in df["n_star"]:
+    # Both grid and interpolated thresholds are present.
+    assert "n_star_grid" in df.columns
+    assert "n_star_interp" in df.columns
+    for val in df["n_star_grid"]:
         assert val is None or isinstance(val, int)
+    for val in df["n_star_interp"]:
+        assert val is None or isinstance(val, float)

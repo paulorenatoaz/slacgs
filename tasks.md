@@ -21,7 +21,6 @@ Use these documents as conceptual references:
 1. `coinfosim_research_proposal_v4.pdf`
 2. `coinfosim_research_proposal_v4.tex`
 3. `coinfosim_sprint1_implementation_guidelines.pdf`
-4. `coinfosim_sprint1_implementation_guidelines.tex`
 
 The Sprint 1 implementation guidelines are the main source of truth for this task list.
 
